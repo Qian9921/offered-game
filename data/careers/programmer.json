@@ -1,0 +1,38 @@
+{
+  "career": "programmer",
+  "careerName": "程序员",
+  "start": "node_intro",
+  "nodes": {
+    "node_intro": {
+      "speaker": "导师老陈",
+      "text": "来,新人,坐这。你的工位。",
+      "effects": {},
+      "choices": [
+        { "label": "谢谢老师!(激动)", "next": "node_eager", "effects": { "passion": 5 } },
+        { "label": "(默默点头)", "next": "node_quiet", "effects": {} }
+      ]
+    },
+    "node_eager": {
+      "speaker": "导师老陈",
+      "text": "好,有冲劲!先把开发环境搭起来。",
+      "effects": {},
+      "choices": [
+        { "label": "好的,马上开始", "next": "node_end", "effects": { "energy": -10, "skill": 5 } }
+      ]
+    },
+    "node_quiet": {
+      "speaker": "导师老陈",
+      "text": "话不多,行,踏实点也好。先看看文档吧。",
+      "effects": {},
+      "choices": [
+        { "label": "好,我去看看", "next": "node_end", "effects": { "stress": 5 } }
+      ]
+    },
+    "node_end": {
+      "speaker": "",
+      "text": "（第一天就这样开始了。）",
+      "effects": {},
+      "choices": []
+    }
+  }
+}
