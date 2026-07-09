@@ -331,19 +331,23 @@ export class WorldScene extends Phaser.Scene {
       tile(x - T / 2, y, 231, y);     tile(x + T / 2, y, 232, y);
       this._zone(x, y + 8, 2 * T * 0.8, 16);
     };
-    // 黑色办公椅（8,4)-(9,4) 两瓦竖叠：看到椅背 → 放桌南侧,人坐着面向桌子
+    // 黑色办公椅（8,4)-(9,4) 两瓦竖叠：看到椅背 → 放桌南侧,人坐着面向桌子。
+    // 缩到 0.8 倍并整体上移，紧贴桌沿，不再是压过桌子的大灰团。
     const chairBack = (x, y) => {
-      tile(x, y - T, 132, y); tile(x, y, 148, y);
+      const s = FSCALE * 0.8;
+      this.add.image(x, y - T * 0.8, 'office', 132).setScale(s).setOrigin(0.5).setDepth(y);
+      this.add.image(x, y, 'office', 148).setScale(s).setOrigin(0.5).setDepth(y);
     };
 
-    // 一个完整工位 = 桌 + 桌上显示器/键盘 + 桌前的椅子（照 LimeZu 官方示例的组合方式）
-    // south 工位：黑椅背在桌南(玩家看到椅背) / north 工位：灰圆背椅正面在桌北
-    const workstation = (x, y, deskKey, monKey, side = 'south') => {
-      place(deskKey, x, y);                       // 桌
-      deco(monKey, x - 8, y - 18);                // 显示器(桌面偏左)
-      deco('keyboard', x + 14, y - 4, FSCALE * 0.8); // 键盘(桌面偏右)
-      if (side === 'south') chairBack(x, y + 46);
-      else place('chair_down', x, y - 54, FSCALE * 0.85);
+    // 一个完整工位（紧凑单元，照 LimeZu 官方示例的密度）：
+    // 桌上摆双屏+键盘（占满桌面不空），椅背紧贴桌南沿（玩家看到椅背，人朝屏幕坐）。
+    // deskItem: 桌面右侧再放一件小物（文件/台灯/笔电/座机）增加"有人在用"的生活感。
+    const workstation = (x, y, deskKey, monKey, deskItem = null) => {
+      place(deskKey, x, y);                        // 桌
+      deco(monKey, x - 12, y - 16, FSCALE * 1.05); // 显示器（桌面偏左，略放大填桌）
+      deco('keyboard', x + 6, y - 2, FSCALE * 0.85); // 键盘（显示器前）
+      if (deskItem) deco(deskItem, x + 30, y - 10, FSCALE * 0.6); // 桌面右侧小物
+      chairBack(x, y + 40);                         // 椅背紧贴桌南沿（缩小、贴桌）
     };
 
     // ============================================================
@@ -375,27 +379,20 @@ export class WorldScene extends Phaser.Scene {
     place('fridge_dark', 918, 118, FSCALE * 1.0);
     plant2(730, 200, ...PLANT.big);
 
-    // === 中部:工位区——2 组 × 3 列,背靠背 ===
-    this.deskCols = [200, 420, 640];
-    const gA = 285, gB = 345;   // 第一组两排 y
-    const gC = 465, gD = 525;   // 第二组两排 y
-    this.deskRows = [gA, gC, gD]; // NPC 站位引用(行0=gA,行1=gC)
+    // === 中部:工位区——3 列 × 3 排整齐工位阵列（横平竖直，行距一致）===
+    // 每个工位独立朝下（椅背朝玩家），成排对齐，像真实开放办公室的格子间。
+    this.deskCols = [230, 480, 730];
+    const deskRowYs = [300, 430, 560];
+    this.deskRows = deskRowYs; // NPC 站位引用(行0/1/2)
     const deskKeys = ['desk_wood', 'desk_gray'];
     const monKeys = ['mon_a', 'mon_b'];
-    this.deskCols.forEach((cx, ci) => {
-      // 组1:上排椅在南(朝上坐,面向桌子) / 下排椅在北(朝下坐) → 背靠背
-      workstation(cx, gA, deskKeys[ci % 2], monKeys[ci % 2], 'south');
-      workstation(cx, gB + 8, deskKeys[(ci + 1) % 2], monKeys[(ci + 1) % 2], 'north');
-      // 组2
-      workstation(cx, gC, deskKeys[(ci + 1) % 2], monKeys[ci % 2], 'south');
-      workstation(cx, gD + 8, deskKeys[ci % 2], monKeys[(ci + 1) % 2], 'north');
+    const deskItems = ['papers', 'lamp', 'deskscreen', null, 'laptop', null, null, 'papers', 'lamp'];
+    deskRowYs.forEach((ry, ri) => {
+      this.deskCols.forEach((cx, ci) => {
+        const idx = ri * 3 + ci;
+        workstation(cx, ry, deskKeys[idx % 2], monKeys[idx % 2], deskItems[idx]);
+      });
     });
-    // 桌面点缀(散落感:文件/台灯/笔电/座机)
-    deco('papers', this.deskCols[0] + 42, gA - 10, FSCALE * 0.75);
-    deco('laptop', this.deskCols[1] + 40, gB - 4, FSCALE * 0.7);
-    deco('lamp', this.deskCols[1] + 44, gC - 10, FSCALE * 0.7);
-    deco('deskscreen', this.deskCols[2] + 42, gA - 8, FSCALE * 0.65);
-    deco('papers', this.deskCols[2] + 42, gD - 4, FSCALE * 0.7);
 
     // === 右侧:白置物架墙(官方 13,7-14,8 的 2×2 货架) ===
     shelfWhite(MW - 70, 300);
