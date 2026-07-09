@@ -17,10 +17,16 @@ import { AudioSystem } from '../systems/AudioSystem.js';
 // - office_16.png: 256x848, 16x16 tiles；frame 85 = 蓝灰色办公地毯
 // - singles16: 全部 32x48px；roombuilder_16.png: 256x224, 16x16 tiles
 
-const MW = 960, MH = 640;
-const WALL = 32;
-const SCALE = 2;       // 角色缩放
-const FSCALE = 2.5;      // 家具缩放 (32x48 → 64x96)
+const MW = 1280, MH = 960; // SkyOffice 地图像素尺寸（40×30 tiles @ 32px）
+const SCALE = 2;       // 角色缩放（LimeZu 16×32 → 32×64，与 32px 地图协调）
+// 出生点 + NPC 站位（SkyOffice 地图的可行走空地，像素坐标）：
+// 中央走廊约 x600-760；开放工位区在右侧 x900+；会议室左下。
+const SPAWN = { x: 680, y: 620 };
+const NPC_POS = {
+  senior: { x: 980, y: 470 },  // 资深：右侧工位区
+  peer:   { x: 700, y: 500 },  // 同事：中央走廊
+  vet:    { x: 640, y: 300 },  // 前辈：上方（茶水/休息区一带）
+};
 
 // idle 帧（Row0，逐帧目检修正）：f0=右 f1=上 f2=左 f3=下
 const IDLE = { right: 0, up: 1, left: 2, down: 3 };
@@ -124,55 +130,30 @@ export class WorldScene extends Phaser.Scene {
     this.load.spritesheet('bob', './assets/limezu/characters/Bob.png', {
       frameWidth: 16, frameHeight: 32,
     });
-    // office tileset — 地板用
-    this.load.spritesheet('office', './assets/limezu/office_16.png', {
-      frameWidth: 16, frameHeight: 16,
-    });
-    // roombuilder — 墙壁装饰用
-    this.load.spritesheet('roombuilder', './assets/limezu/roombuilder_16.png', {
-      frameWidth: 16, frameHeight: 16,
-    });
-    // 家具 — LimeZu singles。ID 经 10× 放大逐张终审（/tmp/zoom_check.png /tmp/zoom2.png）：
-    // 337-339 是散钞票(≠绿植!) → 绿植真身在 office_16 瓦片图 r50；
-    // 110=橙椅侧面 111=橙老板椅正面 112=橙椅背面；83/84=白桌面板 85=白小桌。
-    const P = './assets/limezu/singles16/Modern_Office_Singles_';
-    const L = (k, id) => this.load.image(k, `${P}${id}.png`);
-    // 桌与桌面物
-    L('desk_wood', 211); L('desk_gray', 214);
-    L('mon_a', 122); L('mon_b', 132); L('keyboard', 128);
-    L('laptop', 140); L('lamp', 141);
-    L('papers', 155); L('deskscreen', 167);
-    // 椅子（10× 终审）：270 灰高背朝右 / 197 灰圆背正面 / 111 橙老板椅正面 / 112 橙椅背面
-    L('chair_up', 112); L('chair_down', 197); L('chair_boss', 111); L('chair_side', 110);
-    // 会议区：画架白板(182-184 橙架白板) + 双屏演示架 + 米色地毯(220)
-    L('easel_a', 182); L('easel_b', 183); L('easel_c', 184);
-    L('duoscreen_dark', 275); L('duoscreen_white', 276);
-    L('rug', 220); L('rug_small', 188);
-    // 休息区沙发（灰网面 L 型 + 单人）
-    L('sofa_L', 205); L('sofa_1', 204);
-    // 储物：186/187 橙红书柜、195 高木柜、191 矮木柜、193 木长凳
-    L('shelf_a', 186); L('shelf_b', 187); L('shelf_tall', 195);
-    L('cab_wood', 191); L('bench', 193);
-    // 茶水间/设备角（10× 终审：173 饮水机 175 售货机 176 暗柜 328 复印台 317 服务器堆）
-    L('water', 173); L('vending', 175); L('fridge_dark', 176);
-    L('copier', 328); L('server', 317); L('fax', 156);
-    // 墙面装饰（证书）
-    L('cert_a', 113); L('cert_b', 114);
+    // ===== SkyOffice 成品办公室地图（MIT 许可）+ 其 tileset（frame 均 32×32，物件除外）=====
+    // 专业设计的多区办公室：开放工位/会议室/休息室/老板办公室，一次加载全套。
+    const SO = './assets/skyoffice';
+    this.load.tilemapTiledJSON('office_map', `${SO}/map/map.json`);
+    this.load.spritesheet('tiles_wall', `${SO}/map/FloorAndGround.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('so_office', `${SO}/tileset/Modern_Office_Black_Shadow.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('so_generic', `${SO}/tileset/Generic.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('so_basement', `${SO}/tileset/Basement.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('so_chairs', `${SO}/items/chair.png`, { frameWidth: 32, frameHeight: 64 });
+    this.load.spritesheet('so_computers', `${SO}/items/computer.png`, { frameWidth: 96, frameHeight: 64 });
+    this.load.spritesheet('so_whiteboards', `${SO}/items/whiteboard.png`, { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet('so_vending', `${SO}/items/vendingmachine.png`, { frameWidth: 48, frameHeight: 72 });
   }
 
   create() {
     AudioSystem.playBgm('office');
-    this.obstacles = this.physics.add.staticGroup();
 
-    this._buildFloor();
-    this._buildWalls();
-    this._placeFurniture();
+    this._buildMap();       // SkyOffice tilemap：地板 + 墙碰撞 + 物件层
     this._createPlayer();
     this._createNpcs();
 
-    // 设计分辨率 1920×1080，世界仍是 960×640 坐标系 → camera zoom 2 让
-    // 视口显示 960×540 世界单位（与旧取景一致），但渲染在 2× 真实像素上 = 锐利。
-    this.cameras.main.setZoom(2);
+    // 设计分辨率 1920×1080；camera zoom 1.6 让视口显示约 1200×675 世界单位，
+    // 既看得清家具细节又有足够视野，渲染在真实像素上 = 锐利。
+    this.cameras.main.setZoom(1.6);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
     this.cameras.main.setBounds(0, 0, MW, MH);
 
@@ -256,162 +237,55 @@ export class WorldScene extends Phaser.Scene {
     // uiCamera 之前 ignore 了世界快照；新 UI 对象不在快照里，故 uiCamera 默认会渲染它——无需额外处理。
   }
 
-  // ==================== 地板 ====================
-  _buildFloor() {
-    const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
-    this.add.tileSprite(0, 0, MW, MH, 'roombuilder', theme.floor)
-      .setOrigin(0)
-      .setDepth(0);
-    // 职业氛围光：极淡的全屏色调,一进场就能感到"行业气质"不同
-    if (theme.tint) {
-      this.add.rectangle(0, 0, MW, MH, theme.tint, 0.06).setOrigin(0).setDepth(2);
-    }
-  }
+  // ==================== SkyOffice 成品办公室地图（MIT）====================
+  // 用 Phaser 原生 tilemap 加载专业设计的多区办公室：地板 tile 层 + 墙碰撞 +
+  // 各物件层（桌椅/电脑/白板/售货机等）。逻辑移植自 SkyOffice Game.ts（同源素材）。
+  _buildMap() {
+    const map = this.make.tilemap({ key: 'office_map' });
+    this.officeMap = map;
 
-  // ==================== 墙壁 ====================
-  _buildWalls() {
-    const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
-    const wallColor = theme.wall;
-    const wallTop = wallColor + 0x101010;
-    const t = WALL;
+    // 地板层：FloorAndGround tileset，带 collides 属性的瓦片作墙壁碰撞
+    const floorTs = map.addTilesetImage('FloorAndGround', 'tiles_wall');
+    const ground = map.createLayer('Ground', floorTs).setDepth(0);
+    ground.setCollisionByProperty({ collides: true });
+    this.groundLayer = ground;
 
-    this.add.rectangle(0, 0, MW, t, wallColor).setOrigin(0).setDepth(10);
-    this.add.rectangle(0, 0, t, MH, wallColor).setOrigin(0).setDepth(10);
-    this.add.rectangle(MW - t, 0, t, MH, wallColor).setOrigin(0).setDepth(10);
-
-    const doorW = 100;
-    const halfL = (MW - doorW) / 2;
-    this.add.rectangle(0, MH - t, halfL, t, wallColor).setOrigin(0, 0).setDepth(10);
-    this.add.rectangle(MW - halfL, MH - t, halfL, t, wallColor).setOrigin(0, 0).setDepth(10);
-
-    this.add.rectangle(0, t - 2, MW, 2, wallTop).setOrigin(0).setDepth(11);
-    this.add.rectangle(t - 2, 0, 2, MH, wallTop).setOrigin(0).setDepth(11);
-    this.add.rectangle(MW - t, 0, 2, MH, wallTop).setOrigin(0).setDepth(11);
-
-    this._zone(MW / 2, t / 2, MW, t);
-    this._zone(t / 2, MH / 2, t, MH);
-    this._zone(MW - t / 2, MH / 2, t, MH);
-    this._zone(halfL / 2, MH - t / 2, halfL, t);
-    this._zone(MW - halfL / 2, MH - t / 2, halfL, t);
-  }
-
-  // ==================== 家具 ====================
-  _placeFurniture() {
-    const place = (key, x, y, s = FSCALE) => {
-      const img = this.add.image(x, y, key)
-        .setScale(s)
-        .setOrigin(0.5, 0.75)
-        .setDepth(y);
-      const tex = this.textures.get(key);
-      if (tex?.source[0]) {
-        const fw = tex.source[0].width * s;
-        const fh = tex.source[0].height * s;
-        this._zone(x, y + fh * 0.12, fw * 0.55, fh * 0.22);
-      }
-      return img;
-    };
-    // 纯装饰(不加碰撞,叠在桌上的小物/墙面挂饰)
-    const deco = (key, x, y, s = FSCALE, dy = null) =>
-      this.add.image(x, y, key).setScale(s).setOrigin(0.5, 0.75).setDepth(dy ?? (y + 2));
-
-    // office_16 瓦片图直贴（frame = row*16 + col）——官方参考图的绿植/黑椅在这里
-    const T = 16 * FSCALE; // 一瓦显示尺寸 40px
-    const tile = (x, y, frame, dy = null) =>
-      this.add.image(x, y, 'office', frame).setScale(FSCALE).setOrigin(0.5, 0.5).setDepth(dy ?? y);
-    // 两瓦竖叠盆栽：底瓦(盆)在 y，顶瓦(叶)在 y-T；碰撞在盆
-    const plant2 = (x, y, topF, botF) => {
-      tile(x, y - T, topF, y);      // 叶(与盆同深度,人从后面走会被正确遮挡)
-      tile(x, y, botF, y);          // 盆
-      this._zone(x, y + 6, 26, 14);
-    };
-    const PLANT = { big: [134, 150], fern: [166, 182], bamboo: [214, 230] };
-    // 白置物架 2×2 瓦（13,7)-(14,8）
-    const shelfWhite = (x, y) => {
-      tile(x - T / 2, y - T, 215, y); tile(x + T / 2, y - T, 216, y);
-      tile(x - T / 2, y, 231, y);     tile(x + T / 2, y, 232, y);
-      this._zone(x, y + 8, 2 * T * 0.8, 16);
-    };
-    // 黑色办公椅（8,4)-(9,4) 两瓦竖叠：看到椅背 → 放桌南侧,人坐着面向桌子。
-    // 缩到 0.8 倍并整体上移，紧贴桌沿，不再是压过桌子的大灰团。
-    const chairBack = (x, y) => {
-      const s = FSCALE * 0.8;
-      this.add.image(x, y - T * 0.8, 'office', 132).setScale(s).setOrigin(0.5).setDepth(y);
-      this.add.image(x, y, 'office', 148).setScale(s).setOrigin(0.5).setDepth(y);
-    };
-
-    // 一个完整工位（紧凑单元，照 LimeZu 官方示例的密度）：
-    // 桌上摆双屏+键盘（占满桌面不空），椅背紧贴桌南沿（玩家看到椅背，人朝屏幕坐）。
-    // deskItem: 桌面右侧再放一件小物（文件/台灯/笔电/座机）增加"有人在用"的生活感。
-    const workstation = (x, y, deskKey, monKey, deskItem = null) => {
-      place(deskKey, x, y);                        // 桌
-      deco(monKey, x - 12, y - 16, FSCALE * 1.05); // 显示器（桌面偏左，略放大填桌）
-      deco('keyboard', x + 6, y - 2, FSCALE * 0.85); // 键盘（显示器前）
-      if (deskItem) deco(deskItem, x + 30, y - 10, FSCALE * 0.6); // 桌面右侧小物
-      chairBack(x, y + 40);                         // 椅背紧贴桌南沿（缩小、贴桌）
-    };
-
-    // ============================================================
-    // 布局蓝图（960×640，参考 LimeZu 官方 Office_Design 示例的分区语言）：
-    //   ┌────────────────────────────┬───────────────┐
-    //   │ 会议角(画架白板+双屏+地毯)   │ 茶水间(右上)   │
-    //   ├────────────────────────────┤ 饮水/售货/冰箱 │
-    //   │ 工位区 2 组×3 列 背靠背      ├───────────────┤
-    //   │ (老陈第一排,江野第二组)      │ 书柜墙(右侧)   │
-    //   ├────────────────────────────┴───────────────┤
-    //   │ 入口(下门) · 复印/服务器角 · 沙发休息区       │
-    //   └─────────────────────────────────────────────┘
-    // ============================================================
-
-    // === 左上:会议角 ===
-    deco('rug', 210, 158, FSCALE * 1.6, 1);          // 地毯(垫底)
-    place('easel_a', 130, 112, FSCALE * 0.95);       // 画架白板×2 贴上墙
-    place('easel_b', 215, 112, FSCALE * 0.95);
-    place('duoscreen_dark', 315, 116, FSCALE * 0.95);// 双屏演示架
-    deco('cert_a', 400, 92, FSCALE * 0.75, 12);      // 墙面证书
-    deco('cert_b', 452, 92, FSCALE * 0.75, 12);
-    place('sofa_1', 130, 200, FSCALE * 0.95);        // 会议角坐凳
-    place('bench', 215, 202, FSCALE * 0.95);         // 木长凳
-    plant2(300, 205, ...PLANT.fern);                 // 绿植点缀
-
-    // === 右上:茶水间 ===
-    place('water', 780, 122, FSCALE * 0.95);
-    place('vending', 852, 118, FSCALE * 1.0);
-    place('fridge_dark', 918, 118, FSCALE * 1.0);
-    plant2(730, 200, ...PLANT.big);
-
-    // === 中部:工位区——3 列 × 3 排整齐工位阵列（横平竖直，行距一致）===
-    // 每个工位独立朝下（椅背朝玩家），成排对齐，像真实开放办公室的格子间。
-    this.deskCols = [230, 480, 730];
-    const deskRowYs = [300, 430, 560];
-    this.deskRows = deskRowYs; // NPC 站位引用(行0/1/2)
-    const deskKeys = ['desk_wood', 'desk_gray'];
-    const monKeys = ['mon_a', 'mon_b'];
-    const deskItems = ['papers', 'lamp', 'deskscreen', null, 'laptop', null, null, 'papers', 'lamp'];
-    deskRowYs.forEach((ry, ri) => {
-      this.deskCols.forEach((cx, ci) => {
-        const idx = ri * 3 + ci;
-        workstation(cx, ry, deskKeys[idx % 2], monKeys[idx % 2], deskItems[idx]);
+    // 物件层 → staticGroup，逐个按 gid 摆放（origin 左下 → 中心换算）。
+    // collidable 的层加入碰撞组，供 _createPlayer 后与玩家碰撞。
+    this.solidGroups = [];
+    const addGroup = (layerName, sheetKey, tilesetName, collidable) => {
+      const ts = map.getTileset(tilesetName);
+      if (!ts) return;
+      const group = this.physics.add.staticGroup();
+      const layer = map.getObjectLayer(layerName);
+      if (!layer) return;
+      layer.objects.forEach((o) => {
+        const ax = o.x + o.width * 0.5;
+        const ay = o.y - o.height * 0.5;
+        const img = group.get(ax, ay, sheetKey, o.gid - ts.firstgid);
+        if (img) img.setDepth(ay);
       });
-    });
+      if (collidable) this.solidGroups.push(group);
+    };
 
-    // === 右侧:白置物架墙(官方 13,7-14,8 的 2×2 货架) ===
-    shelfWhite(MW - 70, 300);
-    shelfWhite(MW - 70, 400);
-    place('cab_wood', MW - 66, 490, FSCALE * 0.95);
+    // 墙（用地板 sheet 的瓦片做立面）+ 各类家具物件
+    addGroup('Wall', 'tiles_wall', 'FloorAndGround', false);
+    addGroup('Objects', 'so_office', 'Modern_Office_Black_Shadow', false);
+    addGroup('ObjectsOnCollide', 'so_office', 'Modern_Office_Black_Shadow', true);
+    addGroup('GenericObjects', 'so_generic', 'Generic', false);
+    addGroup('GenericObjectsOnCollide', 'so_generic', 'Generic', true);
+    addGroup('Basement', 'so_basement', 'Basement', true);
+    // 椅子/电脑/白板/售货机（专用 sheet，帧尺寸各异）
+    addGroup('Chair', 'so_chairs', 'chair', false);
+    addGroup('Computer', 'so_computers', 'computer', true);
+    addGroup('Whiteboard', 'so_whiteboards', 'whiteboard', true);
+    addGroup('VendingMachine', 'so_vending', 'vendingmachine', true);
 
-    // === 左侧:绿植带(office_16 真·盆栽,两瓦竖叠) ===
-    plant2(62, 280, ...PLANT.big);
-    plant2(62, 390, ...PLANT.fern);
-    plant2(62, 500, ...PLANT.bamboo);
-
-    // === 底部:入口两侧 ===
-    // 左下:设备角(复印机+服务器+传真)
-    place('copier', 140, 590, FSCALE * 1.0);
-    place('server', 225, 588, FSCALE * 0.95);
-    place('fax', 295, 585, FSCALE * 0.8);
-    // 右下:休息区(L 沙发 + 盆栽)
-    place('sofa_L', 800, 590, FSCALE * 1.1);
-    plant2(890, 585, ...PLANT.big);
+    // 职业氛围光：极淡全屏色调（保留职业差异化的"行业气质"）
+    const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
+    if (theme.tint) {
+      this.add.rectangle(0, 0, MW, MH, theme.tint, 0.05).setOrigin(0).setDepth(1);
+    }
   }
 
   // ==================== 玩家 ====================
@@ -439,7 +313,7 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    this.player = this.physics.add.sprite(MW / 2, MH - 70, skinKey, IDLE.down);
+    this.player = this.physics.add.sprite(SPAWN.x, SPAWN.y, skinKey, IDLE.down);
     if (skinTint) this.player.setTint(skinTint);
     this.player.setScale(SCALE);
     this.player.setCollideWorldBounds(true);
@@ -447,7 +321,9 @@ export class WorldScene extends Phaser.Scene {
     this.player.body.setOffset(2, 18);
 
     this.physics.world.setBounds(0, 0, MW, MH);
-    this.physics.add.collider(this.player, this.obstacles);
+    // 与地板墙碰撞层 + 各碰撞物件组碰撞（替代旧的 this.obstacles）
+    if (this.groundLayer) this.physics.add.collider(this.player, this.groundLayer);
+    if (this.solidGroups) this.solidGroups.forEach(g => this.physics.add.collider(this.player, g));
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
@@ -456,12 +332,7 @@ export class WorldScene extends Phaser.Scene {
 
   // ==================== NPC ====================
   _createNpcs() {
-    // 工位坐标复用 _placeFurniture 的 cols/rows
-    // NPC 站在工位椅子处（cy+55），朝向决定 idle 帧
-    const C = this.deskCols, R = this.deskRows;
-
-    // 站位与新布局对齐；名字/头衔/寒暄按职业主题注入——
-    // 每个职业进来遇到的是"自己行业的人"。
+    // 站位用 NPC_POS（SkyOffice 地图的可行走空地）；名字/头衔/寒暄按职业主题注入。
     const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
     const [seniorName, seniorTitle] = theme.npcs.senior;
     const [peerName, peerTitle] = theme.npcs.peer;
@@ -469,19 +340,19 @@ export class WorldScene extends Phaser.Scene {
     const defs = [
       {
         id: 'senior', name: seniorName, tex: 'bob',
-        x: C[1], y: R[0] + 58, facing: 'down',
+        x: NPC_POS.senior.x, y: NPC_POS.senior.y, facing: 'down',
         label: `${seniorName} · ${seniorTitle}`, mark: '❗', markColor: '#ffdd33',
         act: 1, // 走近报到 → 播第一幕
       },
       {
         id: 'peer', name: peerName, tex: 'alex',
-        x: C[0], y: R[1] + 58, facing: 'down',
+        x: NPC_POS.peer.x, y: NPC_POS.peer.y, facing: 'down',
         label: `${peerName} · ${peerTitle}`, mark: '💬', markColor: '#7ec8ff',
         line: theme.peerLine,
       },
       {
         id: 'vet', name: vetName, tex: 'amelia',
-        x: 800, y: 195, facing: 'down',
+        x: NPC_POS.vet.x, y: NPC_POS.vet.y, facing: 'down',
         label: `${vetName} · ${vetTitle}`, mark: '💬', markColor: '#7ec8ff',
         line: theme.vetLine,
       },
@@ -494,25 +365,21 @@ export class WorldScene extends Phaser.Scene {
         .setOrigin(0.5, 1)
         .setDepth(d.y);
 
-      // NPC 名牌（工位下方小字，随世界滚动）
-      const nameTag = this.add.text(d.x, d.y + 6, d.name, {
-        fontSize: '11px', color: '#ffffff',
-        backgroundColor: '#00000088', padding: { x: 4, y: 1 },
+      // NPC 名牌（脚下小字，1920 尺度）
+      const nameTag = this.add.text(d.x, d.y + 8, d.name, {
+        fontSize: '13px', color: '#ffffff',
+        backgroundColor: '#00000088', padding: { x: 5, y: 2 },
       }).setOrigin(0.5, 0).setDepth(d.y + 1);
 
-      // 头顶交互浮标（随世界滚动，上下浮动）
-      const markY = d.y - 74;
+      // 头顶交互浮标（上下浮动）
+      const markY = d.y - 78;
       const mark = this.add.text(d.x, markY, d.mark, {
-        fontSize: '20px', color: d.markColor,
+        fontSize: '24px', color: d.markColor,
       }).setOrigin(0.5, 1).setDepth(9000);
       this.tweens.add({
-        targets: mark,
-        y: markY - 6,
+        targets: mark, y: markY - 6,
         duration: 620, yoyo: true, repeat: -1, ease: 'Sine.inOut',
       });
-
-      // NPC 脚下碰撞（挡路，但可走近）
-      this._zone(d.x, d.y - 8, 24, 16);
 
       this.npcs.push({ ...d, spr, mark, nameTag });
     }
@@ -787,10 +654,4 @@ export class WorldScene extends Phaser.Scene {
       });
   }
 
-  // ==================== 碰撞辅助 ====================
-  _zone(cx, cy, w, h) {
-    const z = this.add.zone(cx, cy, w, h);
-    this.physics.add.existing(z, true);
-    this.obstacles.add(z);
-  }
 }
