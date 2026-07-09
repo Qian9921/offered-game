@@ -19,14 +19,19 @@ import { AudioSystem } from '../systems/AudioSystem.js';
 
 const MW = 1280, MH = 960; // SkyOffice 地图像素尺寸（40×30 tiles @ 32px）
 const SCALE = 2;       // 角色缩放（LimeZu 16×32 → 32×64，与 32px 地图协调）
-// 出生点 + NPC 站位（SkyOffice 地图的可行走空地，像素坐标）：
-// 中央走廊约 x600-760；开放工位区在右侧 x900+；会议室左下。
-const SPAWN = { x: 680, y: 620 };
+// 出生点 + NPC 站位（均为脚本验证过的可行走空地，非碰撞、非家具占用）：
+const SPAWN = { x: 752, y: 600 };  // 中央走廊下段，靠入口
 const NPC_POS = {
-  senior: { x: 980, y: 470 },  // 资深：右侧工位区
-  peer:   { x: 700, y: 500 },  // 同事：中央走廊
-  vet:    { x: 640, y: 300 },  // 前辈：上方（茶水/休息区一带）
+  senior: { x: 1008, y: 400 }, // 资深：右侧开放工位区（报到目标）
+  peer:   { x: 752, y: 528 },  // 同事：中央走廊
+  vet:    { x: 240, y: 656 },  // 前辈：左下会议区
 };
+// 背景群演（让办公室有"活人"氛围）：坐/站在开放区的路人同事，纯装饰不可交互。
+const EXTRA_WORKERS = [
+  { x: 848, y: 368, tex: 'amelia' },
+  { x: 1136, y: 400, tex: 'bob' },
+  { x: 976, y: 560, tex: 'alex' },
+];
 
 // idle 帧（Row0，逐帧目检修正）：f0=右 f1=上 f2=左 f3=下
 const IDLE = { right: 0, up: 1, left: 2, down: 3 };
@@ -387,6 +392,12 @@ export class WorldScene extends Phaser.Scene {
       });
 
       this.npcs.push({ ...d, spr, mark, nameTag });
+    }
+
+    // 背景群演：坐/站在开放区的路人同事，让办公室"有活人"（纯装饰，不可交互）
+    for (const w of EXTRA_WORKERS) {
+      this.add.sprite(w.x, w.y, w.tex, IDLE.down)
+        .setScale(SCALE).setOrigin(0.5, 1).setDepth(w.y);
     }
   }
 

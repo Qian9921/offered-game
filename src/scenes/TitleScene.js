@@ -25,23 +25,23 @@ export class TitleScene extends Phaser.Scene {
       });
     }
 
-    // 顶部小字
-    this.add.text(W / 2, H * 0.26, '腾讯云黑客松 · 职场疗愈叙事 RPG', {
-      fontSize: '14px', color: '#6a6a8a', letterSpacing: 2,
+    // 顶部小字（1920 尺度：字号加大防缩放模糊）
+    this.add.text(W / 2, H * 0.24, '腾讯云黑客松 · 职场疗愈叙事 RPG', {
+      fontSize: '24px', color: '#8a8aa0', letterSpacing: 3,
     }).setOrigin(0.5);
 
     // 游戏名(大标题)
     const title = this.add.text(W / 2, H * 0.40, '你 想 成 为 谁', {
-      fontSize: '58px', color: '#ffffff', fontStyle: 'bold', letterSpacing: 6,
+      fontSize: '84px', color: '#ffffff', fontStyle: 'bold', letterSpacing: 10,
     }).setOrigin(0.5);
-    title.setShadow(0, 3, '#d4a35388', 12, false, true);
+    title.setShadow(0, 4, '#d4a35388', 16, false, true);
     // 标题呼吸
     this.tweens.add({ targets: title, scale: 1.02, duration: 2400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-    // 主题金句
+    // 主题金句（两行独立居中，避免标点单独换行）
     this.add.text(W / 2, H * 0.55, '「 你不是要成为一个正确的人，\n而是要认出那个本来的你。 」', {
-      fontSize: '18px', color: '#c8b88a', align: 'center', lineSpacing: 10,
-      wordWrap: { width: W - 120, useAdvancedWrap: true },
+      fontSize: '28px', color: '#c8b88a', align: 'center', lineSpacing: 14,
+      wordWrap: { width: W - 200, useAdvancedWrap: true },
     }).setOrigin(0.5);
 
     // 是否有存档决定按钮布局：有档 → 开始上移 + 下方"继续游戏"；无档 → 只有开始
@@ -91,14 +91,14 @@ export class TitleScene extends Phaser.Scene {
 
     // 底部键位提示(闪烁) — 与全局交互规范统一
     const hintTxt = hasSave ? '回车 继续 · 点击选择' : '点击开始 · 或按 回车 / 空格';
-    const hint = this.add.text(W / 2, H * 0.92, hintTxt, {
-      fontSize: '13px', color: '#6a6a8a',
+    const hint = this.add.text(W / 2, H * 0.90, hintTxt, {
+      fontSize: '22px', color: '#8a8aa0',
     }).setOrigin(0.5);
     this.tweens.add({ targets: hint, alpha: 0.3, duration: 1000, yoyo: true, repeat: -1 });
 
     // 右上角全屏切换按钮
-    const fsBtn = this.add.text(W - 16, 14, '⛶ 全屏', {
-      fontSize: '13px', color: '#8a8a9e',
+    const fsBtn = this.add.text(W - 20, 18, '⛶ 全屏', {
+      fontSize: '20px', color: '#8a8a9e',
     }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
     fsBtn.on('pointerover', () => fsBtn.setColor('#e6e6e6'));
     fsBtn.on('pointerout', () => fsBtn.setColor('#8a8a9e'));
@@ -108,8 +108,8 @@ export class TitleScene extends Phaser.Scene {
     });
 
     // 署名
-    this.add.text(W - 8, H - 6, 'Art: LimeZu · Kenney　AI: 腾讯混元 hy3', {
-      fontSize: '10px', color: '#4a4a5e',
+    this.add.text(W - 12, H - 8, 'Art: LimeZu · Kenney　AI: 腾讯混元 hy3', {
+      fontSize: '16px', color: '#5a5a6e',
     }).setOrigin(1, 1);
   }
 }
