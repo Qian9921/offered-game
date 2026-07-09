@@ -20,6 +20,9 @@ export class OpeningScene extends Phaser.Scene {
   create() {
     AudioSystem.playBgm('title'); // 与标题同氛围（相同 mood 不重启，无缝衔接）
     this.cameras.main.setBackgroundColor('#1a1a2e');
+    // 960×540 硬编码坐标；zoom 2 + 居中让其在 1920 屏铺满原生锐利，坐标零改。
+    this.cameras.main.setZoom(2);
+    this.cameras.main.centerOn(480, 270);
     // 角色皮肤模板（真实游戏立绘,主角形象=进办公室的形象）
     this.charSkins = [
       { key: 'alex', name: '利落短发 · 男', gender: 'male' },

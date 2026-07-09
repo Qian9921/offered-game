@@ -12,18 +12,18 @@ const GROUPS = [
 ];
 const ORDER = GROUPS.flatMap(g => g.stats); // 迷你条顺序 = 面板顺序
 
-// —— 迷你条布局 ——
-const MINI_X = 8, MINI_Y = 8;
-const MINI_BAR_W = 30, MINI_BAR_H = 5, MINI_GAP = 4;
-const MINI_PAD = 8;
+// —— 迷你条布局（1920 屏尺度：整体放大 ~1.9×，清晰可读）——
+const MINI_X = 14, MINI_Y = 14;
+const MINI_BAR_W = 54, MINI_BAR_H = 9, MINI_GAP = 8;
+const MINI_PAD = 14;
 
-// —— 展开面板布局（沿用上一版） ——
-const PANEL_X = 8, PANEL_Y = 8, PANEL_W = 184, PAD = 10;
-const TITLE_H = 15, ROW_H = 17, GROUP_GAP = 6;
+// —— 展开面板布局（1920 尺度）——
+const PANEL_X = 14, PANEL_Y = 14, PANEL_W = 340, PAD = 18;
+const TITLE_H = 26, ROW_H = 30, GROUP_GAP = 10;
 const LABEL_X = PANEL_X + PAD;
-const BAR_X = LABEL_X + 36;
-const BAR_WIDTH = 92, BAR_HEIGHT = 8;
-const VALUE_X = BAR_X + BAR_WIDTH + 6;
+const BAR_X = LABEL_X + 64;
+const BAR_WIDTH = 168, BAR_HEIGHT = 14;
+const VALUE_X = BAR_X + BAR_WIDTH + 12;
 
 const FILL_COLOR = 0x4ec9b0;
 const BG_COLOR = 0x2a2a3a;
@@ -57,11 +57,11 @@ export class StatusBarUI {
   _buildMini() {
     const n = ORDER.length;
     const w = MINI_PAD * 2 + n * MINI_BAR_W + (n - 1) * MINI_GAP;
-    const h = MINI_PAD * 2 + MINI_BAR_H + 12; // 12 = 小标签行
+    const h = MINI_PAD * 2 + MINI_BAR_H + 22; // 22 = 小标签行
     this.mini = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(9998);
 
-    const bg = this.scene.add.rectangle(MINI_X, MINI_Y, w, h, 0x14141f, 0.72)
-      .setOrigin(0, 0).setStrokeStyle(1, 0x3a3a4e, 0.8)
+    const bg = this.scene.add.rectangle(MINI_X, MINI_Y, w, h, 0x14141f, 0.75)
+      .setOrigin(0, 0).setStrokeStyle(2, 0x3a3a4e, 0.9)
       .setInteractive({ useHandCursor: true });
     this.mini.add(bg);
     // 悬停展开，移出收起（星露谷式按需查看）
@@ -69,10 +69,10 @@ export class StatusBarUI {
 
     ORDER.forEach((s, i) => {
       const x = MINI_X + MINI_PAD + i * (MINI_BAR_W + MINI_GAP);
-      const y = MINI_Y + MINI_PAD + 10;
+      const y = MINI_Y + MINI_PAD + 18;
       // 单字标签（健/精/心/压/技/绩/金/热）
       this.mini.add(this.scene.add.text(x + MINI_BAR_W / 2, MINI_Y + MINI_PAD + 1, s.label[0], {
-        fontSize: '9px', color: s.key === 'passion' ? '#ffb080' : '#9a9ab0',
+        fontSize: '15px', color: s.key === 'passion' ? '#ffb080' : '#9a9ab0',
       }).setOrigin(0.5, 0).setResolution(TEXT_RES));
       this.mini.add(this.scene.add.rectangle(x, y, MINI_BAR_W, MINI_BAR_H, BG_COLOR).setOrigin(0, 0));
       const fill = this.scene.add.rectangle(x, y, this._ratio(s.key) * MINI_BAR_W, MINI_BAR_H,
@@ -81,8 +81,8 @@ export class StatusBarUI {
       this.miniFills[s.key] = fill;
     });
     // 展开提示
-    this.mini.add(this.scene.add.text(MINI_X + w + 6, MINI_Y + 8, 'Tab', {
-      fontSize: '9px', color: '#55556a',
+    this.mini.add(this.scene.add.text(MINI_X + w + 10, MINI_Y + 14, 'Tab', {
+      fontSize: '15px', color: '#55556a',
     }).setResolution(TEXT_RES));
   }
 
@@ -99,7 +99,7 @@ export class StatusBarUI {
     let y = PANEL_Y + PAD;
     for (const group of GROUPS) {
       this.panel.add(this.scene.add.text(LABEL_X, y, group.name, {
-        fontSize: '11px', color: '#8a8a9e',
+        fontSize: '18px', color: '#8a8a9e',
       }).setResolution(TEXT_RES));
       y += TITLE_H;
 
@@ -109,7 +109,7 @@ export class StatusBarUI {
         const barCY = y + ROW_H / 2 - 1;
 
         this.panel.add(this.scene.add.text(LABEL_X, barCY, s.label, {
-          fontSize: '12px',
+          fontSize: '20px',
           color: isPassion ? '#ffd6a0' : '#d8d8e2',
           fontStyle: isPassion ? 'bold' : 'normal',
         }).setOrigin(0, 0.5).setResolution(TEXT_RES));
@@ -120,7 +120,7 @@ export class StatusBarUI {
         this.panel.add(fill);
 
         const valText = this.scene.add.text(VALUE_X, barCY, `${value}`, {
-          fontSize: '11px', color: '#f0f0f4',
+          fontSize: '19px', color: '#f0f0f4',
         }).setOrigin(1, 0.5).setResolution(TEXT_RES);
         this.panel.add(valText);
 
@@ -129,8 +129,8 @@ export class StatusBarUI {
       }
       y += GROUP_GAP;
     }
-    this.panel.add(this.scene.add.text(PANEL_X + PANEL_W - 8, PANEL_Y + 6, 'Tab 收起', {
-      fontSize: '9px', color: '#55556a',
+    this.panel.add(this.scene.add.text(PANEL_X + PANEL_W - 12, PANEL_Y + 10, 'Tab 收起', {
+      fontSize: '15px', color: '#55556a',
     }).setOrigin(1, 0).setResolution(TEXT_RES));
   }
 

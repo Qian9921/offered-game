@@ -11,6 +11,9 @@ export class HubScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#1a1a2e');
     this.cameras.main.fadeIn(500, 10, 8, 20);
+    // 本场景用 960×540 硬编码坐标；zoom 2 + 居中让其在 1920×1080 屏铺满且原生锐利，坐标零改。
+    this.cameras.main.setZoom(2);
+    this.cameras.main.centerOn(480, 270);
     AudioSystem.playBgm('title'); // 延续标题氛围（同 mood 无缝）
 
     // 背景氛围光点（与标题页呼应）

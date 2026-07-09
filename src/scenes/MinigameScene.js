@@ -61,6 +61,9 @@ export class MinigameScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor('#0d1117');
+    // 960×540 硬编码坐标；zoom 2 + 居中让其在 1920 屏铺满原生锐利，坐标零改。
+    this.cameras.main.setZoom(2);
+    this.cameras.main.centerOn(480, 270);
     this._buildChrome();
     this._showQuestion();
   }
