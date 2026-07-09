@@ -147,6 +147,11 @@ export class WorldScene extends Phaser.Scene {
   create() {
     AudioSystem.playBgm('office');
 
+    // 安全清场：确保菜单类场景不残留叠加渲染（防标题文字漏进办公室）
+    for (const k of ['TitleScene', 'OpeningScene', 'HubScene']) {
+      if (this.scene.isActive(k) || this.scene.isVisible(k)) this.scene.stop(k);
+    }
+
     this._buildMap();       // SkyOffice tilemap：地板 + 墙碰撞 + 物件层
     this._createPlayer();
     this._createNpcs();
