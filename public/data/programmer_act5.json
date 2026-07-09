@@ -10,7 +10,10 @@
       "text": "白墙。天花板上那根日光灯管有一格在闪。\n我盯着它数,一下,两下,数到第七下的时候,想起来自己在哪儿。",
       "bg": "hospital",
       "choices": [
-        { "label": "……我这是躺了多久", "next": "a5_start2" }
+        {
+          "label": "……我这是躺了多久",
+          "next": "a5_start2"
+        }
       ]
     },
     "a5_start2": {
@@ -19,7 +22,10 @@
       "bg": "hospital",
       "effects": {},
       "choices": [
-        { "label": "「妈,我没事。」（其实我自己都不信）", "next": "a5_start3" }
+        {
+          "label": "「妈,我没事。」（其实我自己都不信）",
+          "next": "a5_start3"
+        }
       ]
     },
     "a5_start3": {
@@ -28,7 +34,10 @@
       "bg": "hospital",
       "effects": {},
       "choices": [
-        { "label": "（继续）", "next": "a5_start4" }
+        {
+          "label": "（继续）",
+          "next": "a5_start4"
+        }
       ]
     },
     "a5_start4": {
@@ -37,7 +46,10 @@
       "bg": "hospital",
       "effects": {},
       "choices": [
-        { "label": "（把手机扣在胸口，闭上眼）", "next": "a5_crossroads" }
+        {
+          "label": "（把手机扣在胸口，闭上眼）",
+          "next": "a5_crossroads"
+        }
       ]
     },
     "a5_crossroads": {
@@ -47,21 +59,98 @@
       "effects": {},
       "note": "★抉择枢纽:用condition按玩家累积状态开放不同路径,导向5结局。末尾兜底choice无条件,保证任何状态都可达。",
       "choices": [
-        { "label": "（打开电脑，回复消息。手上的活，我还得做完）", "next": "a5_backbone_1", "condition": { "performance": { "min": 55 }, "skill": { "min": 55 }, "passion": { "min": 15 } } },
-        { "label": "（新建一个文档，标题打上「辞职申请」）", "next": "a5_quit_1", "condition": { "passion": { "max": 20 }, "stress": { "min": 55 }, "money": { "min": 30 } } },
-        { "label": "（连坐直都费劲。也许身体比我先做了决定）", "next": "a5_health_1", "condition": { "health": { "max": 25 } } },
-        { "label": "（翻出以前收藏的那些东西——不是这行的，是别的）", "next": "a5_switch_1", "condition": { "passion": { "max": 30 }, "skill": { "min": 45 }, "san": { "min": 40 } } },
-        { "label": "（先不急着决定。今晚，我只想跟自己好好待一会儿）", "next": "a5_light_1", "condition": { "passion": { "min": 30 }, "san": { "min": 45 } } },
-        { "label": "（我盯着那截还没枯的绿，很久没动）", "next": "a5_light_1" }
+        {
+          "label": "（打开电脑，回复消息。手上的活，我还得做完）",
+          "next": "a5_backbone_1",
+          "condition": {
+            "performance": {
+              "min": 55
+            },
+            "skill": {
+              "min": 55
+            },
+            "passion": {
+              "min": 15
+            }
+          },
+          "tag": "stay_backbone"
+        },
+        {
+          "label": "（新建一个文档，标题打上「辞职申请」）",
+          "next": "a5_quit_1",
+          "condition": {
+            "passion": {
+              "max": 20
+            },
+            "stress": {
+              "min": 55
+            },
+            "money": {
+              "min": 30
+            }
+          },
+          "tag": "quit"
+        },
+        {
+          "label": "（连坐直都费劲。也许身体比我先做了决定）",
+          "next": "a5_health_1",
+          "condition": {
+            "health": {
+              "max": 25
+            }
+          },
+          "tag": "health_warning"
+        },
+        {
+          "label": "（翻出以前收藏的那些东西——不是这行的，是别的）",
+          "next": "a5_switch_1",
+          "condition": {
+            "passion": {
+              "max": 30
+            },
+            "skill": {
+              "min": 45
+            },
+            "san": {
+              "min": 40
+            }
+          },
+          "tag": "switch"
+        },
+        {
+          "label": "（先不急着决定。今晚，我只想跟自己好好待一会儿）",
+          "next": "a5_light_1",
+          "condition": {
+            "passion": {
+              "min": 30
+            },
+            "san": {
+              "min": 45
+            }
+          },
+          "tag": "self_care"
+        },
+        {
+          "label": "（我盯着那截还没枯的绿，很久没动）",
+          "next": "a5_light_1",
+          "tag": "keep_faith"
+        }
       ]
     },
     "a5_backbone_1": {
       "speaker": "",
       "text": "我把九十九+的消息一条条清完。手指落在键盘上,身体记得该怎么做——哪个模块要改,哪个坑我熟,哪句话该怎么回让对面放心。\n三个月后,我成了组里那个「有他在就不慌」的人。新来的实习生遇到问题先找我,老板汇报时会点我的名。上线不再让我手抖了。\n我确实,变靠谱了。",
       "bg": "office_night",
-      "effects": { "performance": 4, "skill": 3, "stress": 2 },
+      "effects": {
+        "performance": 4,
+        "skill": 3,
+        "stress": 2
+      },
       "choices": [
-        { "label": "（可深夜关掉电脑那一刻，总有点说不清的东西）", "next": "a5_backbone_2" }
+        {
+          "label": "（可深夜关掉电脑那一刻，总有点说不清的东西）",
+          "next": "a5_backbone_2"
+        }
       ]
     },
     "a5_backbone_2": {
@@ -71,18 +160,26 @@
       "effects": {},
       "note": "★老陈点题·骨干线:肯定你的稳，又戳破稳的代价。",
       "choices": [
-        { "label": "（回到家，那封信还没开。今晚，我想读了）", "next": "a5_backbone_letter" }
+        {
+          "label": "（回到家，那封信还没开。今晚，我想读了）",
+          "next": "a5_backbone_letter"
+        }
       ]
     },
     "a5_backbone_letter": {
       "speaker": "",
       "text": "指纹解开加密。一年前那个我,隔着三百六十五天,开口了。\n信不长。末了那句,我一眼就认出是自己的字迹、自己的语气:\n「我是真的喜欢把一个东西亲手做出来的感觉。别把这个弄丢了。」\n我坐在满桌的代码前——我做出来了太多东西了,一个接一个,又快又稳。可我想不起来上一次「激动」是什么时候。\n那个亲手做东西的人,和现在这个把东西做得很好的人,好像不是同一个了。",
       "bg": "apartment_night",
-      "effects": { "san": 2 },
+      "effects": {
+        "san": 2
+      },
       "action": "write_letter",
       "note": "★开信·骨干线:回收act1核心独白，对照'做得好'与'做得动情'的裂缝。催泪克制。",
       "choices": [
-        { "label": "（我把信读了第二遍，然后闭上眼）", "next": "a5_backbone_mindscape" }
+        {
+          "label": "（我把信读了第二遍，然后闭上眼）",
+          "next": "a5_backbone_mindscape"
+        }
       ]
     },
     "a5_backbone_mindscape": {
@@ -93,7 +190,10 @@
       "action": "enter_mindscape",
       "note": "★心象终章·骨干线:稳但空的阴天态；火星仍在但久未使用。一缕微光。",
       "choices": [
-        { "label": "（睁开眼。窗外天快亮了）", "next": "a5_ending_backbone" }
+        {
+          "label": "（睁开眼。窗外天快亮了）",
+          "next": "a5_ending_backbone"
+        }
       ]
     },
     "a5_ending_backbone": {
@@ -109,41 +209,63 @@
       "speaker": "",
       "text": "文档标题打上「辞职申请」四个字。光标闪了几下,我发现自己在笑——不是开心那种,是一种松了很久终于断掉的笑。\n正文其实不用写多长。我删掉了那些「因个人原因」的客套,只留了一句真的:我干不动了,也不想再骗自己还热爱。\n手在抖。可这次的抖,跟上线那晚的抖不一样。那次是怕,这次是……卸下来了。",
       "bg": "apartment_night",
-      "effects": { "stress": -6, "passion": 1 },
+      "effects": {
+        "stress": -6,
+        "passion": 1
+      },
       "choices": [
-        { "label": "（点发送前，我给老陈发了条消息）", "next": "a5_quit_2" }
+        {
+          "label": "（点发送前，我给老陈发了条消息）",
+          "next": "a5_quit_2"
+        }
       ]
     },
     "a5_quit_2": {
       "speaker": "",
       "text": "「陈哥,我想辞职了。」\n他回得很快,只有一句:「早该了。你熬夜那阵子,我看你眼睛就知道,那点光快没了。」\n过了一会儿,他又发来一条:「不丢人。有人是能在一个地方扎根一辈子的,有人不是。认清自己是哪种,比硬撑着更需要勇气。」\n我盯着屏幕,鼻子一酸。这是他第一次,没用毒舌的方式跟我说话。",
       "bg": "apartment_night",
-      "effects": { "san": 3 },
+      "effects": {
+        "san": 3
+      },
       "note": "★老陈点题·裸辞线:难得不毒舌，认可'认清自己'的勇气。",
       "choices": [
-        { "label": "（点下发送。然后，我想起了那封信）", "next": "a5_quit_letter" }
+        {
+          "label": "（点下发送。然后，我想起了那封信）",
+          "next": "a5_quit_letter"
+        }
       ]
     },
     "a5_quit_letter": {
       "speaker": "",
       "text": "信来自一年前那个刚入职、眼里全是光的我。我几乎不敢看。\n最后那句是这样的:\n「我是真的喜欢把一个东西亲手做出来的感觉。别把这个弄丢了。」\n对不起。我把它弄丢了。\n不是不喜欢做东西了,是这个地方、这种做法,把那份喜欢一点点磨没了。我辞职,不是背叛你写下的这句话——恰恰相反,是为了把它捡回来,别让它彻底死在这儿。\n我对着屏幕,轻声说:我先带你离开这儿。剩下的,我们慢慢找。",
       "bg": "apartment_night",
-      "effects": { "san": 2, "passion": 2 },
+      "effects": {
+        "san": 2,
+        "passion": 2
+      },
       "action": "write_letter",
       "note": "★开信·裸辞线:回收核心独白，辞职=为了救回那份喜欢而非背叛它。",
       "choices": [
-        { "label": "（我把信收好，关灯，睡了这几个月来第一个整觉）", "next": "a5_quit_mindscape" }
+        {
+          "label": "（我把信收好，关灯，睡了这几个月来第一个整觉）",
+          "next": "a5_quit_mindscape"
+        }
       ]
     },
     "a5_quit_mindscape": {
       "speaker": "",
       "text": "梦里是那片原野。天还没全晴,云在动,缝里漏下来几道光,落在草上。\n那棵树瘦了,掉了些叶子,可根还扎在土里,没死。河水又开始流了,虽然还浑,但能听见水声了。\n我蹲下来,把手里那粒火星轻轻按进树根旁的泥土里。它没灭。它在等一个我还不知道的地方,重新烧起来。",
       "bg": "window",
-      "effects": { "passion": 2 },
+      "effects": {
+        "passion": 2
+      },
       "action": "enter_mindscape",
       "note": "★心象终章·裸辞线:云缝漏光、河复流、火星入土待燃。一缕微光偏向复苏。",
       "choices": [
-        { "label": "（醒来，是个晴天）", "next": "a5_ending_quit" }
+        {
+          "label": "（醒来，是个晴天）",
+          "next": "a5_ending_quit"
+        }
       ]
     },
     "a5_ending_quit": {
@@ -159,29 +281,45 @@
       "speaker": "",
       "text": "我想坐到电脑前,回那九十九+条消息。可身体不听。\n站起来,眼前一黑,扶住墙才没倒下去。心跳得又快又乱,像谁在胸腔里擂鼓。手指发麻,连握鼠标都握不稳。\n体检单上那几个箭头,不再是纸上的符号了。它们现在住在我身体里,一下一下地提醒我:再往前一步,就是悬崖。",
       "bg": "apartment_night",
-      "effects": { "energy": -3, "stress": 3 },
+      "effects": {
+        "energy": -3,
+        "stress": 3
+      },
       "choices": [
-        { "label": "（我慢慢滑坐到地上，第一次认真地怕了）", "next": "a5_health_2" }
+        {
+          "label": "（我慢慢滑坐到地上，第一次认真地怕了）",
+          "next": "a5_health_2"
+        }
       ]
     },
     "a5_health_2": {
       "speaker": "",
       "text": "我给老板发消息说要请长假。他打字很快:「项目正紧要,能不能再扛扛?」\n我看着这句话,忽然一点都不生气了。他没错,他站在他的位置上。错的是我一直以为,只要我扛,就没有扛不过去的。\n我删掉了准备好的一长串解释,只回了三个字:「我不行。」\n发出去那一刻,天塌了一半,又好像,轻了一半。承认「我不行」,原来这么难,又这么该。",
       "bg": "apartment_night",
-      "effects": { "stress": -3 },
+      "effects": {
+        "stress": -3
+      },
       "choices": [
-        { "label": "（放下手机，我摸出了那封一直没敢开的信）", "next": "a5_health_letter" }
+        {
+          "label": "（放下手机，我摸出了那封一直没敢开的信）",
+          "next": "a5_health_letter"
+        }
       ]
     },
     "a5_health_letter": {
       "speaker": "",
       "text": "一年前的我,写信时大概正年轻力壮,以为身体是取之不尽的。信不长,最后一句是:\n「我是真的喜欢把一个东西亲手做出来的感觉。别把这个弄丢了。」\n我看着这行字,眼泪一下就下来了。\n傻孩子。你光顾着叮嘱我别把喜欢弄丢,却忘了叮嘱我——先别把自己弄坏。\n喜欢的东西,得有个活着的、健康的人,才做得出来啊。这个最要紧的前提,我们俩,当时都没想到。",
       "bg": "apartment_night",
-      "effects": { "san": 2 },
+      "effects": {
+        "san": 2
+      },
       "action": "write_letter",
       "note": "★开信·健康线:回收核心独白，戳破'热爱'的前提是先活着。催泪顶点，克制。",
       "choices": [
-        { "label": "（我把信贴在胸口，闭上眼，让自己彻底休息一次）", "next": "a5_health_mindscape" }
+        {
+          "label": "（我把信贴在胸口，闭上眼，让自己彻底休息一次）",
+          "next": "a5_health_mindscape"
+        }
       ]
     },
     "a5_health_mindscape": {
@@ -192,7 +330,10 @@
       "action": "enter_mindscape",
       "note": "★心象终章·健康线:雾/枯枝/干河的沉沦态，但枝头一缕微光/火星将熄未熄。",
       "choices": [
-        { "label": "（睁开眼。我拨通了那个号码）", "next": "a5_ending_health" }
+        {
+          "label": "（睁开眼。我拨通了那个号码）",
+          "next": "a5_ending_health"
+        }
       ]
     },
     "a5_ending_health": {
@@ -208,41 +349,63 @@
       "speaker": "",
       "text": "我翻出收藏夹深处那些一直舍不得删的东西——不是技术文档,是我偷偷做过的小玩意:给妈写的记账小程序,帮朋友排的婚礼流程图,还有那个没做完的、教小孩认星座的动画。\n它们都很粗糙,可我看着它们,心里是暖的。\n我忽然明白了一件事:这几年我以为自己不爱写代码了。其实我爱的从来不是「写代码」这三个字本身——我爱的,是把一个念头,亲手变成一个能用、能让人笑一下的东西。",
       "bg": "apartment_night",
-      "effects": { "passion": 3, "san": 2 },
+      "effects": {
+        "passion": 3,
+        "san": 2
+      },
       "choices": [
-        { "label": "（这行,只是刚好用到了这一小块。可它要的太多了别的）", "next": "a5_switch_2" }
+        {
+          "label": "（这行,只是刚好用到了这一小块。可它要的太多了别的）",
+          "next": "a5_switch_2"
+        }
       ]
     },
     "a5_switch_2": {
       "speaker": "",
       "text": "我约了老陈喝咖啡,把这个想法说给他听——我可能要离开这行了,去做产品,或者做点跟「把念头做出来」更近的事。\n他没劝我留,搅了搅咖啡,说:「我在这行待了十五年,见过太多人。有的是真爱这行的骨头缝,有的是爱这行里的某样东西,错把整行都扛上了。」\n他看着我:「你是后者。早点认出来,是好事。你那点手艺,换个地方照样值钱——它长在你脑子里,不长在这家公司的服务器上。」",
       "bg": "office_night",
-      "effects": { "san": 3 },
+      "effects": {
+        "san": 3
+      },
       "note": "★老陈点题·转行线:爱的是行里的某样东西而非整行；技能可迁移。",
       "choices": [
-        { "label": "（回到家，我打开了那封一年前的信）", "next": "a5_switch_letter" }
+        {
+          "label": "（回到家，我打开了那封一年前的信）",
+          "next": "a5_switch_letter"
+        }
       ]
     },
     "a5_switch_letter": {
       "speaker": "",
       "text": "一年前的自己,信里最后写着:\n「我是真的喜欢把一个东西亲手做出来的感觉。别把这个弄丢了。」\n我笑了,眼眶却热。\n你看,我一直以为要守住这句话,就得守住这份工作。可其实你说的是「把东西做出来的感觉」——你从来没说,一定得是代码,一定得在这儿。\n是我自己把这句话读窄了。谢谢你替我记着最要紧的那半句。剩下那半句「在哪里做、用什么做」,让我来替你,重新写一遍。",
       "bg": "apartment_night",
-      "effects": { "san": 2, "passion": 2 },
+      "effects": {
+        "san": 2,
+        "passion": 2
+      },
       "action": "write_letter",
       "note": "★开信·转行线:回收核心独白，把'喜欢做出来'与'一定得写代码'解绑。",
       "choices": [
-        { "label": "（我把信存好，也把它当成了新的起点）", "next": "a5_switch_mindscape" }
+        {
+          "label": "（我把信存好，也把它当成了新的起点）",
+          "next": "a5_switch_mindscape"
+        }
       ]
     },
     "a5_switch_mindscape": {
       "speaker": "",
       "text": "梦里那片原野,天开了。云散得干干净净,阳光把草地晒得发亮。\n那棵树还在,可它旁边,不知什么时候冒出了一株新的绿芽——品种和它不一样,叶子形状都不同,却一样精神,一样朝着光长。\n河水清了,分出一条新的支流,拐了个弯,流向我从没走过的方向。\n我把手里那粒火星,凑近了那株新芽。芽尖「腾」地亮了一下,像被点着了。原来它一直在等这个。",
       "bg": "window",
-      "effects": { "passion": 3 },
+      "effects": {
+        "passion": 3
+      },
       "action": "enter_mindscape",
       "note": "★心象终章·转行线:云开、新品种绿芽、河分新支流、火星点亮新芽。治愈向。",
       "choices": [
-        { "label": "（醒来，我开始投第一份简历）", "next": "a5_ending_switch" }
+        {
+          "label": "（醒来，我开始投第一份简历）",
+          "next": "a5_ending_switch"
+        }
       ]
     },
     "a5_ending_switch": {
@@ -258,41 +421,66 @@
       "speaker": "",
       "text": "我没开电脑,也没写辞职信。我给自己煮了碗面,卧了个蛋,坐在窗边慢慢吃完。\n很久没有,好好吃过一顿饭了。\n吃完,我把那盆绿苗端到腿上,一片一片擦掉叶子上的灰。它剩最后一小截绿,可这截绿,是活的。它没等我,自己撑到了现在。\n我忽然很想跟它道个歉,也道声谢。这几个月,我差点把我们俩,都弄丢了。",
       "bg": "apartment_night",
-      "effects": { "health": 2, "san": 3, "stress": -3 },
+      "effects": {
+        "health": 2,
+        "san": 3,
+        "stress": -3
+      },
       "choices": [
-        { "label": "（手机响了，是老陈）", "next": "a5_light_2" }
+        {
+          "label": "（手机响了，是老陈）",
+          "next": "a5_light_2"
+        }
       ]
     },
     "a5_light_2": {
       "speaker": "",
       "text": "老陈没提工作,只问我:「今天,有没有为自己活哪怕一个钟头?」\n我说,我煮了碗面,擦了擦那盆绿苗的叶子。\n他在那头笑了,是我认识他以来,最放松的一声笑:「够了。就这样。你知道我这大半辈子最后悔什么吗?不是没做成哪个项目,是有太多年,我一天都没为自己活过。我把自己活成了公司的一个函数,调用完就等着下一次调用。」\n「你别学我。你还来得及。」",
       "bg": "apartment_night",
-      "effects": { "san": 3, "passion": 2 },
+      "effects": {
+        "san": 3,
+        "passion": 2
+      },
       "note": "★老陈点题·找到光线(最治愈):'未来的你'袒露最深悔恨，把选择权交还给你。",
       "choices": [
-        { "label": "（挂了电话，我拿起了那封一直没敢开的信）", "next": "a5_light_letter" }
+        {
+          "label": "（挂了电话，我拿起了那封一直没敢开的信）",
+          "next": "a5_light_letter"
+        }
       ]
     },
     "a5_light_letter": {
       "speaker": "",
       "text": "指纹解锁。一年前那个满眼是光的我,笔迹还那么用力。\n最后一句是:\n「我是真的喜欢把一个东西亲手做出来的感觉。别把这个弄丢了。」\n我看了很久,没有哭,反而慢慢笑了。\n我想告诉那个你:我差一点就弄丢了。真的差一点。可你看,今晚我煮了碗面,擦了盆绿苗的叶子,还接了个电话——那个「喜欢把东西亲手做出来」的我,他还在。他被埋得很深,但没死。\n谢谢你一年前就替我把他记下来。这封信,你不是写给未来的我的。你是伸过一整年,拉了我一把。",
       "bg": "apartment_night",
-      "effects": { "san": 4, "passion": 3 },
+      "effects": {
+        "san": 4,
+        "passion": 3
+      },
       "action": "write_letter",
       "note": "★开信·找到光线(催泪顶点·克制):回收核心独白，一年前的信成了拉自己一把的手。不煽情，笑中带泪。",
       "choices": [
-        { "label": "（我把信读完，靠在窗边，闭上眼）", "next": "a5_light_mindscape" }
+        {
+          "label": "（我把信读完，靠在窗边，闭上眼）",
+          "next": "a5_light_mindscape"
+        }
       ]
     },
     "a5_light_mindscape": {
       "speaker": "",
       "text": "又是那片原野。这一次,乌云正在退。它们没有轰然散去,是慢慢地、一寸一寸地让开,露出后面早就等在那儿的天光。\n那棵树,枝头冒出了新芽——嫩得发亮的绿,一点一点,顺着枝干往上爬。河水彻底清了,哗啦啦地流,倒映着漫天正在亮起来的窗。\n我摊开手掌,那粒火星还在,比以前更亮了。我没有把它交给谁,也没有埋进土里。我就那样捧着它,任它在我掌心,静静地、稳稳地烧着。\n这一次,它不是被谁点燃的。是我,自己决定,让它继续亮下去。",
       "bg": "window",
-      "effects": { "passion": 4, "san": 4 },
+      "effects": {
+        "passion": 4,
+        "san": 4
+      },
       "action": "enter_mindscape",
       "note": "★心象终章·找到光线(最治愈):云开、新芽发亮、河复流、亮窗；玩家亲手让火星继续燃。呼应act1明亮态。",
       "choices": [
-        { "label": "（睁开眼。屋子里很静，我却觉得，久违地踏实）", "next": "a5_ending_light" }
+        {
+          "label": "（睁开眼。屋子里很静，我却觉得，久违地踏实）",
+          "next": "a5_ending_light"
+        }
       ]
     },
     "a5_ending_light": {

@@ -99,6 +99,10 @@ function ensureSkinAnims(scene, skinKey) {
 // 轻量职业：单文件全剧情（data/light_*.json），无分幕；深度职业走 {career}_act{n}.json
 const LIGHT_CAREERS = ['designer', 'operation', 'teacher', 'doctor', 'civilservant', 'sales', 'lawyer'];
 
+// 深度职业每幕需要"经营"几天（下班睡觉推进）才解锁下一幕剧情——让剧情有节奏、天数有意义。
+// 入职(act1)当天播完就过1天；上手/消耗/至暗各2天；抉择(act5)当天。一段职业生涯约 8 天。
+const ACT_DAYS = { 1: 1, 2: 2, 3: 2, 4: 2, 5: 1 };
+
 // 职业主题：每个职业不同的地板/墙色/氛围光 + NPC 名字与开场寒暄。
 // 场景骨架(工位/会议角/茶水间)共享——像同一栋写字楼里不同公司的楼层,
 // 但色彩、命名、氛围完全不同,一眼能认出"这是哪一行"。
@@ -177,6 +181,9 @@ export class WorldScene extends Phaser.Scene {
     // 多天循环：从 CommuteScene 传入的 day + stats 快照（有则用，无则从存档/默认）
     this._incomingDay = (data && data.day) || null;
     this._incomingStats = (data && data.stats) || null;
+    // 剧情状态机（消除"一口气读完整幕"）：ready=待播本幕剧情 / working=经营期(剧情已播,过日子)
+    // 深度职业才用；轻量职业单文件一次播完。默认从存档恢复。
+    this._story = { phase: 'ready', act: 1, daysInAct: 0 };
     // 续档恢复：若存档与本场职业/幕次一致，取出已存状态供 create 还原（不丢中盘进度）
     this._savedStats = null;
     this._savedQuests = null;   // 供 _loadQuestData restore
@@ -186,16 +193,19 @@ export class WorldScene extends Phaser.Scene {
       if (saved && saved.career === this.career && saved.act === this.act && saved.stats) {
         this._savedStats = saved.stats;
       }
-      // 任务/选择记忆/思维状态/天数无论幕次都保留（跨幕累积）
+      // 任务/选择记忆/思维状态/天数/剧情阶段无论幕次都保留（跨幕累积）
       if (saved && saved.quests) this._savedQuests = saved.quests;
       if (saved && saved.choiceLog) this._savedChoiceLog = saved.choiceLog;
       if (saved && saved.thought) this._savedThought = saved.thought;
       if (saved && saved.daySystem) this._savedDay = saved.daySystem;
+      if (saved && saved.story) this._story = { ...this._story, ...saved.story };
     } catch (e) {}
-    // 进场即存档，保证"继续游戏"总能回到当前职业与幕次（保留已存的任务/选择记忆/思维，不覆盖丢失）
+    // story.act 是权威幕次
+    this.act = this._story.act || this.act;
+    // 进场即存档
     SaveSystem.saveProgress({
       career: this.career, act: this.act, stats: this._savedStats,
-      extra: { quests: this._savedQuests, choiceLog: this._savedChoiceLog, thought: this._savedThought },
+      extra: { quests: this._savedQuests, choiceLog: this._savedChoiceLog, thought: this._savedThought, story: this._story },
     });
   }
 
@@ -261,6 +271,8 @@ export class WorldScene extends Phaser.Scene {
     if (this._savedDay) this.daySystem.restore(this._savedDay);
     if (this._incomingDay) this.daySystem.day = this._incomingDay;
     this.daySystem.setPhase('work'); // 进办公室即 work 阶段
+    this.daySystem.energyBudget = 100; // 每次进办公室=一天工作的开始，精力预算满
+    this._exhaustedPrompted = false;
     this.statusUI = new StatusBarUI(this, this.stateSystem);
     this.dialogueEngine = new DialogueEngine(this, this.stateSystem);
     this._setupDialogueEvents();
@@ -298,6 +310,15 @@ export class WorldScene extends Phaser.Scene {
     const SW = this.scale.width, SH = this.scale.height; // 1920×1080 屏幕坐标系
     this.uiObjects = [];
     const trackUI = (o) => { this.uiObjects.push(o); return o; };
+
+    // 环境滤镜层（bgChange 真换景）+ 情绪染色层（状态演出）——钉屏、UI相机、低 depth 作氛围底。
+    // 用颜色叠加程序化地表现"晨街/大堂/深夜"和"压力/耗竭/心流"，不需要新美术。
+    this._ambientOverlay = trackUI(this.add.rectangle(SW / 2, SH / 2, SW, SH, 0xffffff, 0)
+      .setScrollFactor(0).setDepth(500));
+    this._moodTint = trackUI(this.add.rectangle(SW / 2, SH / 2, SW, SH, 0xffffff, 0)
+      .setScrollFactor(0).setDepth(501));
+    this._moodState = null;      // 当前情绪演出态（避免每帧重设 tween）
+    this._lastHeartbeat = 0;     // 压力心跳音效节流
 
     // 操作提示（屏幕顶部居中）
     trackUI(this.add.text(SW / 2, 14, 'WASD 移动 · E 交互 · T 倾听内心 · ESC 菜单', {
@@ -608,8 +629,11 @@ export class WorldScene extends Phaser.Scene {
     EXTRA_WORKERS.forEach((w, i) => placeChar(w.x, w.y, workerSkins[i % workerSkins.length]));
   }
 
-  update() {
+  update(time) {
     if (!this.player?.body) return;
+
+    // 状态即演出：按主导状态染屏 + 音效 + 减速（让状态条"活"起来）
+    this._updateMoodFx(time || 0);
 
     // HUD 随对话状态自动让路（半透明），单点同步不怕遗漏
     if (this.statusUI && this._lastDim !== this.dialogueActive) {
@@ -647,7 +671,8 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 130;
+    // 耗竭时移动变慢（状态演出：身体拖着走）
+    const speed = 130 * (this._moodSpeedMul || 1);
     const L = this.cursors.left.isDown || this.wasd.A.isDown;
     const R = this.cursors.right.isDown || this.wasd.D.isDown;
     const U = this.cursors.up.isDown || this.wasd.W.isDown;
@@ -752,7 +777,7 @@ export class WorldScene extends Phaser.Scene {
       for (const [k, v] of Object.entries(obj.effect || {})) this.stateSystem.change(k, v);
       Juice.celebrate(this, this.player.x, this.player.y - 30, 0x6aaa6a);
       this._showLine('', `${obj.icon} 喝下去，精神了一点。`);
-      if (obj.cooldown === 'daily') this._cooldowns[obj.id] = true;
+      this._afterInteract(obj);
       return;
     }
     // water_plant：复用仪式弹窗 + 状态
@@ -760,7 +785,7 @@ export class WorldScene extends Phaser.Scene {
       for (const [k, v] of Object.entries(obj.effect || {})) this.stateSystem.change(k, v);
       this._showRitual('🌱 你给绿萝浇了水。它好像在灯光下轻轻颤了一下。');
       Juice.burst(this, this.player.x, this.player.y - 20, 0x6aaa6a, 10);
-      if (obj.cooldown === 'daily') this._cooldowns[obj.id] = true;
+      this._afterInteract(obj);
       return;
     }
     // quest_board：打开任务板（暂停+暂停菜单任务页）
@@ -774,48 +799,48 @@ export class WorldScene extends Phaser.Scene {
       });
       return;
     }
-    // monologue:*：触发内心独白
+    // monologue:*：触发内心独白（如 phone 打电话回家，附带状态回升）
     if (action.startsWith('monologue')) {
       const key = action.split(':')[1] || 'auto';
+      if (obj.effect) for (const [k, v] of Object.entries(obj.effect)) this.stateSystem.change(k, v);
       this._triggerMonologue(key);
-      if (obj.cooldown === 'daily') this._cooldowns[obj.id] = true;
+      this._afterInteract(obj);
       return;
     }
     // minigame:*：走对话引擎的 action 路由（复用现有逻辑）
     if (action.startsWith('minigame')) {
       this.dialogueEngine.emit('action', action, {});
-      if (obj.cooldown === 'daily') this._cooldowns[obj.id] = true;
+      this._afterInteract(obj);
       return;
+    }
+  }
+
+  // 每次成功交互后：设冷却 + 上报 interact 任务进度 + 消耗每日精力预算。
+  // 这是"任务=今日工作 + 精力驱动"的接线核心：交互物件完成推进任务，做多了会累该下班。
+  _afterInteract(obj) {
+    if (obj.cooldown === 'daily') this._cooldowns[obj.id] = true;
+    // 上报任务进度（interact 目标——修复"progress('interact') 从未调用"的断裂）
+    if (this.questSystem) {
+      this.questSystem.progress('interact', obj.id);
+      this._updateNpcMarks();
+    }
+    // 消耗每日精力预算，耗尽提示下班
+    if (this.daySystem) {
+      const left = this.daySystem.spendEnergy(12);
+      this._updateDayHud();
+      if (left <= 0 && !this._exhaustedPrompted) {
+        this._exhaustedPrompted = true;
+        this._showThoughtBubble('（今天有点累了……该下班回家了。）', '#f0c060');
+      }
     }
   }
 
   _interact(npc) {
     if (this.dialogueActive) return;
 
-    // 老陈 → 触发正式剧情第一幕
-    if (npc.act) {
-      this.dialogueActive = true;
-      this.ePrompt.setVisible(false);
-      this.guideText.setVisible(false);
-      this.act = npc.act;
-      // 轻量职业单文件；深度职业按幕分文件
-      const url = LIGHT_CAREERS.includes(this.career)
-        ? `./data/light_${this.career}.json`
-        : `./data/${this.career}_act${this.act}.json`;
-      console.log('[WorldScene] 走近老陈,加载剧情:', url);
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`加载剧情失败:HTTP ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          this.dialogueEngine._clearUI();
-          this.dialogueEngine.start(data);
-        })
-        .catch(err => {
-          console.error('[WorldScene]', err.message);
-          this.dialogueActive = false;
-        });
+    // 导师(senior) → 剧情状态机（剧情=里程碑，经营期=日常，交替推进）
+    if (npc.id === 'senior' || npc.act) {
+      this._interactSenior(npc);
       return;
     }
 
@@ -854,6 +879,88 @@ export class WorldScene extends Phaser.Scene {
     if (npc.line) this._showNpcLineWithMemory(npc);
   }
 
+  // ==================== 导师剧情状态机（连贯性核心）====================
+  // 让"剧情"成为里程碑、"经营期"成为日常，二者交替推进——消除"一口气读完整幕"。
+  // 轻量职业：走近一次播完整单文件到 ending（无经营期）。
+  // 深度职业：ready→播本幕剧情→working(经营期，做任务过日子)→天数攒够→播下一幕。
+  _interactSenior(npc) {
+    // 导师身上有可交付任务 → 优先交付（senior 是多数任务 giver）
+    if (this.questSystem) {
+      for (const q of this.questSystem.active()) {
+        if (q.giver === 'senior' && this.questSystem.isReady(q.id)) {
+          this.questSystem.complete(q.id);
+          this._showLine(npc.name, `「${q.title}」完成！干得漂亮。`);
+          this._updateNpcMarks();
+          return;
+        }
+      }
+    }
+
+    // 轻量职业：单文件一次播完
+    if (LIGHT_CAREERS.includes(this.career)) {
+      this._playStory(`./data/light_${this.career}.json`);
+      return;
+    }
+
+    // 深度职业状态机
+    if (this._story.phase === 'ready') {
+      // 播本幕剧情
+      this._story.act = this.act;
+      this._playStory(`./data/${this.career}_act${this.act}.json`);
+      return;
+    }
+    // working 经营期：检查能否推进下一幕
+    if (this._story.phase === 'working') {
+      const need = ACT_DAYS[this.act] || 1;
+      if (this._story.daysInAct >= need) {
+        // 攒够天数 → 推进下一幕：act+1，回到 ready，立即播下一幕剧情
+        this.act += 1;
+        this._story.act = this.act;
+        this._story.phase = 'ready';
+        this._story.daysInAct = 0;
+        this._persistStory();
+        this._playStory(`./data/${this.career}_act${this.act}.json`);
+      } else {
+        // 未到时候 → 提示还需过几天（引导玩家去做任务、下班睡觉）
+        const left = need - this._story.daysInAct;
+        this._showLine(npc.name, `这阶段的活儿还没到收尾的时候。\n再忙上${left}天吧——做做手头的任务，累了就下班回家。等你缓过来，我们再聊下一步。`);
+      }
+      return;
+    }
+  }
+
+  // 播一段剧情 JSON（提取自原 senior 逻辑）。播完由 dialogueEngine 的 action 驱动后续。
+  _playStory(url) {
+    this.dialogueActive = true;
+    this.ePrompt.setVisible(false);
+    if (this.guideText) this.guideText.setVisible(false);
+    fetch(url)
+      .then(res => { if (!res.ok) throw new Error(`加载剧情失败:HTTP ${res.status}`); return res.json(); })
+      .then(data => {
+        this.dialogueEngine._clearUI();
+        this.dialogueEngine.start(data);
+      })
+      .catch(err => {
+        console.error('[WorldScene]', err.message);
+        this.dialogueActive = false;
+      });
+  }
+
+  // 持久化剧情状态（story）到存档
+  _persistStory() {
+    const saved = SaveSystem.load() || {};
+    SaveSystem.saveProgress({
+      career: this.career, act: this.act, stats: this.stateSystem.getAll(),
+      extra: {
+        quests: this.questSystem.serialize(),
+        choiceLog: this.choiceLog.serialize(),
+        thought: this.thoughtSystem ? this.thoughtSystem.serialize() : null,
+        daySystem: this.daySystem ? this.daySystem.serialize() : null,
+        story: this._story,
+      },
+    });
+  }
+
   // NPC 记忆台词：AI 按玩家选择历史生成个性化反应，让"世界记得你"。
   // 门槛：有足够选择记录 + 30% 概率触发（保持稀有）；否则/失败用固定寒暄。
   _showNpcLineWithMemory(npc) {
@@ -879,30 +986,46 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // 轻量单句气泡（非正式剧情）——钉屏 UI 相机，1920 尺度，点击/E/空格关闭
+  // 框高按正文实测高度自适应（先量后定），根治多行文字溢出遮字
   _showLine(name, text) {
     this.dialogueActive = true;
     this.ePrompt.setVisible(false);
     if (this.guideText) this.guideText.setVisible(false);
     const { width, height } = this.scale;
     const bw = Math.min(1400, width - 120);
-    const bx = (width - bw) / 2, by = height - 200;
-    const PAD = 32;
+    const bx = (width - bw) / 2;
+    const PAD = 28;
+    const wrapW = bw - PAD * 2;
     const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10000);
     // 全屏输入层（点任何位置关闭，永不错位）
     const hit = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.001)
       .setScrollFactor(0).setInteractive();
     c.add(hit);
-    c.add(this.add.rectangle(bx + bw / 2, by + 80, bw, 160, 0x0a0a14, 0.86).setStrokeStyle(2, 0xd4a353, 0.5));
-    if (name) c.add(this.add.text(bx + PAD, by + 20, name, {
-      fontSize: '22px', color: '#ffd24d', fontStyle: 'bold',
-    }));
-    const bodyTxt = this.add.text(bx + PAD, by + 56, text, {
-      fontSize: '26px', color: '#ffffff', lineSpacing: 8, wordWrap: { width: bw - PAD * 2, useAdvancedWrap: true },
-    });
+
+    // 先量正文高度 → 据此定框高
+    const nameH = name ? 34 : 0;
+    const hintH = 26;
+    const bodyTxt = this.add.text(0, 0, text, {
+      fontSize: '26px', color: '#ffffff', lineSpacing: 8,
+      wordWrap: { width: wrapW, useAdvancedWrap: true },
+    }).setOrigin(0, 0);
+    const bodyH = bodyTxt.height;
+    const boxH = PAD + nameH + bodyH + 14 + hintH + PAD;
+    const by = height - 40 - boxH; // 框底距屏幕底 40
+
+    c.add(this.add.rectangle(bx + bw / 2, by + boxH / 2, bw, boxH, 0x0a0a14, 0.92).setStrokeStyle(2, 0xd4a353, 0.5));
+    let ty = by + PAD;
+    if (name) {
+      c.add(this.add.text(bx + PAD, ty, name, {
+        fontSize: '22px', color: '#ffd24d', fontStyle: 'bold',
+      }).setOrigin(0, 0));
+      ty += nameH;
+    }
+    bodyTxt.setPosition(bx + PAD, ty);
     c.add(bodyTxt);
     this._lineBodyText = bodyTxt; // 供 AI 记忆台词覆盖
     this._lineActive = true;
-    c.add(this.add.text(bx + bw - PAD, by + 150, '［点击 / E 继续］', {
+    c.add(this.add.text(bx + bw - PAD, by + boxH - PAD + 4, '［点击 / E 继续］', {
       fontSize: '18px', color: '#9aa0a6',
     }).setOrigin(1, 1));
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
@@ -952,20 +1075,109 @@ export class WorldScene extends Phaser.Scene {
       });
   }
 
-  // 刷新 NPC 头顶任务标记（可接 ❗ / 可交付 ❓）
+  // 刷新 NPC 头顶标记：导师按剧情阶段（❗待剧情/可推进，💤经营中），其余 NPC 按任务。
   _updateNpcMarks() {
     if (!this.npcs || !this.questSystem) return;
     const ctx = { act: this.act };
     for (const npc of this.npcs) {
-      const mark = this.questSystem.npcMark(npc.id, ctx);
-      if (mark === 'available' && npc.mark) {
-        npc.mark.setText('❗').setColor('#ffdd33');
-      } else if (mark === 'deliver' && npc.mark) {
-        npc.mark.setText('❓').setColor('#7eff7e');
-      } else if (mark === 'progress' && npc.mark) {
-        npc.mark.setText('…').setColor('#7ec8ff');
+      if (!npc.mark) continue;
+      // 导师：剧情状态机标记（深度职业）
+      if (npc.id === 'senior' && !LIGHT_CAREERS.includes(this.career)) {
+        if (this._story.phase === 'ready') {
+          npc.mark.setText('❗').setColor('#ffdd33'); // 待播本幕剧情
+        } else if (this._story.phase === 'working') {
+          const need = ACT_DAYS[this.act] || 1;
+          if (this._story.daysInAct >= need) npc.mark.setText('❗').setColor('#ffdd33'); // 可推进下一幕
+          else npc.mark.setText('💤').setColor('#8a8a9e'); // 经营中，还没到时候
+        }
+        // 导师身上有可交付任务时优先显示 ❓
+        for (const q of this.questSystem.active()) {
+          if (q.giver === 'senior' && this.questSystem.isReady(q.id)) { npc.mark.setText('❓').setColor('#7eff7e'); break; }
+        }
+        continue;
       }
-      // 无任务标记的 NPC 保持原样（寒暄用 💬）
+      // 其余 NPC：按任务
+      const mark = this.questSystem.npcMark(npc.id, ctx);
+      if (mark === 'available') npc.mark.setText('❗').setColor('#ffdd33');
+      else if (mark === 'deliver') npc.mark.setText('❓').setColor('#7eff7e');
+      else if (mark === 'progress') npc.mark.setText('…').setColor('#7ec8ff');
+    }
+  }
+
+  // ==================== 环境换景（bgChange 真生效）====================
+  // 用颜色滤镜叠加程序化表现不同环境氛围——晨街/大堂/白天/深夜加班，配合现有办公室地图。
+  _applyAmbient(bg) {
+    const MOODS = {
+      street_morning:  { color: 0xffdca8, alpha: 0.14 }, // 晨光暖黄
+      office_lobby:    { color: 0x9ab4dc, alpha: 0.12 }, // 冷调大堂
+      office_day:      { color: 0xffffff, alpha: 0.00 }, // 白天中性
+      office_corridor: { color: 0x4a5a7e, alpha: 0.18 }, // 走廊偏暗
+      office_night:    { color: 0x1e2e52, alpha: 0.30 }, // 深夜
+      office_996:      { color: 0x18183e, alpha: 0.36 }, // 996 至暗
+      office_evening:  { color: 0x6a5a7e, alpha: 0.16 }, // 黄昏
+    };
+    const m = MOODS[bg] || { color: 0xffffff, alpha: 0.05 };
+    if (!this._ambientOverlay) return;
+    this._ambientOverlay.setFillStyle(m.color);
+    this.tweens.add({ targets: this._ambientOverlay, alpha: m.alpha, duration: 800, ease: 'Sine.inOut' });
+  }
+
+  // ==================== 状态即演出（情绪视觉化）====================
+  // 按主导状态给屏幕染色 + 音效/减速，让 8 个状态条"活"起来（不只是数字）。
+  // 优先级：耗竭 > 高压 > 心流 > 平静。在 update 里每帧轻量调用。
+  _updateMoodFx(time) {
+    if (!this._moodTint || !this.stateSystem) return;
+    const s = this.stateSystem.getAll();
+    let mood, color, alpha, speedMul = 1;
+    if (s.health <= 30 || s.energy <= 22) {
+      mood = 'drained'; color = 0x6a5a3a; alpha = 0.22; speedMul = 0.72; // 耗竭：灰褐+减速
+    } else if (s.stress >= 70) {
+      mood = 'stress'; color = 0x8a1a1a; alpha = 0.16;                    // 高压：泛红
+    } else if (s.passion >= 70 && s.stress < 45) {
+      mood = 'flow'; color = 0xffd070; alpha = 0.10;                      // 心流：暖金
+    } else {
+      mood = 'calm'; color = 0xffffff; alpha = 0;
+    }
+    this._moodSpeedMul = speedMul;
+    if (this._moodState !== mood) {
+      this._moodState = mood;
+      this._moodTint.setFillStyle(color);
+      this.tweens.add({ targets: this._moodTint, alpha, duration: 900, ease: 'Sine.inOut' });
+    }
+    // 高压：心跳音效（每 ~1.4s 一次，节流）
+    if (mood === 'stress' && time - this._lastHeartbeat > 1400) {
+      this._lastHeartbeat = time;
+      AudioSystem._tone(70, 55, 'sine', 0.16, 0.10);
+    }
+  }
+
+  // 关键抉择的即时演出：让每个有意义的选择"有重量"，而不只是"选完点下一句"。
+  // 按 tag 分类给屏幕反馈——负面选择低沉红闪、正面选择暖色轻响、人生抉择更强演出。
+  _reactToChoice(choice) {
+    if (!choice) return;
+    const tag = choice.tag;
+    const eff = choice.effects || {};
+    // 人生抉择（act5 结局分叉）→ 强演出：闪 + 粒子 + 音
+    const bigChoices = ['stay_backbone', 'quit', 'health_warning', 'switch', 'keep_faith'];
+    if (bigChoices.includes(tag)) {
+      Juice.flash(this, 0xffffff, 200);
+      Juice.burst(this, this.scale.width / 2, this.scale.height / 2, 0xf0d080, 18);
+      AudioSystem.levelUp();
+      return;
+    }
+    // 负面选择（伤身/报喜不报忧/糊弄）→ 低沉红闪
+    const negative = ['overwork', 'report_good_news', 'slack_off', 'numb'];
+    if (negative.includes(tag) || (eff.stress > 0 && (eff.health < 0 || eff.passion < 0))) {
+      Juice.flash(this, 0x8a1a1a, 150);
+      AudioSystem._tone(160, 110, 'sawtooth', 0.18, 0.10);
+      return;
+    }
+    // 正面选择（照顾自己/守初心/坦诚/协作/共情）→ 暖色轻响
+    const positive = ['self_care', 'keep_faith', 'honest_with_family', 'collaborate', 'empathy', 'ask_help', 'steady'];
+    if (positive.includes(tag) || eff.san > 0 || eff.passion > 0) {
+      Juice.flash(this, 0xffe0a0, 120);
+      AudioSystem.success();
+      return;
     }
   }
 
@@ -1098,9 +1310,7 @@ export class WorldScene extends Phaser.Scene {
     const eng = this.dialogueEngine;
     const self = this;
 
-    eng.on('bgChange', bg => {
-      console.log('[WorldScene] bgChange:', bg);
-    });
+    eng.on('bgChange', bg => self._applyAmbient(bg));
 
     eng.on('dialogueEnd', () => {
       self.dialogueActive = false;
@@ -1116,6 +1326,8 @@ export class WorldScene extends Phaser.Scene {
           tag: choice.tag || null, // 剧情数据可给 choice 加 tag 标注行为类型
         });
       }
+      // 关键抉择即时演出：让"选择有重量"——按 tag/effects 给屏幕反馈
+      self._reactToChoice(choice);
     });
 
     eng.on('action', (action, node) => {
@@ -1128,26 +1340,30 @@ export class WorldScene extends Phaser.Scene {
           break;
         case 'minigame:coding':
         case 'minigame:review':
-        case 'minigame:affairs':
+        case 'minigame:affairs': {
+          const mgType = action.split(':')[1];
+          // 程序员的 coding 用「Debug 找茬」动作玩法（点出bug行）；其余职业用选择题
+          const useDebug = (mgType === 'coding' && self.career === 'programmer');
+          const gameScene = useDebug ? 'DebugGameScene' : 'MinigameScene';
+          const onComplete = (result) => {
+            // 按成绩反哺状态:全对 skill+5 passion+4;部分 skill+3;全错 stress+3 但 skill+1(试错也是学)
+            const total = result?.total || 3, ok = result?.correct || 0;
+            if (ok === total) { self.stateSystem.change('skill', 5); self.stateSystem.change('passion', 4); }
+            else if (ok > 0) { self.stateSystem.change('skill', 3); self.stateSystem.change('energy', -3); }
+            else { self.stateSystem.change('stress', 3); self.stateSystem.change('skill', 1); }
+            self.questSystem.progress('minigame', mgType); // 上报任务进度
+            self._updateNpcMarks();
+            self.scene.stop(gameScene);
+            self.scene.resume();
+          };
           self.scene.pause();
-          self.scene.launch('MinigameScene', {
-            type: action.split(':')[1],
-            career: self.career,          // 让小游戏加载职业专属题库
-            fromScene: null,
-            onComplete: (result) => {
-              // 按成绩反哺状态:全对 skill+5 passion+4;部分 skill+3;全错 stress+3 但 skill+1(试错也是学)
-              const total = result?.total || 3, ok = result?.correct || 0;
-              if (ok === total) { self.stateSystem.change('skill', 5); self.stateSystem.change('passion', 4); }
-              else if (ok > 0) { self.stateSystem.change('skill', 3); self.stateSystem.change('energy', -3); }
-              else { self.stateSystem.change('stress', 3); self.stateSystem.change('skill', 1); }
-              // 上报任务进度（minigame 类型匹配 objective kind=minigame）
-              self.questSystem.progress('minigame', action.split(':')[1]);
-              self._updateNpcMarks();
-              self.scene.stop('MinigameScene');
-              self.scene.resume();
-            },
-          });
+          if (useDebug) {
+            self.scene.launch('DebugGameScene', { act: self.act, fromScene: null, onComplete });
+          } else {
+            self.scene.launch('MinigameScene', { type: mgType, career: self.career, fromScene: null, onComplete });
+          }
           break;
+        }
         case 'enter_mindscape':
           self.scene.pause();
           self.scene.launch('MindscapeScene', {
@@ -1240,20 +1456,30 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ---------- 仪式弹窗（钉屏）----------
+  // 框高按文本实测高度自适应（先量后定），长文案不再顶穿框
   _showRitual(text) {
     const { width, height } = this.scale;
     const overlay = this.add.container(0, 0).setScrollFactor(0).setDepth(10001);
     // 全屏遮罩兼点击层（点任何处关闭）
     const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.55).setInteractive();
     overlay.add(mask);
-    overlay.add(this.add.rectangle(width / 2, height / 2 - 30, 820, 220, 0x1e1e2e, 0.97).setStrokeStyle(2, 0xd4a353, 0.6));
-    overlay.add(this.add.text(width / 2, height / 2 - 55, text, {
+
+    const boxW = 820, wrapW = 720, PAD = 44, hintH = 40;
+    // 先量正文高度
+    const bodyTxt = this.add.text(0, 0, text, {
       fontSize: '30px', color: '#f0d080',
-      wordWrap: { width: 720, useAdvancedWrap: true }, align: 'center', lineSpacing: 8,
-    }).setOrigin(0.5));
-    overlay.add(this.add.text(width / 2, height / 2 + 55, '点击任意处继续', {
+      wordWrap: { width: wrapW, useAdvancedWrap: true }, align: 'center', lineSpacing: 8,
+    }).setOrigin(0.5, 0);
+    const bodyH = bodyTxt.height;
+    const boxH = PAD + bodyH + 20 + hintH + PAD;
+    const boxTop = height / 2 - boxH / 2;
+
+    overlay.add(this.add.rectangle(width / 2, height / 2, boxW, boxH, 0x1e1e2e, 0.97).setStrokeStyle(2, 0xd4a353, 0.6));
+    bodyTxt.setPosition(width / 2, boxTop + PAD);
+    overlay.add(bodyTxt);
+    overlay.add(this.add.text(width / 2, boxTop + boxH - PAD + 6, '点击任意处继续', {
       fontSize: '20px', color: '#8a8a9e',
-    }).setOrigin(0.5));
+    }).setOrigin(0.5, 1));
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(overlay);
 
     const close = () => overlay.destroy(true);
@@ -1265,40 +1491,33 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ---------- 加载下一幕 ----------
+  // 剧情内 next_act 触发：不再立即播下一幕，而是进入「经营期」。
+  // 玩家看完本幕剧情 → 回办公室过日子（做任务/交互/下班睡觉推进天数）→ 攒够天数走近导师推进下一幕。
+  // 这样剧情被天数切段、天数有了意义、任务是日常——三个时钟拧成一根绳。
   _loadNextAct() {
     this.dialogueEngine._clearUI();
+    this.dialogueActive = false;
+    // 若下一幕不存在（act5 后）→ 直接进结局
     const next = this.act + 1;
-    const url = `./data/${this.career}_act${next}.json`;
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        this.act = next;
-        // 过幕即存，含状态数值 + 任务进度 + 选择记忆
-        SaveSystem.saveProgress({
-          career: this.career, act: this.act, stats: this.stateSystem.getAll(),
-          extra: {
-            quests: this.questSystem.serialize(),
-            choiceLog: this.choiceLog.serialize(),
-            thought: this.thoughtSystem ? this.thoughtSystem.serialize() : null,
-          },
-        });
-        this._updateNpcMarks(); // 新幕刷新任务标记
-        this.dialogueEngine._clearUI();
-        this.dialogueEngine.start(data);
-        // 幕次推进：推一条家人消息（每幕1条，呼应"低频高杀伤"的设计）
-        this._showFamilyByAct(next);
-      })
-      .catch(() => {
-        SceneRouter.goto(this, 'EndingScene', {
-          ending: this.career,
-          career: this.career,
-          stats: this.stateSystem.getAll(),
-          choiceLog: this.choiceLog.serialize(),
-        });
+    if (next > 5) {
+      SceneRouter.goto(this, 'EndingScene', {
+        ending: this.career, career: this.career,
+        stats: this.stateSystem.getAll(), choiceLog: this.choiceLog.serialize(),
       });
+      return;
+    }
+    // 进入本幕经营期
+    this._story.phase = 'working';
+    this._story.act = this.act;
+    this._story.daysInAct = 0;
+    this._persistStory();
+    this._updateNpcMarks();
+    // 本幕家人消息 + 引导提示"去过日子"
+    this._showFamilyByAct(this.act);
+    const need = ACT_DAYS[this.act] || 1;
+    this.time.delayedCall(400, () => {
+      this._showRitual(`📅 这一阶段的故事告一段落。\n接下来的${need}天，好好经营你的职场日常——\n做做任务、和同事聊聊、累了就下班回家。\n等你过完这几天，去找老陈聊下一步。`);
+    });
   }
 
 }

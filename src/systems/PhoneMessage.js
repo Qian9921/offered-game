@@ -140,8 +140,20 @@ export class PhoneMessage {
     if (this.ui) this._cleanup();
   }
 
+  // 用与渲染完全相同的测量逻辑算总高——面板高度贴合实际内容，不再"框比内容小"
   _contentHeight(messages) {
-    const perMsg = 21 + 48 + 24; // sender 行 + 气泡(最小) + 间隔
-    return messages.length * perMsg + 16; // 底部留白
+    const scene = this.scene;
+    const panelW = 420;
+    let h = 20; // 顶部留白
+    for (const msg of messages) {
+      h += 21; // sender 行
+      const probe = scene.add.text(-9999, -9999, msg.text, {
+        fontSize: '18px', wordWrap: { width: panelW - 96, useAdvancedWrap: true },
+      }).setVisible(false);
+      const bubbleH = Math.max(48, probe.height + 24); // 与渲染处一致
+      probe.destroy();
+      h += bubbleH + 24;
+    }
+    return h + 16; // 底部留白
   }
 }

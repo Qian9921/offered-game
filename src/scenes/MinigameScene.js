@@ -255,21 +255,19 @@ export class MinigameScene extends Phaser.Scene {
       fontSize: '13px', color: '#484f58',
     }).setOrigin(0.5));
 
-    // 2 秒自动推进，或点击跳过
+    // 2 秒自动推进，或点击跳过。
+    // 关键：先移除监听再置空，否则监听泄漏到下一题、玩家点第一个选项就被残留监听吞掉一题
+    // （这是"3题只显示2题"的根因）
     const advance = () => {
-      this._advanceTimer = null;
-      this._advanceHandler = null;
+      if (this._advanceTimer) { this._advanceTimer.remove(); this._advanceTimer = null; }
+      if (this._advanceHandler) { this.input.off('pointerdown', this._advanceHandler); this._advanceHandler = null; }
       this.idx++;
       if (this.idx < this.questions.length) this._showQuestion();
       else this._showResult();
     };
     this._advanceTimer = this.time.delayedCall(2000, advance);
-    const onClick = () => {
-      if (this._advanceTimer) { this._advanceTimer.remove(); this._advanceTimer = null; }
-      advance();
-    };
-    this._advanceHandler = onClick;
-    this.input.on('pointerdown', onClick);
+    this._advanceHandler = advance;
+    this.input.on('pointerdown', advance);
   }
 
   // ---------- 结果页 ----------

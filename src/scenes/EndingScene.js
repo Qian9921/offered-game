@@ -124,48 +124,43 @@ export class EndingScene extends Phaser.Scene {
   }
 
   // ===== 渲染报告卡片 =====
+  // 全程「先量文字实际高度、再定位」——根治遮字。卡片高度由内容反推，不写死。
   _render(p) {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
     if (this.uiContainer) this.uiContainer.destroy(true);
     const ui = this.add.container(0, 0);
     this.uiContainer = ui;
 
-    const cardW = 900, cardH = 500;
-    const cardX = (width - cardW) / 2, cardY = 20;
+    const cardW = 900;
+    const cardX = (width - cardW) / 2, cardY = 24;
     const innerL = cardX + 24;
     const innerW = cardW - 48;
 
-    // 卡片底板 + 金线（立即显示，作为揭示的"舞台"）
-    ui.add(this.add.rectangle(width / 2, cardY + cardH / 2, cardW, cardH, 0x1e1e30));
-    ui.add(this.add.rectangle(width / 2, cardY, cardW, 3, 0xd4a353).setOrigin(0.5, 0));
-
-    // 收集所有可揭示的"段落组"——每组是一组 UI 元素，按顺序淡入上滑。
-    // 标题/副标题/AI标记/分隔线也作为揭示组，让整张卡片像礼物一样逐层打开。
     const revealGroups = [];
     const addGroup = () => { const g = []; revealGroups.push(g); return g; };
 
-    let y = cardY + 30;
+    // 所有文本用 origin(x, 0) 顶对齐，y 就是顶部，height 可直接累加（安全前进）
+    let y = cardY + 28;
     const g0 = addGroup();
-    g0.push(this.add.text(width / 2, y, '你的心之画像', {
+    const title = this.add.text(width / 2, y, '你的心之画像', {
       fontSize: '28px', color: '#d4a353', fontStyle: 'bold',
-    }).setOrigin(0.5));
-    y += 34;
-    g0.push(this.add.text(width / 2, y, `结局 · ${ENDING_NAMES[this.ending] || this.ending}`, {
+    }).setOrigin(0.5, 0);
+    g0.push(title); y += title.height + 8;
+    const sub = this.add.text(width / 2, y, `结局 · ${ENDING_NAMES[this.ending] || this.ending}`, {
       fontSize: '16px', color: '#8b8ba0',
-    }).setOrigin(0.5));
-    y += 12;
-    g0.push(this.add.text(width / 2, y, this.aiSource === 'ai' ? '· 由腾讯混元 hy3 为你生成 ·' : '· 基于你的旅程生成 ·', {
+    }).setOrigin(0.5, 0);
+    g0.push(sub); y += sub.height + 5;
+    const aimark = this.add.text(width / 2, y, this.aiSource === 'ai' ? '· 由腾讯混元 hy3 为你生成 ·' : '· 基于你的旅程生成 ·', {
       fontSize: '11px', color: '#5a6a8a',
-    }).setOrigin(0.5));
-    y += 18;
+    }).setOrigin(0.5, 0);
+    g0.push(aimark); y += aimark.height + 12;
 
     y = this._divider(ui, width / 2, y, cardW - 120);
     y = this._revealSection(ui, revealGroups, innerL, y, innerW, '🟡 你的驱动力', p.driveText, '#d4a353');
     y = this._revealSection(ui, revealGroups, innerL, y, innerW, '🔴 你的消耗源', p.drainText, '#e8735a');
     y = this._revealSection(ui, revealGroups, innerL, y, innerW, '💙 你与压力的关系', p.stressStyle, '#7b9cd6');
-    const hlBg = this.add.rectangle(width / 2, y + 16, innerW + 8, 44, 0x2a2a18, 0.7);
-    ui.add(hlBg);
-    y = this._revealSection(ui, revealGroups, innerL, y, innerW, '✨ 你没察觉的模式 ✨', p.hiddenPattern, '#f0c060', hlBg);
+    // 隐藏模式段：带高亮底框（框尺寸由该段实测高度决定，包住整段不遮字）
+    y = this._revealSection(ui, revealGroups, innerL, y, innerW, '✨ 你没察觉的模式 ✨', p.hiddenPattern, '#f0c060', true);
     y = this._revealSection(ui, revealGroups, innerL, y, innerW, '🟢 职业契合度', p.fitText, '#6aaa6a');
 
     y = this._divider(ui, width / 2, y, cardW - 200);
@@ -173,31 +168,41 @@ export class EndingScene extends Phaser.Scene {
     y = this._statsBar(ui, innerL, y, innerW, statsGroup);
     y = this._divider(ui, width / 2, y + 4, cardW - 120);
 
+    // 金句：实测高度前进（AI 生成常 2 行，写死会遮）
     const oneLineGroup = addGroup();
-    oneLineGroup.push(this.add.text(width / 2, y, `「 ${p.oneLineForYou} 」`, {
+    const quote = this.add.text(width / 2, y, `「 ${p.oneLineForYou} 」`, {
       fontSize: '18px', color: '#f0d080', fontStyle: 'bold',
       wordWrap: { width: innerW - 40, useAdvancedWrap: true }, align: 'center',
-    }).setOrigin(0.5));
-    ui.add(oneLineGroup[0]);
-    y += 34;
+    }).setOrigin(0.5, 0);
+    oneLineGroup.push(quote); ui.add(quote);
+    y += quote.height + 12;
     y = this._divider(ui, width / 2, y, cardW - 160);
 
-    // 把所有组的元素加入容器 + 初始隐藏（准备逐组揭示）
+    // 按钮区
+    const btnY = y + 30;
+    const btnGroup = addGroup();
+    const b1 = this._button(ui, width / 2 - 220, btnY, 190, 36, '再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
+    const b2 = this._button(ui, width / 2, btnY, 190, 36, '保存画像 📷', 0x3a3a2a, () => this._sharePortrait());
+    const b3 = this._button(ui, width / 2 + 220, btnY, 190, 36, '返回标题', 0x33283a, () => this.scene.start('TitleScene'));
+    btnGroup.push(b1.bg, b1.txt, b2.bg, b2.txt, b3.bg, b3.txt);
+
+    // 卡片底板：由内容最终高度反推（不写死 500），画完后沉到最底作"舞台"
+    const contentBottom = btnY + 40;
+    const cardH = contentBottom - cardY + 20;
+    const board = this.add.rectangle(width / 2, cardY + cardH / 2, cardW, cardH, 0x1e1e30);
+    const goldLine = this.add.rectangle(width / 2, cardY, cardW, 3, 0xd4a353).setOrigin(0.5, 0);
+    ui.add(board); ui.add(goldLine);
+    ui.sendToBack(goldLine); ui.sendToBack(board); // board 最底，金线在其上、内容之下
+    // 卡片整体垂直居中于屏幕（内容高度变化时不会贴顶或超出）
+    ui.y = Math.max(0, (height - cardH - cardY * 2) / 2);
+
+    // 揭示组初始隐藏
     for (const g of revealGroups) {
       for (const el of g) {
         if (el && !el.parentContainer) ui.add(el);
         if (el && el.setAlpha) el.setAlpha(0);
       }
     }
-
-    // 按钮区：最后揭示（所有段落完成后才出现，让玩家先"读完"再看操作）
-    const btnY = y + 16;
-    const btnGroup = addGroup();
-    const b1 = this._button(ui, width / 2 - 220, btnY, 190, 36, '再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
-    const b2 = this._button(ui, width / 2, btnY, 190, 36, '保存画像 📷', 0x3a3a2a, () => this._sharePortrait());
-    const b3 = this._button(ui, width / 2 + 220, btnY, 190, 36, '返回标题', 0x33283a, () => this.scene.start('TitleScene'));
-    // _button 内部已 add 进 ui，这里收集用于揭示
-    btnGroup.push(b1.bg, b1.txt, b2.bg, b2.txt, b3.bg, b3.txt);
     for (const el of btnGroup) { if (el && el.setAlpha) el.setAlpha(0); }
 
     // 逐组揭示：每组延迟 220ms，淡入 + 上滑 8px，配打字机 blip 增加仪式感
@@ -255,15 +260,28 @@ export class EndingScene extends Phaser.Scene {
     parent.add(this.add.text(x, y + 14, text, { fontSize: '12px', color: '#b8b8c8', wordWrap: { width: w, useAdvancedWrap: true }, lineSpacing: 3 }));
     return y + 40;
   }
-  // 揭示版 _section：元素收集进 revealGroups 而非立即全显示（配合逐段揭示动画）
-  _revealSection(parent, revealGroups, x, y, w, label, text, accent, extraEl) {
+  // 揭示版 _section：先量文字高度再定位，高亮框（highlight=true）尺寸由实测段落高度决定。
+  // origin(x,0) 顶对齐，y 前进 = label高 + 间距 + 正文实测高 + 段间距。根治遮字。
+  _revealSection(parent, revealGroups, x, y, w, label, text, accent, highlight) {
     const g = []; revealGroups.push(g);
-    const labelEl = this.add.text(x, y, label, { fontSize: '13px', color: accent, fontStyle: 'bold' });
-    const textEl = this.add.text(x, y + 14, text, { fontSize: '12px', color: '#b8b8c8', wordWrap: { width: w, useAdvancedWrap: true }, lineSpacing: 3 });
+    const labelEl = this.add.text(x, y, label, { fontSize: '13px', color: accent, fontStyle: 'bold' }).setOrigin(0, 0);
+    const labelH = labelEl.height;
+    const textY = y + labelH + 5;
+    const textEl = this.add.text(x, textY, text || '', {
+      fontSize: '13px', color: '#c4c4d4',
+      wordWrap: { width: w, useAdvancedWrap: true }, lineSpacing: 4,
+    }).setOrigin(0, 0);
+    const textH = textEl.height;
+    const sectionH = labelH + 5 + textH;
+    // 高亮框先加（在文字下层），尺寸包住整段
+    if (highlight) {
+      const hlBg = this.add.rectangle(x + w / 2, y + sectionH / 2, w + 16, sectionH + 16, 0x2a2a18, 0.7);
+      parent.add(hlBg);
+      g.push(hlBg);
+    }
     parent.add(labelEl); parent.add(textEl);
     g.push(labelEl, textEl);
-    if (extraEl) g.push(extraEl);
-    return y + 40;
+    return y + sectionH + 16; // 段间距 16
   }
   _statsBar(parent, x, y, w, group) {
     const items = [

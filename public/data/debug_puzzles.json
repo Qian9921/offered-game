@@ -1,0 +1,144 @@
+{
+  "_meta": {
+    "title": "Debug 找茬关卡",
+    "desc": "程序员专属动作玩法：给一段有 bug 的代码，玩家点击 bug 所在的那一行来定位。找对高亮+过关，找错扣时间。lines 是代码行数组，bugLine 是有 bug 的行号(0-based)，hint 提示，explain 解释。按 act 分难度。",
+    "usage": "DebugGameScene 按当前 act 抽对应难度的关卡。act1-2 单bug简单，act3-4 代码更长，act5 多bug/更隐蔽。"
+  },
+  "puzzles": [
+    {
+      "id": "d_act1_range",
+      "act": 1,
+      "title": "第一个 bug",
+      "lang": "python",
+      "lines": [
+        "def print_scores(scores):",
+        "    for i in range(0, 4):",
+        "        print(scores[i])",
+        "",
+        "print_scores([85, 92, 78])"
+      ],
+      "bugLine": 1,
+      "hint": "循环跑了几次？列表有几个元素？",
+      "explain": "range(0, 4) 会访问索引 0~3，但列表只有 3 个元素（索引 0~2），第 4 次就越界。应改成 range(len(scores))。"
+    },
+    {
+      "id": "d_act1_assign",
+      "act": 1,
+      "title": "少写了个等号",
+      "lang": "python",
+      "lines": [
+        "total = 0",
+        "count = 5",
+        "if count = 5:",
+        "    total = count * 2",
+        "print(total)"
+      ],
+      "bugLine": 2,
+      "hint": "判断相等和赋值，是同一个符号吗？",
+      "explain": "if 里判断相等要用 ==，写成 = 是赋值，语法错误。应改成 if count == 5。"
+    },
+    {
+      "id": "d_act2_offbyone",
+      "act": 2,
+      "title": "差了一个",
+      "lang": "python",
+      "lines": [
+        "def sum_first_n(nums, n):",
+        "    total = 0",
+        "    for i in range(1, n):",
+        "        total += nums[i]",
+        "    return total",
+        "",
+        "# 想累加前 n 个元素"
+      ],
+      "bugLine": 2,
+      "hint": "range 从哪开始、到哪结束？前 n 个元素的索引是？",
+      "explain": "range(1, n) 从索引 1 开始且不含 n，漏了第 0 个、少算一个。前 n 个应是 range(0, n)。经典 off-by-one。"
+    },
+    {
+      "id": "d_act2_none",
+      "act": 2,
+      "title": "空的东西",
+      "lang": "javascript",
+      "lines": [
+        "function getName(user) {",
+        "  return user.name.toUpperCase();",
+        "}",
+        "",
+        "getName(null);"
+      ],
+      "bugLine": 1,
+      "hint": "user 可能是什么？访问它的属性前该检查吗？",
+      "explain": "user 传了 null，直接读 user.name 会抛 TypeError。应先判空：user && user.name。这是最常见的线上崩溃。"
+    },
+    {
+      "id": "d_act3_mutate",
+      "act": 3,
+      "title": "边遍历边删",
+      "lang": "python",
+      "lines": [
+        "def remove_zeros(nums):",
+        "    for i in range(len(nums)):",
+        "        if nums[i] == 0:",
+        "            nums.pop(i)",
+        "    return nums",
+        "",
+        "remove_zeros([1, 0, 0, 3])"
+      ],
+      "bugLine": 3,
+      "hint": "一边遍历一边改变列表长度，索引还对得上吗？",
+      "explain": "在遍历时 pop 会让后面元素前移、索引错位，漏删连续的 0。应用列表推导 [x for x in nums if x != 0]。"
+    },
+    {
+      "id": "d_act3_async",
+      "act": 3,
+      "title": "没等它回来",
+      "lang": "javascript",
+      "lines": [
+        "async function loadUser(id) {",
+        "  const res = fetch('/api/user/' + id);",
+        "  const data = res.json();",
+        "  return data;",
+        "}"
+      ],
+      "bugLine": 1,
+      "hint": "fetch 返回的是什么？异步操作要等吗？",
+      "explain": "fetch 返回 Promise，少了 await，res 不是响应对象、res.json() 会报错。应写 const res = await fetch(...)。"
+    },
+    {
+      "id": "d_act4_race",
+      "act": 4,
+      "title": "深夜的并发",
+      "lang": "python",
+      "lines": [
+        "balance = 100",
+        "def withdraw(amount):",
+        "    global balance",
+        "    if balance >= amount:",
+        "        balance = balance - amount",
+        "    return balance",
+        "# 多线程同时调用 withdraw"
+      ],
+      "bugLine": 3,
+      "hint": "检查和扣款之间，别的线程会插进来吗？",
+      "explain": "检查余额和扣款不是原子操作，多线程下两个请求可能都通过检查、导致超额扣款。需要加锁。至暗时刻的经典事故。"
+    },
+    {
+      "id": "d_act5_logic",
+      "act": 5,
+      "title": "最后一关",
+      "lang": "javascript",
+      "lines": [
+        "function shouldRetry(err, attempts) {",
+        "  if (err.code === 'TIMEOUT' || 'NETWORK') {",
+        "    return attempts < 3;",
+        "  }",
+        "  return false;",
+        "}"
+      ],
+      "bugLine": 1,
+      "hint": "'NETWORK' 这个字符串，单独放在 || 后面，永远是什么？",
+      "explain": "|| 'NETWORK' 里的字符串恒为真，条件永远成立，任何错误都会重试。应写 err.code === 'TIMEOUT' || err.code === 'NETWORK'。看似简单，却是最容易漏的逻辑 bug。"
+    }
+  ]
+}

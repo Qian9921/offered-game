@@ -4,6 +4,7 @@ import { Juice } from '../systems/JuiceKit.js';
 import { SceneRouter } from '../systems/SceneRouter.js';
 import { FamilyMessages } from '../systems/FamilyMessages.js';
 import { PhoneMessage } from '../systems/PhoneMessage.js';
+import { SaveSystem } from '../systems/SaveSystem.js';
 
 // HomeScene：夜晚·回家——一天的收尾。家人消息 + 自我提升选择 + 睡觉进下一天。
 // 自我提升：花精力/金钱换成长（skill/san/passion），玩家规划"下班后怎么过"。
@@ -106,16 +107,25 @@ export class HomeScene extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 1, duration: 250, yoyo: true, hold: 1400, onComplete: () => t.destroy() });
   }
 
-  // 睡觉 → 进下一天的通勤。DaySystem 的 endDay 逻辑由 WorldScene 处理，
-  // 这里传 sleepDone 标志让 WorldScene 知道该 endDay。
+  // 睡觉 → 进下一天。关键：推进剧情经营期计数 story.daysInAct（攒够天数才能解锁下一幕剧情）。
+  // 这是"天数驱动剧情"的接线——没有它，经营期永远推进不了、剧情卡死。
   _sleep() {
     if (this._sleeping) return;
     this._sleeping = true;
-    // 睡觉动画：淡黑 + 提示
-    const { width: W, height: H } = this.scale;
+    // 睡觉：把当日状态 + 经营期天数写回存档
+    try {
+      const saved = SaveSystem.load() || {};
+      const story = saved.story || { phase: 'ready', act: this.act, daysInAct: 0 };
+      if (story.phase === 'working') story.daysInAct = (story.daysInAct || 0) + 1; // 经营期才累加
+      SaveSystem.saveProgress({
+        career: this.career, act: this.act, stats: this.stats,
+        extra: { ...(saved.quests ? { quests: saved.quests } : {}),
+          quests: saved.quests, choiceLog: saved.choiceLog, thought: saved.thought,
+          daySystem: saved.daySystem, story },
+      });
+    } catch (e) {}
     this.cameras.main.fadeOut(800, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      // 进通勤场景（新一天早晨），day+1 由 CommuteScene 前的 endDay 完成
       this.scene.start('CommuteScene', {
         career: this.career, act: this.act, day: this.day + 1,
         stats: this.stats,

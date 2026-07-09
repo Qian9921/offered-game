@@ -20,22 +20,22 @@
       "code": "let score = \"80\";\nif (score == 80) {\n  console.log(\"合格\");\n}",
       "question": "为了更严谨地判断分数，应该怎样修改？",
       "options": [
-        "将 == 改为 ===",
         "将 \"80\" 改为数字 80",
+        "将 == 改为 ===",
         "在 if 前加类型检查 typeof"
       ],
-      "answer": 0,
+      "answer": 1,
       "explain": "== 会做隐式类型转换（\"80\"==80 为 true），=== 则严格比较类型和值。严谨代码推荐用 ===，避免意外转换。"
     },
     {
       "code": "for i in range(1, 5):\n    print(i)\n# 想打印出 1 到 5",
       "question": "这段代码为什么只打印到 4？",
       "options": [
-        "range(1,5) 是左闭右开，不包含 5",
         "print 没有正确缩进",
-        "i 的初始值应该是 0"
+        "i 的初始值应该是 0",
+        "range(1,5) 是左闭右开，不包含 5"
       ],
-      "answer": 0,
+      "answer": 2,
       "explain": "Python 的 range(start,stop) 生成从 start 到 stop-1 的序列。range(1,5) → 1,2,3,4，不包含 5。要打印 1~5 应改为 range(1,6)。这是经典 off-by-one。"
     }
   ]
