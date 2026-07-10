@@ -15,23 +15,32 @@ import { ChoiceLog } from '../systems/ChoiceLog.js';
 import { ThoughtSystem } from '../systems/ThoughtSystem.js';
 import { AIClient } from '../systems/AIClient.js';
 import { DaySystem } from '../systems/DaySystem.js';
+import { TimeSystem } from '../systems/TimeSystem.js';
+import { NpcAgent } from '../systems/NpcAgent.js';
 import { ProjectSystem } from '../systems/ProjectSystem.js';
+import { ensurePixelIcons, ICON_KEYS, EMOJI_TO_ICON } from '../systems/PixelIcons.js';
+import { Pathfinder } from '../systems/Pathfinder.js';
 import {
-  bottomGuideFromGoal,
-  isStoryPending,
+  ACT_DAYS as SP_ACT_DAYS,
+  LIGHT_CAREERS as SP_LIGHT_CAREERS,
+  WORK_LOOP_CAREERS as SP_WORK_LOOP_CAREERS,
+  DEFAULT_SUBROLE as SP_DEFAULT_SUBROLE,
+  isWorkLoopCareer,
   applyProjectMilestone,
   tryAdvanceByMilestone,
+  tryAdvanceByDays,
+  enterWorkingAfterAct,
+  shouldDeferLightEnding,
+  enterWorkingFromLightEnding,
+  canFinishLightWorkLoop,
+  isStoryPending,
+  mergeStoryState,
+  createStoryState,
+  chainHudStep,
+  bottomGuideFromGoal,
+  buildWorldSaveExtra,
+  seniorMarkVisual,
 } from '../systems/StoryProgress.js';
-import {
-  isWorkLoopCareer,
-  defaultSubRole,
-  questDataUrl,
-  npcDefsFromRoster,
-  seniorInteractAction,
-  applySeniorAccept,
-  applySeniorDeliver,
-  reportMinigameProgress,
-} from '../systems/WorkLoopOffice.js';
 
 // WorldScene — LimeZu 现代办公室俯视角 RPG 探索 + NPC 交互 + 剧情合体
 //
@@ -53,6 +62,29 @@ const NPC_POS = {
   senior: { x: 1008, y: 400 }, // 资深：右侧开放工位区（报到目标）
   peer:   { x: 752, y: 528 },  // 同事：中央走廊
   vet:    { x: 240, y: 656 },  // 前辈：左下会议区
+};
+// 玩家的工位（真实家具坐标）：电脑 + 正下方椅子。这把椅子给玩家留空,不坐 NPC,
+// 让"你的工作电脑"永远可用、对齐真实工位（根治"做任务的电脑放得莫名其妙"）。
+const PLAYER_DESK = { computer: { x: 1008, y: 512 }, chair: { x: 1008, y: 544 } };
+// 坐姿偏移（直接移植自 SkyOffice 源码 sittingShiftData）：dx,dy=相对椅子中心的位移,
+// depth=相对椅子的深度位移(让人物正确"陷进"椅子:朝上时在椅背后、朝下时在椅面前)。
+// SkyOffice 用中心锚点(0.5,0.5)。本项目 NPC 用脚底锚点,换算脚底Y=中心Y+半身高(24)。
+const SIT_SHIFT = {
+  up:    { dx: 0, dy: 3, depth: -10 },
+  down:  { dx: 0, dy: 3, depth: 1 },
+  left:  { dx: 0, dy: -8, depth: 10 },
+  right: { dx: 0, dy: -8, depth: 10 },
+};
+const CHAR_HALF_H = 24; // 32×48 scale1 → 半身高，用于脚底锚点↔中心锚点换算
+// NPC 头顶状态泡泡：随时段变化的"一句话状态"（工作中/摸鱼/上厕所/赶ddl…）——
+// 让同事像真人一样"有当下的状态、有情绪",真实职场感。每条=一句短文 + emoji。
+const MOODS_POOL = {
+  morning_meeting: ['刚到工位 ☕', '开早会 📋', '列今日计划 ✍️', '还没睡醒 😪', '刷会新闻 📰', '回消息 💬', '打卡签到 ✅'],
+  forenoon:        ['写代码 💻', '跑测试 🧪', '查文档 📖', '对需求 🗣️', '改bug 🐛', '喝口水 🥤', '有点卡壳 🤔', '摸鱼一下 🐟'],
+  noon:            ['去吃饭 🍜', '午休片刻 😴', '刷手机 📱', '约饭 💬', '买杯咖啡 ☕', '楼下散步 🚶', '追个剧 📺'],
+  afternoon:       ['赶进度 💻', '开评审会 📋', '发会呆 😶', '困成狗 🥱', '需求又变了 🔄', '摸鱼 🐟', '敲键盘 ⌨️', '接电话 📞'],
+  overtime:        ['还在改bug 🐛', '赶deadline 😱', '等编译 ⏳', '想下班了 🏃', '再撑一会 😮‍💨', '点了外卖 🍔', '血压上来了 🤯', '和产品吵架 💢'],
+  deep_night:      ['熬夜中 🌙', '困到不行 😵', '就差一点 😭', '等发版 🚀', '咖啡续命 ☕', '好想回家 🏠', '已经麻了 🫠', '在改最后一个 🐛'],
 };
 // 背景群演（让办公室有"活人"氛围）：坐/站在开放区的路人同事，纯装饰不可交互。
 const EXTRA_WORKERS = [
@@ -76,11 +108,12 @@ const SKINS = {
   alex:   { type: 'limezu', scale: 2 },
   amelia: { type: 'limezu', scale: 2 },
   bob:    { type: 'limezu', scale: 2 },
-  // SkyOffice 4 款（新，更精细）。tex=纹理key(so_前缀)，cap=帧名用的首字母大写名。
-  so_adam:  { type: 'skyoffice', tex: 'so_adam',  cap: 'Adam',  scale: 1.4 },
-  so_ash:   { type: 'skyoffice', tex: 'so_ash',   cap: 'Ash',   scale: 1.4 },
-  so_lucy:  { type: 'skyoffice', tex: 'so_lucy',  cap: 'Lucy',  scale: 1.4 },
-  so_nancy: { type: 'skyoffice', tex: 'so_nancy', cap: 'Nancy', scale: 1.4 },
+  // SkyOffice 4 款（精细、有坐姿帧）。tex=纹理key(so_前缀)，cap=帧名首字母大写名。
+  // scale 统一 1.5：与办公室 32px tile 协调（约 1.5 tile 宽、2 tile 高），玩家/NPC 一致。
+  so_adam:  { type: 'skyoffice', tex: 'so_adam',  cap: 'Adam',  scale: 1.0 },
+  so_ash:   { type: 'skyoffice', tex: 'so_ash',   cap: 'Ash',   scale: 1.0 },
+  so_lucy:  { type: 'skyoffice', tex: 'so_lucy',  cap: 'Lucy',  scale: 1.0 },
+  so_nancy: { type: 'skyoffice', tex: 'so_nancy', cap: 'Nancy', scale: 1.0 },
 };
 // SkyOffice 走路(run)每向 6 帧：右1-6 上7-12 左13-18 下19-24（idle 同理，另一套帧名）
 const SKY_DIR_START = { right: 1, up: 7, left: 13, down: 19 };
@@ -97,9 +130,14 @@ function ensureSkinAnims(scene, skinKey) {
         key: k, frames: scene.anims.generateFrameNumbers(skinKey, { start: a, end: b }), frameRate: 10, repeat: -1,
       });
     }
-    return { walkPrefix: `walk_${skinKey}`, tex: skinKey, idleFrame: (d) => IDLE[d] ?? IDLE.down };
+    // limezu 无坐姿帧 → 坐姿回退到 idle 帧
+    return {
+      walkPrefix: `walk_${skinKey}`, tex: skinKey,
+      idleFrame: (d) => IDLE[d] ?? IDLE.down,
+      sitFrame: (d) => IDLE[d] ?? IDLE.down,
+    };
   }
-  // skyoffice atlas：帧名 {Cap}_run_{n}.png / {Cap}_idle_anim_{n}.png
+  // skyoffice atlas：帧名 {Cap}_run_{n}.png / {Cap}_idle_anim_{n}.png / {Cap}_sit_{dir}.png
   for (const [dir, start] of Object.entries(SKY_DIR_START)) {
     const k = `walk_${skinKey}_${dir}`;
     if (!scene.anims.exists(k)) scene.anims.create({
@@ -111,15 +149,15 @@ function ensureSkinAnims(scene, skinKey) {
   return {
     walkPrefix: `walk_${skinKey}`, tex: s.tex,
     idleFrame: (d) => `${s.cap}_idle_anim_${SKY_DIR_START[d] ?? SKY_DIR_START.down}.png`,
+    sitFrame: (d) => `${s.cap}_sit_${d || 'down'}.png`, // 坐姿帧（4 向）
   };
 }
 
-// 轻量职业：单文件全剧情（data/light_*.json），无分幕；深度职业走 {career}_act{n}.json
-const LIGHT_CAREERS = ['designer', 'operation', 'teacher', 'doctor', 'civilservant', 'sales', 'lawyer'];
-
-// 深度职业每幕需要"经营"几天（下班睡觉推进）才解锁下一幕剧情——让剧情有节奏、天数有意义。
-// 入职(act1)当天播完就过1天；上手/消耗/至暗各2天；抉择(act5)当天。一段职业生涯约 8 天。
-const ACT_DAYS = { 1: 1, 2: 2, 3: 2, 4: 2, 5: 1 };
+// 剧情/经营/工作日循环常量与纯逻辑 → systems/StoryProgress.js（可单测）
+const LIGHT_CAREERS = SP_LIGHT_CAREERS;
+const ACT_DAYS = SP_ACT_DAYS;
+const WORK_LOOP_CAREERS = SP_WORK_LOOP_CAREERS;
+const DEFAULT_SUBROLE = SP_DEFAULT_SUBROLE;
 
 // 职业主题：每个职业不同的地板/墙色/氛围光 + NPC 名字与开场寒暄。
 // 场景骨架(工位/会议角/茶水间)共享——像同一栋写字楼里不同公司的楼层,
@@ -192,53 +230,49 @@ export class WorldScene extends Phaser.Scene {
 
   init(data) {
     this.career = (data && data.career) || 'programmer';
+    this.subRole = (data && data.subRole) || null; // 细分职业(dev/test)，程序员任务链用
     this.deep = data ? data.deep : true;
     this.act = (data && data.act) || 1;
-    this.subRole = (data && data.subRole) || null; // 任务链方向(dev/test/…)
-    this.workLoopEnabled = isWorkLoopCareer(this.career);
     this.dialogueActive = false;
     this.activeNpc = null;
     // 多天循环：从 CommuteScene 传入的 day + stats 快照（有则用，无则从存档/默认）
     this._incomingDay = (data && data.day) || null;
     this._incomingStats = (data && data.stats) || null;
     // 剧情状态机（消除"一口气读完整幕"）：ready=待播本幕剧情 / working=经营期(剧情已播,过日子)
-    this._story = { phase: 'ready', act: 1, daysInAct: 0 };
+    this._story = createStoryState();
     this._savedStats = null;
     this._savedQuests = null;
     this._savedChoiceLog = null;
     this._savedThought = null;
     this._savedDay = null;
+    this._savedSegment = null;
     this._savedProject = null;
     try {
       const saved = SaveSystem.load();
-      // 同职业续档 → 恢复全部进度；换职业 → 清旧档、全新开始（避免串档）
-      const sameCareer = saved && saved.career === this.career
+      // 同职业+同细分才续档；换职业或换方向 → 清旧档、全新开始（避免串档）。
+      // subRole 为空=从标题"继续"进来,用存档里的方向。
+      const sameRun = saved && saved.career === this.career
         && (this.subRole == null || saved.subRole == null || saved.subRole === this.subRole);
-      if (sameCareer) {
+      if (sameRun) {
         this._savedStats = saved.stats || null;   // 不再用 act 判据（BUG-9：换幕续档不丢血）
         this._savedQuests = saved.quests || null;
         this._savedChoiceLog = saved.choiceLog || null;
         this._savedThought = saved.thought || null;
         this._savedDay = saved.daySystem || null;
+        this._savedSegment = Number.isInteger(saved.segment) ? saved.segment : null;
         this._savedProject = saved.project || null;
-        if (this.subRole == null && saved.subRole) this.subRole = saved.subRole;
-        if (saved.story) this._story = { ...this._story, ...saved.story };
+        if (this.subRole == null && saved.subRole) this.subRole = saved.subRole; // 续档恢复方向
+        if (saved.story) this._story = mergeStoryState(saved.story);
       } else if (saved) {
-        SaveSystem.clear(); // 换职业：清掉上一个职业的进度
+        SaveSystem.clear(); // 换职业/换方向：清掉上一个进度
       }
     } catch (e) {}
-    if (!this.subRole) this.subRole = defaultSubRole(this.career);
     // story.act 是权威幕次
     this.act = this._story.act || this.act;
     // 进场即存档（合并写，保留未提供字段）
     SaveSystem.saveProgress({
       career: this.career, act: this.act, stats: this._savedStats,
-      extra: {
-        subRole: this.subRole,
-        quests: this._savedQuests, choiceLog: this._savedChoiceLog,
-        thought: this._savedThought, daySystem: this._savedDay,
-        project: this._savedProject, story: this._story,
-      },
+      extra: { subRole: this.subRole, quests: this._savedQuests, choiceLog: this._savedChoiceLog, thought: this._savedThought, daySystem: this._savedDay, segment: this._savedSegment, project: this._savedProject, story: this._story },
     });
   }
 
@@ -274,15 +308,19 @@ export class WorldScene extends Phaser.Scene {
     for (const c of ['adam', 'ash', 'lucy', 'nancy']) {
       this.load.atlas(`so_${c}`, `${SO}/character/${c}.png`, `${SO}/character/${c}.json`);
     }
-    // workLoop 名册 + 工单（任务链 talk 目标 / 项目进度）
-    if (this.workLoopEnabled) {
-      this.load.json('roster', `./data/roster_${this.career}.json`);
+    // 办公室背景同事配置（12-15 人，让白天工位坐满像真实公司）
+    this.load.json('office_npcs', './data/office_npcs.json');
+    // 工作日循环玩法：工单池 + 随机办公室事件 + 具名同事名册（目前程序员垂直切片）
+    if (WORK_LOOP_CAREERS.has(this.career)) {
       this.load.json('work_orders', `./data/work_orders_${this.career}.json`);
+      this.load.json('office_events', `./data/office_events_${this.career}.json`);
+      this.load.json('roster', `./data/roster_${this.career}.json`);
     }
   }
 
   create() {
     AudioSystem.playBgm('office');
+    ensurePixelIcons(this); // 像素浮标纹理(❗❓💬💤等)
 
     // 安全清场：确保菜单类场景不残留叠加渲染（防标题文字漏进办公室）
     for (const k of ['TitleScene', 'OpeningScene', 'HubScene']) {
@@ -311,6 +349,24 @@ export class WorldScene extends Phaser.Scene {
     this.daySystem.setPhase('work'); // 进办公室即 work 阶段
     this.daySystem.energyBudget = 100; // 每次进办公室=一天工作的开始，精力预算满
     this._exhaustedPrompted = false;
+    // 日内时段系统（早会→上午→…→深夜）：事件驱动，跨时段驱动灯光 + 在岗人数。
+    this.timeSystem = new TimeSystem();
+    if (Number.isInteger(this._savedSegment)) this.timeSystem.index = this._savedSegment;
+    this.timeSystem.on('segmentChange', (seg) => this._onSegmentChange(seg));
+    // 工作日循环玩法：项目进度/绩效/今日工单（程序员垂直切片）。
+    this.workLoopEnabled = isWorkLoopCareer(this.career);
+    if (this.workLoopEnabled) {
+      const woData = this.cache.json.get('work_orders');
+      this.projectSystem = new ProjectSystem({ pool: (woData && woData.orders) || [] });
+      if (this._savedProject) this.projectSystem.restore(this._savedProject);
+      this.projectSystem.on('milestone', (pct) => this._onProjectMilestone(pct));
+      this.projectSystem.on('progress', () => this._updateProjectHud());
+      this.projectSystem.startDay(Phaser.Math.RND); // 每天抽今日工单
+      // 记录今日起点(日报结算用)
+      this._dayStartProgress = this.projectSystem.progress;
+      this._dayStartStats = { ...this.stateSystem.getAll() };
+      this._reportShown = false;
+    }
     this.statusUI = new StatusBarUI(this, this.stateSystem);
     this.dialogueEngine = new DialogueEngine(this, this.stateSystem);
     this._setupDialogueEvents();
@@ -325,29 +381,13 @@ export class WorldScene extends Phaser.Scene {
     // 任务系统 + 选择记忆（结局 AI 画像的数据源）
     this.questSystem = new QuestSystem(this.stateSystem);
     this.choiceLog = new ChoiceLog();
-    // 工作日循环：项目进度（交付 progressGain / e2e-taskchain）
-    if (this.workLoopEnabled) {
-      const wo = this.cache.json.get('work_orders');
-      const pool = (wo && wo.orders) || [];
-      this.projectSystem = new ProjectSystem({ pool, dailyCount: 3 });
-      if (this._savedProject) {
-        if (this._savedProject.progress != null) this.projectSystem.progress = this._savedProject.progress;
-        if (this._savedProject.performance != null) this.projectSystem.performance = this._savedProject.performance;
-      }
-      this.projectSystem.startDay();
-      // 里程碑 → pendingAct（走近导师推进下一幕）
-      this.projectSystem.on('milestone', (pct) => {
-        const r = applyProjectMilestone(this._story, pct, this.act);
-        this._story = r.story;
-        this._persistStory();
-      });
-    } else {
-      this.projectSystem = null;
-    }
     this._loadQuestData();
-    // 任务完成时反馈（粒子+音效）
+    // 任务完成时反馈（粒子+音效）+ 自动保存（任务链的每一环都是存档点）
     this.questSystem.on('completed', (id) => {
       Juice.celebrate(this, this.player.x, this.player.y - 30, 0xffd24d);
+      // 完成一个任务 = 一天中的事件推进 → 时间进入下一时段（事件驱动的时钟）
+      this._advanceTime();
+      this._autoSave();
     });
     // 内心独白系统（思维内阁）+ 可交互物件
     this.thoughtSystem = new ThoughtSystem();
@@ -380,7 +420,7 @@ export class WorldScene extends Phaser.Scene {
     this.sceneBackdrop = new SceneBackdrop(this);
 
     // 操作提示（屏幕顶部居中）
-    trackUI(this.add.text(SW / 2, 14, 'WASD 移动 · E 交互 · T 倾听内心 · ESC 菜单', {
+    trackUI(this.add.text(SW / 2, 14, 'WASD 移动 · Shift 冲刺 · E 交互 · T 倾听内心 · ESC 菜单', {
       fontSize: '22px',
       fill: '#dfe3ff',
       backgroundColor: '#000000aa',
@@ -392,6 +432,9 @@ export class WorldScene extends Phaser.Scene {
       fontSize: '22px', fill: '#ffe08a', backgroundColor: '#00000099', padding: { x: 14, y: 7 },
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(9999));
     this._updateDayHud();
+    // 让当前时段的灯光/人数立即就位（首帧进世界即呈现对应作息）
+    this.timeSystem.kick();
+    if (this.workLoopEnabled) this._startOfficeEvents(); // 随机办公室事件
 
     // "下班回家"按钮（屏幕右上角，天数下方）
     this.offWorkBtn = trackUI(this.add.text(SW - 20, 64, '🏠 下班回家', {
@@ -400,6 +443,33 @@ export class WorldScene extends Phaser.Scene {
     this.offWorkBtn.on('pointerover', () => this.offWorkBtn.setBackgroundColor('#4a4a7aee'));
     this.offWorkBtn.on('pointerout', () => this.offWorkBtn.setBackgroundColor('#3a3a5aee'));
     this.offWorkBtn.on('pointerdown', () => this._goHome());
+
+    // 项目进度 HUD（右上角，下班按钮下方）——工作日循环的核心可见产出
+    if (this.workLoopEnabled) {
+      const px = SW - 20, py = 128, pw = 236, ph = 22;
+      this._projW = pw;
+      trackUI(this.add.text(px, py - 4, '📊 项目进度', { fontSize: '15px', fill: '#bfeecf' })
+        .setOrigin(1, 1).setScrollFactor(0).setDepth(9999));
+      trackUI(this.add.rectangle(px, py, pw, ph, 0x1c1c2c, 0.92)
+        .setOrigin(1, 0).setStrokeStyle(1, 0x4a6a52).setScrollFactor(0).setDepth(9999));
+      this._projBarFill = trackUI(this.add.rectangle(px - pw, py, 0, ph, 0x5fbf7f, 1)
+        .setOrigin(0, 0).setScrollFactor(0).setDepth(9999));
+      this._projText = trackUI(this.add.text(px - pw / 2, py + ph / 2, '', {
+        fontSize: '14px', fill: '#ffffff', fontStyle: 'bold',
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(10000));
+      this._projDeadline = trackUI(this.add.text(px, py + ph + 4, '', {
+        fontSize: '14px', fill: '#bfb0d0',
+      }).setOrigin(1, 0).setScrollFactor(0).setDepth(9999));
+      this._updateProjectHud();
+    }
+
+    // 功能栏 HUD（左下角）：手机等常驻功能放这里，不再摆在地上（更真实）
+    this._phoneBtn = trackUI(this.add.text(24, SH - 66, '📱 手机', {
+      fontSize: '20px', fill: '#dfe3ff', backgroundColor: '#2a2a44dd', padding: { x: 14, y: 9 },
+    }).setOrigin(0, 0).setScrollFactor(0).setDepth(9999).setInteractive({ useHandCursor: true }));
+    this._phoneBtn.on('pointerover', () => this._phoneBtn.setBackgroundColor('#3a3a5edd'));
+    this._phoneBtn.on('pointerout', () => this._phoneBtn.setBackgroundColor('#2a2a44dd'));
+    this._phoneBtn.on('pointerdown', () => this._usePhone());
 
     // 引导语（屏幕底部）——按职业主题生成"找谁报到"
     const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
@@ -423,6 +493,15 @@ export class WorldScene extends Phaser.Scene {
     trackUI(this.add.text(SW - 10, SH - 6, 'Art: LimeZu · Kenney', {
       fontSize: '14px', fill: '#7a7a8a',
     }).setOrigin(1, 1).setScrollFactor(0).setDepth(9999));
+
+    // 常驻任务目标 HUD（左上·状态条下方）：始终显示"现在该干什么"
+    this.objectiveHud = trackUI(this.add.text(24, 96, '', {
+      fontSize: '17px', fill: '#ffe08a', backgroundColor: '#141422dd',
+      padding: { x: 12, y: 7 }, wordWrap: { width: 430 },
+    }).setOrigin(0, 0).setScrollFactor(0).setDepth(9998).setVisible(false));
+    // 目标方向箭头（世界层·跟随玩家,指向当前目标）——离目标远时才显示
+    this._goalArrow = this.add.image(0, 0, ICON_KEYS.arrow)
+      .setDepth(9500).setVisible(false).setAlpha(0.9);
 
     // HUD（StatusBarUI 的 mini/panel 容器）也归 UI 相机
     if (this.statusUI) {
@@ -491,10 +570,10 @@ export class WorldScene extends Phaser.Scene {
     const steps = [
       { icon: '🎮', title: '欢迎来到你的第一天', text: '这是一段关于「你想成为谁」的职场旅程。\n没有标准答案，只有你的选择。' },
       { icon: '🚶', title: '自由探索', text: 'WASD / 方向键 移动 · Shift 冲刺。\n手机上用左下角的虚拟摇杆。' },
-      { icon: '💬', title: '与人互动', text: '走近头顶有 ❗/❓ 的同事，按 E 交谈、接任务、交付。\n底部黄条会提示「现在该干什么」。' },
-      { icon: '💻', title: '工位上干活', text: '接到干活任务后，走近头顶 💻 的电脑浮标，按 E：\n可做 coding 小游戏 / 提交代码（推进任务）。\n售货机 🥤、白板 📋、咖啡 ☕ 也能按 E 交互。' },
-      { icon: '🧠', title: '状态与内心', text: '左上角状态条：精力/压力会变；Tab 可展开。\n按 T 倾听内心；ESC 打开任务日志。' },
-      { icon: '🌙', title: '经营你的每一天', text: '右上角「下班回家」可休息、见家人、进入下一天。\n建议先完成当前目标再下班——一天才有故事。' },
+      { icon: '💬', title: '与人互动', text: '走近头顶有 ❗/❓ 的同事，按 E 交谈、接任务、交付。\n左上角金色「▸ 下一步」+ 箭头会带你走。' },
+      { icon: '💻', title: '坐工位开工', text: '接到「去工位干活」后，找到自己的椅子：\n［ E ］坐下办公 → 再按 E「开始工作」→ 做工单/小游戏。\n别坐错别人的位子。' },
+      { icon: '🧠', title: '状态与内心', text: '左上角状态条：精力/压力会变；Tab 可展开详情。\n按 T 倾听内心；ESC 打开任务日志。' },
+      { icon: '🌙', title: '经营你的每一天', text: '右上角「下班回家」可休息、见家人、进入下一天。\n建议先完成当前 ▸ 目标再下班——一天才有故事。' },
     ];
     let idx = 0;
     const iconT = this.add.text(W / 2, H / 2 - 130, '', { fontSize: '64px' }).setOrigin(0.5);
@@ -518,7 +597,6 @@ export class WorldScene extends Phaser.Scene {
       (this._hudHiddenForOnboard || []).forEach(o => o && o.setVisible(true));
       if (this.ePrompt) this.ePrompt.setVisible(false); // ePrompt 由交互逻辑控制，默认隐藏
       this.dialogueActive = false;
-      this._syncGuideText(); // 引导结束后用真实下一步覆盖静态「新人报到」
     };
     const advance = () => { idx++; if (idx >= steps.length) finish(); else render(); };
     render();
@@ -553,7 +631,12 @@ export class WorldScene extends Phaser.Scene {
     this.solidGroups = [];
     // collidable=true 的层加入碰撞组；bodyScale 收缩碰撞体（贴合家具实体、
     // 不"隔空挡路"，避免玩家被家具周围的空气挡住）。
-    const addGroup = (layerName, sheetKey, tilesetName, collidable, bodyScale = 0.8) => {
+    // 可遮挡物列表（高家具/墙：玩家走到其身后时半透明，露出人物——像素游戏惯用手法）
+    this._occluders = [];
+    // 碰撞按"贴地底座(footprint)"来做,不是整块贴图：俯视 2.5D 视角下,家具/墙有"高度",
+    // 玩家能走到它前缘、甚至走到它身后(被遮挡),所以只把【底部贴地的一条】设为碰撞体。
+    // bodyMode: 'full' 墙(挡整块) | 'base' 家具(只挡底座) | 'seat' 椅(极小,可走近坐)
+    const addGroup = (layerName, sheetKey, tilesetName, collidable, bodyMode = 'base') => {
       const ts = map.getTileset(tilesetName);
       if (!ts) return;
       const group = this.physics.add.staticGroup();
@@ -565,47 +648,155 @@ export class WorldScene extends Phaser.Scene {
         const img = group.get(ax, ay, sheetKey, o.gid - ts.firstgid);
         if (!img) return;
         img.setDepth(ay);
+        if (img.displayHeight >= 30) this._occluders.push(img); // 高家具/墙框/门框→走到身后半透明
         if (collidable && img.body) {
-          // 碰撞体收缩到家具实体大小并对齐底部（脚下挡人，头顶不挡）
-          const bw = img.displayWidth * bodyScale;
-          const bh = img.displayHeight * bodyScale;
+          const dw = img.displayWidth, dh = img.displayHeight;
+          let bw, bh;
+          if (bodyMode === 'full') { bw = dw * 0.92; bh = Math.min(dh, 32); }       // 墙:近满宽,底部一块
+          else if (bodyMode === 'seat') { bw = dw * 0.42; bh = Math.min(dh, 10); }  // 椅:极小底座,好走近好坐
+          else { bw = dw * 0.68; bh = Math.min(dh * 0.34, 15); }                    // 家具:更窄更矮的贴地底座,桌间/桌边留得开,能靠近
           img.body.setSize(bw, bh);
-          img.body.setOffset((img.displayWidth - bw) / 2, img.displayHeight - bh);
+          img.body.setOffset((dw - bw) / 2, dh - bh);
           img.body.updateFromGameObject();
+        } else if (img.body) {
+          // 装饰物：彻底移出物理世界(不挡人、也不被 overlapRect/路径检查误当障碍)
+          this.physics.world.disable(img);
         }
       });
       if (collidable) this.solidGroups.push(group);
+      return group;
     };
 
-    // 墙 + 各类家具物件。桌(Objects)、椅(Chair) 现在都挡人（修穿模），
-    // 桌用较大碰撞体、椅用较小（椅子矮小只挡一点，不把办公室变迷宫）。
-    addGroup('Wall', 'tiles_wall', 'FloorAndGround', true, 0.9);
-    addGroup('Objects', 'so_office', 'Modern_Office_Black_Shadow', true, 0.82);
-    addGroup('ObjectsOnCollide', 'so_office', 'Modern_Office_Black_Shadow', true, 0.82);
-    addGroup('GenericObjects', 'so_generic', 'Generic', true, 0.8);
-    addGroup('GenericObjectsOnCollide', 'so_generic', 'Generic', true, 0.8);
-    addGroup('Basement', 'so_basement', 'Basement', true, 0.85);
-    // 椅子/电脑/白板/售货机
-    addGroup('Chair', 'so_chairs', 'chair', true, 0.55);
-    addGroup('Computer', 'so_computers', 'computer', true, 0.8);
-    addGroup('Whiteboard', 'so_whiteboards', 'whiteboard', true, 0.8);
-    addGroup('VendingMachine', 'so_vending', 'vendingmachine', true, 0.85);
+    // 碰撞层与 SkyOffice 源码一致：只有 *OnCollide / Basement / VendingMachine 挡人，
+    // 墙由 Ground 瓦片碰撞负责；Objects/GenericObjects/Wall/Chair/Computer/Whiteboard 是**装饰**,不挡人
+    // (根治"空地上到处是看不见的碰撞、走不进去"——之前把装饰层也做成了碰撞)。
+    // collidable=false 的仍会被渲染 + 计入遮挡(走到身后半透明),只是不阻挡移动。
+    const wallGroup = addGroup('Wall', 'tiles_wall', 'FloorAndGround', false);
+    addGroup('Objects', 'so_office', 'Modern_Office_Black_Shadow', false);
+    addGroup('ObjectsOnCollide', 'so_office', 'Modern_Office_Black_Shadow', true, 'base');
+    addGroup('GenericObjects', 'so_generic', 'Generic', false);
+    addGroup('GenericObjectsOnCollide', 'so_generic', 'Generic', true, 'base');
+    addGroup('Basement', 'so_basement', 'Basement', true, 'base');
+    // 椅子/电脑/白板=装饰不挡人(可走上去坐/用)；售货机挡人
+    addGroup('Chair', 'so_chairs', 'chair', false);
+    addGroup('Computer', 'so_computers', 'computer', false);
+    addGroup('Whiteboard', 'so_whiteboards', 'whiteboard', false);
+    addGroup('VendingMachine', 'so_vending', 'vendingmachine', true, 'base');
+
+    // 把 1 格宽的门加宽成 2 格：俯视视角下门框占了下面那格,其实人能从那儿走过去。
+    // 找到"1格水平门"(本格可走、上下被挡、左右通),把下面那格的墙(瓦片碰撞+墙物件)放开。
+    this._widenDoors(map, ground, wallGroup);
+
+    // 收集椅子元数据（坐标 + 朝向），供 NPC/群演坐上去（面向电脑，不再都朝玩家）
+    this.chairs = [];
+    const chairLayer = map.getObjectLayer('Chair');
+    if (chairLayer) {
+      chairLayer.objects.forEach((o) => {
+        const cx = o.x + o.width * 0.5;
+        const cy = o.y - o.height * 0.5;
+        const dir = (o.properties || []).find(p => p.name === 'direction')?.value || 'down';
+        this.chairs.push({ x: cx, y: cy, dir, taken: false });
+      });
+    }
 
     // 职业氛围光：极淡全屏色调（保留职业差异化的"行业气质"）
     const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
     if (theme.tint) {
       this.add.rectangle(0, 0, MW, MH, theme.tint, 0.05).setOrigin(0).setDepth(1);
     }
+
+    this._buildNavGrid(map); // 导航网格(A* 寻路用)——此时家具已就位、角色还没建,只含墙+家具
+  }
+
+  // 建导航网格：每格可走 = 地板(非墙) 且 该处无实体家具挡住(NPC 脚下能站)。
+  // 建好后从出生点洪水填充,剔除与主区不连通的孤立小块(否则寻路会失败)。
+  _buildNavGrid(map) {
+    const cell = 32, cols = map.width, rows = map.height;
+    const walk = [];
+    for (let cy = 0; cy < rows; cy++) {
+      walk[cy] = [];
+      for (let cx = 0; cx < cols; cx++) {
+        const t = this.groundLayer.getTileAt(cx, cy);
+        let ok = !!(t && !t.collides); // 地板
+        if (ok) {
+          // 探针略大于 NPC 脚(20×18 ≥ 身体18×16),确保"可走格"身体真能站进去,不会走到一半卡住
+          const wx = cx * cell + cell / 2, wy = cy * cell + cell / 2;
+          const hits = this.physics.overlapRect(wx - 10, wy - 4, 20, 18, false, true);
+          for (const bd of hits) { if (bd.enable) { ok = false; break; } }
+        }
+        walk[cy][cx] = ok;
+      }
+    }
+    // 剔除孤立块：只保留与出生点连通的可走格
+    const sx = Math.floor(SPAWN.x / cell), sy = Math.floor(SPAWN.y / cell);
+    const main = new Set(); const st = [];
+    if (walk[sy] && walk[sy][sx]) { main.add(sy * cols + sx); st.push([sx, sy]); }
+    while (st.length) {
+      const [x, y] = st.pop();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < cols && ny < rows && walk[ny][nx] && !main.has(ny * cols + nx)) {
+          main.add(ny * cols + nx); st.push([nx, ny]);
+        }
+      }
+    }
+    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) {
+      if (walk[cy][cx] && !main.has(cy * cols + cx)) walk[cy][cx] = false; // 孤立块设为不可走
+    }
+    this._nav = { cell, cols, rows, walk };
+    this._pathfinder = new Pathfinder(walk, cols, rows, cell);
+  }
+
+  // 求 (sx,sy)→(gx,gy) 的路点数组(绕开墙/家具)，无路返回 null
+  _findPath(sx, sy, gx, gy) {
+    return this._pathfinder ? this._pathfinder.find(sx, sy, gx, gy) : null;
+  }
+
+  // 把 1 格宽的水平门加宽成 2 格：门框(下面那格)在俯视里挡住了,其实能走。
+  // 放开门下方那格的：① 地板层瓦片碰撞 ② 覆盖该格的墙物件碰撞。
+  _widenDoors(map, ground, wallGroup) {
+    const W = map.width, H = map.height, TS = map.tileWidth;
+    const isFloor = (cx, cy) => { const t = ground.getTileAt(cx, cy); return t && !t.collides; };
+    const isBlocked = (cx, cy) => { const t = ground.getTileAt(cx, cy); return !t || t.collides; };
+    const openTiles = [];
+    for (let cy = 1; cy < H - 1; cy++) {
+      for (let cx = 1; cx < W - 1; cx++) {
+        // 水平门：本格可走、上下被挡、左右可走 → 门下方那格(cy+1)放开
+        if (isFloor(cx, cy) && isBlocked(cx, cy - 1) && isBlocked(cx, cy + 1)
+            && isFloor(cx - 1, cy) && isFloor(cx + 1, cy)) {
+          openTiles.push({ cx, cy: cy + 1 });
+        }
+      }
+    }
+    for (const { cx, cy } of openTiles) {
+      // ① 放开地板层该格碰撞
+      const t = ground.getTileAt(cx, cy);
+      if (t) t.setCollision(false);
+      // ② 放开覆盖该格的墙物件碰撞（如门框墙块 gid149）
+      const wx = cx * TS + TS / 2, wy = cy * TS + TS / 2;
+      if (wallGroup) {
+        wallGroup.getChildren().forEach((img) => {
+          if (img.body && Math.abs(img.x - wx) < TS * 0.6 && Math.abs(img.y - wy) < TS * 0.6) {
+            img.body.enable = false;
+          }
+        });
+      }
+    }
+    this._doorOpenCount = openTiles.length;
   }
 
   // ==================== 玩家 ====================
   _createPlayer() {
-    // 主角皮肤 = 捏人选的形象（wdwtb_profile.avatar.skinKey）,默认 adam
-    let skinKey = 'adam', skinTint = null;
+    // 主角皮肤 = 捏人选的形象（wdwtb_profile.avatar.skinKey）,默认 so_adam。
+    // 统一 SkyOffice：老存档若存的是 LimeZu 皮肤,映射到同风格 SkyOffice,保证与 NPC 同尺寸。
+    const LIMEZU_TO_SKY = { adam: 'so_adam', alex: 'so_ash', amelia: 'so_lucy', bob: 'so_nancy' };
+    let skinKey = 'so_adam', skinTint = null;
     try {
       const prof = JSON.parse(localStorage.getItem('wdwtb_profile') || '{}');
-      if (prof?.avatar?.skinKey && SKINS[prof.avatar.skinKey]) {
-        skinKey = prof.avatar.skinKey;
+      let k = prof?.avatar?.skinKey;
+      if (k && LIMEZU_TO_SKY[k]) k = LIMEZU_TO_SKY[k];
+      if (k && SKINS[k]) {
+        skinKey = k;
         skinTint = prof.avatar.tint || null;
       }
     } catch (e) {}
@@ -620,10 +811,11 @@ export class WorldScene extends Phaser.Scene {
     if (skinTint) this.player.setTint(skinTint);
     this.player.setScale(s.scale ?? SCALE);
     this.player.setCollideWorldBounds(true);
-    // 碰撞体=脚底一小块（两种素材尺寸不同，按显示高度比例取底部）
-    const fw = this.player.displayWidth, fh = this.player.displayHeight;
-    this.player.body.setSize(fw * 0.4 / this.player.scaleX, fh * 0.25 / this.player.scaleY);
-    this.player.body.setOffset(fw * 0.3 / this.player.scaleX, fh * 0.7 / this.player.scaleY);
+    // 碰撞体=脚下实体（与 NPC 同规格 18×16,贴脚）,人物之间/与家具像真人一样保持距离。
+    const bw = 18, bh = 16;
+    this.player.body.setSize(bw, bh);
+    this.player.body.setOffset((this.player.width - bw) / 2, this.player.height - bh - 2);
+    this.player.body.pushable = false; // 玩家也不被 NPC 推走(碰撞只阻挡)
 
     this.physics.world.setBounds(0, 0, MW, MH);
     // 与地板墙碰撞层 + 各碰撞物件组碰撞（替代旧的 this.obstacles）
@@ -632,80 +824,301 @@ export class WorldScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+    this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT); // 按住冲刺
     this.facing = 'down';
   }
 
   // ==================== NPC ====================
   _createNpcs() {
-    // workLoop：名册具名同事(zhao/lin/ting…)；否则主题三槽 senior/peer/vet
+    // 程序员：读具名同事名册(老陈/江野/周哥/小林/小赵/婷婷)——有名有角色、任务链能"去找谁"。
+    // 其余职业：沿用职业主题的 senior/peer/vet 三槽。
     const roster = this.cache.json.get('roster');
-    let defs = npcDefsFromRoster(roster, this.career);
-    if (!defs) {
+    let defs;
+    if (WORK_LOOP_CAREERS.has(this.career) && roster && roster.npcs) {
+      defs = roster.npcs.map(n => ({
+        id: n.id, name: n.name, role: n.role, skin: n.skin,
+        x: n.x, y: n.y, tint: n.tint ? parseInt(n.tint, 16) : null,
+        label: `${n.name} · ${n.role}`, mark: n.mark || '💬', markColor: n.markColor || '#7ec8ff',
+        act: n.act, line: n.line,
+      }));
+    } else {
       const theme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
       const [seniorName, seniorTitle] = theme.npcs.senior;
       const [peerName, peerTitle] = theme.npcs.peer;
       const [vetName, vetTitle] = theme.npcs.vet;
       defs = [
-        {
-          id: 'senior', name: seniorName, skin: 'so_adam',
-          x: NPC_POS.senior.x, y: NPC_POS.senior.y, facing: 'down',
-          label: `${seniorName} · ${seniorTitle}`, mark: '❗', markColor: '#ffdd33',
-          act: 1,
-        },
-        {
-          id: 'peer', name: peerName, skin: 'so_nancy',
-          x: NPC_POS.peer.x, y: NPC_POS.peer.y, facing: 'down',
-          label: `${peerName} · ${peerTitle}`, mark: '💬', markColor: '#7ec8ff',
-          line: theme.peerLine,
-        },
-        {
-          id: 'vet', name: vetName, skin: 'so_lucy',
-          x: NPC_POS.vet.x, y: NPC_POS.vet.y, facing: 'down',
-          label: `${vetName} · ${vetTitle}`, mark: '💬', markColor: '#7ec8ff',
-          line: theme.vetLine,
-        },
+        { id: 'senior', name: seniorName, skin: 'so_adam', x: NPC_POS.senior.x, y: NPC_POS.senior.y,
+          label: `${seniorName} · ${seniorTitle}`, mark: '❗', markColor: '#ffdd33', act: 1 },
+        { id: 'peer', name: peerName, skin: 'so_nancy', x: NPC_POS.peer.x, y: NPC_POS.peer.y,
+          label: `${peerName} · ${peerTitle}`, mark: '💬', markColor: '#7ec8ff', line: theme.peerLine },
+        { id: 'vet', name: vetName, skin: 'so_lucy', x: NPC_POS.vet.x, y: NPC_POS.vet.y,
+          label: `${vetName} · ${vetTitle}`, mark: '💬', markColor: '#7ec8ff', line: theme.vetLine },
       ];
     }
 
-    // 用任意皮肤在 (x,y) 放一个静态角色（朝向 idle 帧），返回 sprite
-    const placeChar = (x, y, skinKey, facing = 'down') => {
+    // 先把玩家工位的椅子占掉(标记 taken 但不坐人),留给玩家自己的工作电脑。
+    this.playerDesk = PLAYER_DESK;
+    for (const c of (this.chairs || [])) {
+      if (Phaser.Math.Distance.Between(c.x, c.y, PLAYER_DESK.chair.x, PLAYER_DESK.chair.y) < 24) {
+        c.taken = true; c.isPlayerDesk = true;
+      }
+    }
+
+    // 取离 (x,y) 最近的空椅子并占用（让 NPC 坐工位、面向电脑而非朝玩家）。
+    const takeNearestChair = (x, y) => {
+      let best = null, bestD = Infinity;
+      for (const c of (this.chairs || [])) {
+        if (c.taken) continue;
+        const dd = Phaser.Math.Distance.Between(x, y, c.x, c.y);
+        if (dd < bestD) { bestD = dd; best = c; }
+      }
+      if (best) best.taken = true;
+      return best;
+    };
+
+    // 放一个角色：sit=true 用坐姿帧（坐在椅子上、按椅子朝向），否则站立 idle 帧。
+    const placeChar = (x, y, skinKey, facing = 'down', { sit = false, tint = null } = {}) => {
       const sk = ensureSkinAnims(this, skinKey) || ensureSkinAnims(this, 'adam');
       const cfg = SKINS[skinKey] || SKINS.adam;
-      return this.add.sprite(x, y, sk.tex).setFrame(sk.idleFrame(facing))
+      const frame = sit ? sk.sitFrame(facing) : sk.idleFrame(facing);
+      const spr = this.add.sprite(x, y, sk.tex).setFrame(frame)
         .setScale(cfg.scale ?? SCALE).setOrigin(0.5, 1).setDepth(y);
+      if (tint) spr.setTint(tint);
+      return spr;
+    };
+
+    // 计算坐到某椅子上的脚底坐标+深度（脚底锚点=中心+半身高；深度按 SkyOffice 位移）
+    const seatOf = (chair) => {
+      const s = SIT_SHIFT[chair.dir] || SIT_SHIFT.down;
+      return { x: chair.x + s.dx, y: chair.y + s.dy + CHAR_HALF_H, depth: chair.y + s.depth };
     };
 
     this.npcs = [];
     for (const d of defs) {
-      const skinKey = d.skin || 'so_adam';
-      const spr = placeChar(d.x, d.y, skinKey, d.facing || 'down');
-      if (d.tint) spr.setTint(d.tint);
+      // 主要 NPC 坐到最近的工位：位置=椅子、朝向=椅子朝向（面向电脑）
+      const chair = takeNearestChair(d.x, d.y);
+      if (chair) {
+        const seat = seatOf(chair);
+        d.x = seat.x; d.y = seat.y; d.facing = chair.dir; d._seat = seat;
+      } else d.facing = 'down';
+      const spr = placeChar(d.x, d.y, d.skin, d.facing, { sit: !!chair, tint: d.tint || null });
+      if (chair) spr.setDepth(d._seat.depth); // 正确陷进椅子
 
-      // NPC 名牌（脚下小字，1920 尺度）
-      const nameTag = this.add.text(d.x, d.y + 8, d.name, {
-        fontSize: '13px', color: '#ffffff',
-        backgroundColor: '#00000088', padding: { x: 5, y: 2 },
+      // NPC 名牌（脚下小字：名字 + 角色，让"谁是谁"一目了然）
+      const tagText = d.role ? `${d.name}·${d.role}` : d.name;
+      const nameTag = this.add.text(d.x, d.y + 8, tagText, {
+        fontSize: '12px', color: '#ffffff',
+        backgroundColor: '#00000099', padding: { x: 5, y: 2 },
       }).setOrigin(0.5, 0).setDepth(d.y + 1);
 
-      // 头顶交互浮标（上下浮动）
+      // 头顶交互浮标（像素图标,上下浮动）
       const markY = d.y - 78;
-      const mark = this.add.text(d.x, markY, d.mark || '💬', {
-        fontSize: '24px', color: d.markColor || '#7ec8ff',
-      }).setOrigin(0.5, 1).setDepth(9000);
+      const mark = this.add.image(d.x, markY, EMOJI_TO_ICON[d.mark] || ICON_KEYS.chat)
+        .setOrigin(0.5, 1).setDepth(9000)
+        .setTint(Phaser.Display.Color.HexStringToColor(d.markColor).color);
       this.tweens.add({
         targets: mark, y: markY - 6,
         duration: 620, yoyo: true, repeat: -1, ease: 'Sine.inOut',
       });
 
-      this.npcs.push({
-        ...d, spr, mark, nameTag,
-        markState: d.mark || '💬',
-      });
+      this.npcs.push({ ...d, spr, mark, nameTag, markState: d.mark, defaultMark: d.mark, defaultMarkColor: d.markColor });
     }
 
-    // 背景群演：坐/站在开放区的路人，让办公室"有活人"（纯装饰，混搭皮肤增加多样）
-    const workerSkins = ['amelia', 'bob', 'so_ash'];
-    EXTRA_WORKERS.forEach((w, i) => placeChar(w.x, w.y, workerSkins[i % workerSkins.length]));
+    // 背景同事：从 office_npcs.json 读配置，坐满剩余工位（白天像真实公司满员）。
+    // tint 把 4 个 atlas 扩成十几个视觉不同的人。纯装饰不可交互。
+    this.workers = [];
+    const cfgData = this.cache.json.get('office_npcs');
+    const workerDefs = (cfgData && cfgData.workers) || [];
+    // 优先坐满右侧开放工位区（x>780），会议室/茶水间(左侧)留大部分空着——
+    // 真实公司平时人在工位上，会议室多数时候没人。
+    const freeChairs = (this.chairs || []).filter(c => !c.taken)
+      .sort((a, b) => b.x - a.x);
+    workerDefs.forEach((w, i) => {
+      const chair = freeChairs[i];
+      if (!chair) return; // 椅子坐满就停
+      chair.taken = true;
+      const tint = w.tint ? parseInt(w.tint, 16) : null;
+      const seat = seatOf(chair);
+      const spr = placeChar(seat.x, seat.y, w.skin, chair.dir, { sit: true, tint });
+      spr.setDepth(seat.depth); // 正确陷进椅子
+      // 存动画访问器（sit/idle 帧），供 NpcAgent 起身/坐下切帧
+      const anims = ensureSkinAnims(this, w.skin) || ensureSkinAnims(this, 'adam');
+      const worker = { ...w, spr, chair, anims, seat };
+      worker.agent = new NpcAgent(this, worker);
+      this.workers.push(worker);
+    });
+
+    // 每个 NPC/同事一个"脚下静态挡块"(zone + 静态体)——这是可靠挡住玩家的方案。
+    // 坐着的挡块固定；走动的(补间移动)每帧把挡块同步到脚下,所以走动的同事也挡人。
+    this.npcColliders = this.physics.add.staticGroup();
+    const addBody = (spr) => {
+      const z = this.add.zone(spr.x, spr.y - 16, 22, 30); // 覆盖坐着的身体大部分,可靠挡人
+      this.physics.add.existing(z, true);
+      z.body.updateFromGameObject();
+      this.npcColliders.add(z);
+      return z;
+    };
+    this.npcs.forEach(n => { n._body = addBody(n.spr); });
+    this.workers.forEach(w => { w._body = addBody(w.spr); });
+    if (this.player) this.physics.add.collider(this.player, this.npcColliders);
+
+    // 头顶心情泡泡：每个同事一个,随时段变化(真实职场情绪感)
+    [...this.npcs, ...this.workers].forEach(e => { e._mood = this._makeMoodBubble(e.spr); });
+    this._refreshAllMoods();
+    if (this._moodTimer) this._moodTimer.remove();
+    this._moodTimer = this.time.addEvent({
+      delay: 5000, loop: true, callback: () => this._shuffleSomeMoods(),
+    });
+
+    this._startNpcLife();
+  }
+
+  // ==================== NPC 头顶状态泡泡（一句话状态）====================
+  // 小气泡=深色圆角底 + 白字,显示同事当下在干嘛("写代码💻""要上厕所🚽""赶deadline😱")。
+  _makeMoodBubble(spr) {
+    const t = this.add.text(spr.x, spr.y - 52, '', {
+      fontSize: '12px', color: '#f4f4ff', backgroundColor: '#242436e0',
+      padding: { x: 7, y: 4 }, align: 'center',
+    }).setOrigin(0.5, 1).setDepth(9000);
+    if (this.uiCamera) this.uiCamera.ignore(t);
+    return t;
+  }
+
+  _moodPool() {
+    const seg = this.timeSystem ? this.timeSystem.current.id : 'forenoon';
+    return MOODS_POOL[seg] || MOODS_POOL.forenoon;
+  }
+
+  _positionMood(e) {
+    if (e._mood && e.spr) e._mood.setPosition(e.spr.x, e.spr.y - 52).setDepth(e.spr.y + 30);
+  }
+
+  _setMood(e) {
+    if (!e || !e._mood || !e.spr) return;
+    e._mood.setText(Phaser.Utils.Array.GetRandom(this._moodPool()));
+    this._positionMood(e);
+    e._mood.setVisible(e.spr.visible);
+  }
+
+  _refreshAllMoods() {
+    // 出行中的同事保留其"目的"文字,不被时段刷新打断(根治"去厕所走一半突然变打卡")
+    [...(this.npcs || []), ...(this.workers || [])]
+      .filter(e => !(e.agent && e.agent.busy))
+      .forEach(e => this._setMood(e));
+  }
+
+  // 每隔几秒随机给几个同事换一句状态（让泡泡"活"起来）。出行中的人保留其"目的"文字,不打断。
+  _shuffleSomeMoods() {
+    const all = [...(this.npcs || []), ...(this.workers || [])]
+      .filter(e => e.spr && e.spr.visible && !(e.agent && e.agent.busy));
+    if (!all.length) return;
+    const n = Math.min(4, all.length);
+    for (let i = 0; i < n; i++) this._setMood(Phaser.Utils.Array.GetRandom(all));
+  }
+
+  // 走到高家具/墙身后时，把它半透明化露出人物（像素游戏惯用遮挡处理）。
+  // 判定：家具在玩家"前面"(y更大→绘制盖住玩家) 且横向重叠 且纵向在其高度内 → 淡化。
+  _updateOcclusion() {
+    if (!this._occluders || !this.player) return;
+    const px = this.player.x, py = this.player.y;
+    for (const o of this._occluders) {
+      if (!o.active) continue;
+      const dx = Math.abs(o.x - px);
+      const dyc = o.y - py; // >0：家具在玩家下方(前面),会盖住玩家
+      const behind = dx < (o.displayWidth / 2 + 6) && dyc > 4 && dyc < (o.displayHeight * 0.85);
+      const target = behind ? 0.5 : 1;
+      if (o.alpha !== target) o.setAlpha(target);
+    }
+  }
+
+  // 每帧驱动走动中的同事（补间移动 + 挡块/状态泡泡跟随脚下）
+  _updateWorkers(now) {
+    if (!this.workers) return;
+    for (const w of this.workers) {
+      if (!w.agent || !w.spr) continue;
+      const busy = w.agent.busy;
+      if (w.agent.state === 'walking') {
+        w.agent.update(now);
+        if (w._mood) this._positionMood(w);
+        this._syncBody(w); // 走动的同事挡块跟着脚下走(也挡玩家)
+      }
+      // 出行结束回到工位 → 挡块归位到座位 + 泡泡换回普通状态
+      if (w._wasBusy && !busy) {
+        this._syncBody(w);
+        this._setMood(w); this._positionMood(w);
+      }
+      w._wasBusy = busy;
+    }
+  }
+
+  // 把某同事的脚下挡块同步到其精灵当前位置
+  _syncBody(w) {
+    if (!w._body || !w._body.body || !w.spr) return;
+    w._body.x = w.spr.x; w._body.y = w.spr.y - 16;
+    w._body.body.updateFromGameObject();
+  }
+
+  // 办公室"生活"调度：每隔几秒挑一个在座同事,让他【带着明确目的】起身——去厕所/茶水间/
+  // 打印/开会/找同事……用 A* 寻路真正走过去(绕开墙和家具)、做完事再走回工位坐下。
+  _startNpcLife() {
+    // 目的地 POI：一句"我去干嘛" + 目标点 + 停留时长。开局把每个点吸附到最近可走格,
+    // 保证 NPC 真的能走到、不会走进墙被甩出图。吸附不到的直接丢弃。
+    // 只用【地图里真实存在的地点】做目的地(没有厕所就不去厕所)——去了真的到,到了真的做。
+    const raw = [
+      { id: 'coffee',  label: '去茶水间 ☕',     x: 400, y: 300, dwell: 3600 }, // 左上休息区
+      { id: 'water',   label: '去接杯水 🥤',     x: 430, y: 430, dwell: 2200 }, // 售货机
+      { id: 'meeting', label: '去会议室 📋',     x: 400, y: 640, dwell: 6000 }, // 左下会议室
+      { id: 'board',   label: '去看看白板 📊',   x: 560, y: 470, dwell: 2600 }, // 白板
+      { id: 'printer', label: '去打印文件 🖨️',   x: 900, y: 810, dwell: 2400 }, // 打印机
+      { id: 'stroll',  label: '起来走两步 🚶',   x: 704, y: 432, dwell: 2600 }, // 走廊
+      { id: 'chat',    label: '找同事聊两句 💬', x: 1040, y: 680, dwell: 3000 }, // 工位群
+    ];
+    this._pois = [];
+    for (const poi of raw) {
+      const snap = this._pathfinder ? this._pathfinder.snapToWalkable(poi.x, poi.y) : { x: poi.x, y: poi.y };
+      if (snap) this._pois.push({ ...poi, x: snap.x, y: snap.y });
+    }
+    if (this._npcLifeTimer) this._npcLifeTimer.remove();
+    this._npcLifeTimer = this.time.addEvent({
+      delay: 4000, loop: true, callback: () => this._tickNpcLife(),
+    });
+  }
+
+  _tickNpcLife() {
+    if (this.dialogueActive || !this.workers?.length || !this._pois) return;
+    const seg = this.timeSystem?.current;
+    // 深夜/午休在岗少,走动更少
+    if (seg && seg.population < 0.3 && Phaser.Math.RND.frac() > 0.3) return;
+    const idle = this.workers.filter(w => w.spr?.visible && w.agent && !w.agent.busy);
+    if (!idle.length) return;
+    const w = Phaser.Utils.Array.GetRandom(idle);
+    const seat = w.seat || { x: w.chair.x, y: w.chair.y };
+    // 随机挑一个目的地,用 A* 求去程/回程路径；求不到就换一个,都不行这次不走。
+    const pois = Phaser.Utils.Array.Shuffle(this._pois.slice());
+    for (const poi of pois) {
+      const pathTo = this._findPath(seat.x, seat.y, poi.x, poi.y);
+      if (!pathTo || pathTo.length < 1) continue;
+      const pathBack = this._findPath(poi.x, poi.y, seat.x, seat.y);
+      if (!pathBack || pathBack.length < 1) continue;
+      // 让回程终点精确回到座位
+      pathBack[pathBack.length - 1] = { x: seat.x, y: seat.y };
+      if (w.agent.goTrip(pathTo, pathBack, poi.dwell)) {
+        if (w._mood) { w._mood.setText(poi.label); this._positionMood(w); } // 泡泡显示"去干嘛"
+      }
+      return;
+    }
+  }
+
+  // 头顶冒一个短暂的情绪气泡（上浮 + 淡出），零美术、纯氛围。
+  _npcEmote(worker, char) {
+    const spr = worker.spr;
+    if (!spr || !spr.scene) return;
+    const t = this.add.text(spr.x, spr.y - 48, char, { fontSize: '20px' })
+      .setOrigin(0.5, 1).setDepth(9000);
+    this.tweens.add({
+      targets: t, y: t.y - 16, alpha: 0, duration: 1600, ease: 'Sine.out',
+      onComplete: () => t.destroy(),
+    });
   }
 
   update(time) {
@@ -713,6 +1126,9 @@ export class WorldScene extends Phaser.Scene {
 
     // 状态即演出：按主导状态染屏 + 音效 + 减速（让状态条"活"起来）
     this._updateMoodFx(time || 0);
+    this._updateWorkers(this.time.now); // 驱动走动同事(物理移动+到达检测)
+    this._updateOcclusion(); // 走到家具身后半透明露出人物
+    this._updateObjectiveHud(); // 常驻目标 HUD + 方向箭头
 
     // HUD 随对话状态自动让路（半透明），单点同步不怕遗漏
     if (this.statusUI && this._lastDim !== this.dialogueActive) {
@@ -750,8 +1166,24 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    // 坐着状态：移动键=起身；E=（在自己工位）开始工作 /（普通座位）起身
+    if (this._sitting) {
+      this.player.setVelocity(0, 0);
+      const mv = this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown
+        || this.wasd.A.isDown || this.wasd.D.isDown || this.wasd.W.isDown || this.wasd.S.isDown;
+      const tAxis = this.touchControls ? this.touchControls.getAxis() : { x: 0, y: 0 };
+      if (mv || Math.abs(tAxis.x) > 0.3 || Math.abs(tAxis.y) > 0.3) { this._standUp(); return; }
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
+        if (this._sitting.isPlayerDesk) this._openWorkBoard();
+        else this._standUp();
+      }
+      return;
+    }
+
     // 耗竭时移动变慢（状态演出：身体拖着走）
-    const speed = 130 * (this._moodSpeedMul || 1);
+    // 按住 Shift 冲刺(耗竭时冲刺打折)
+    const sprint = (this.shiftKey && this.shiftKey.isDown) ? 1.65 : 1;
+    const speed = 130 * (this._moodSpeedMul || 1) * sprint;
     const L = this.cursors.left.isDown || this.wasd.A.isDown;
     const R = this.cursors.right.isDown || this.wasd.D.isDown;
     const U = this.cursors.up.isDown || this.wasd.W.isDown;
@@ -799,6 +1231,12 @@ export class WorldScene extends Phaser.Scene {
       }
     } else {
       this.player.anims.play(`${this.walkPrefix}_${this.facing}`, true);
+      // 脚步声：按步频节流（冲刺时更密），极轻不吵
+      const stepGap = sprint > 1 ? 220 : 320;
+      if (!this._lastStepAt || time - this._lastStepAt > stepGap) {
+        this._lastStepAt = time;
+        AudioSystem.footstep();
+      }
     }
 
     // ---- 交互:找最近可交互 NPC ----
@@ -817,15 +1255,35 @@ export class WorldScene extends Phaser.Scene {
       const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, obj.x, obj.y);
       if (d < nd) { nd = d; nearest = obj; nearestType = 'object'; }
     }
+    // 空椅子可坐（NPC 占用的不算；玩家工位椅虽标记 taken 但留给玩家,可坐）
+    for (const ch of (this.chairs || [])) {
+      if (ch.taken && !ch.isPlayerDesk) continue;
+      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, ch.x, ch.y + 6);
+      if (d < nd) { nd = d; nearest = ch; nearestType = 'chair'; }
+    }
 
     this.activeNpc = nearestType === 'npc' ? nearest : null;
     this.activeObject = nearestType === 'object' ? nearest : null;
+    // 高亮圈跟随当前可交互的真实家具/座位（NPC 不用高亮圈,有头顶浮标）
+    if (this._objHighlight) {
+      if (nearestType === 'object') {
+        this._objHighlight.setPosition(nearest.x, nearest.y + 10).setVisible(true);
+      } else if (nearestType === 'chair') {
+        this._objHighlight.setPosition(nearest.x, nearest.y + 6).setVisible(true);
+      } else {
+        this._objHighlight.setVisible(false);
+      }
+    }
     if (nearest) {
-      const label = nearestType === 'npc' ? `与 ${nearest.name} 交谈` : nearest.prompt;
+      let label;
+      if (nearestType === 'npc') label = `与 ${nearest.name} 交谈`;
+      else if (nearestType === 'chair') label = nearest.isPlayerDesk ? '坐下办公' : '坐下';
+      else label = nearest.prompt;
       this.ePrompt.setText(`［ E ］${label}`).setVisible(true);
       if (this.touchControls) this.touchControls.setInteractVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
         if (nearestType === 'npc') this._interact(nearest);
+        else if (nearestType === 'chair') this._sitOnChair(nearest);
         else this._interactObject(nearest);
       }
     } else {
@@ -837,7 +1295,7 @@ export class WorldScene extends Phaser.Scene {
   // 交互物件触发：执行 def.action。冷却物件每天限一次。
   _interactObject(obj) {
     if (this.dialogueActive) return;
-    // workLoop 工位电脑：开今日工单板（也可直接上报 work 进度兜底）
+    // 工位电脑：开工作日循环的核心——打开今日工单板（程序员切片）
     if (obj.id === 'computer' && this.workLoopEnabled) {
       this._openWorkBoard();
       return;
@@ -954,13 +1412,32 @@ export class WorldScene extends Phaser.Scene {
           }
         }
       }
+      // 该 NPC 是某进行中任务的"下一个 talk 目标" → 说对接台词(talkLines)并推进
+      let questLine = null;
+      for (const q of this.questSystem.active()) {
+        const next = q.ordered ? this.questSystem.nextObjective(q.id) : null;
+        const isTarget = next
+          ? (next.kind === 'talk' && next.target === npc.id)
+          : (q.objectives || []).some(o => o.kind === 'talk' && o.target === npc.id
+              && !this.questSystem._objDone(q.id, o.id));
+        if (isTarget) {
+          questLine = (q.talkLines && q.talkLines[npc.id]) || null;
+          break;
+        }
+      }
       // 上报 talk 进度（该 NPC 是某进行中任务的 talk 目标）
       this.questSystem.progress('talk', npc.id);
       this._updateNpcMarks();
+      if (questLine) {
+        this._showLine(npc.name, questLine);
+        return;
+      }
     }
 
-    // 其余 NPC → 寒暄。有选择历史时，NPC 可能说一句"记得你做过什么"的个性化台词（AI 生成）。
-    if (npc.line) this._showNpcLineWithMemory(npc);
+    // 其余 NPC → 寒暄。台词随剧情幕变化(linesByAct)——同事的状态跟着故事一起走。
+    // 有选择历史时，NPC 可能说一句"记得你做过什么"的个性化台词（AI 生成）。
+    const line = npcLineForAct(npc, this.act);
+    if (line) this._showNpcLineWithMemory(npc, line);
   }
 
   // ==================== 导师剧情状态机（连贯性核心）====================
@@ -968,96 +1445,117 @@ export class WorldScene extends Phaser.Scene {
   // 轻量职业：走近一次播完整单文件到 ending（无经营期）。
   // 深度职业：ready→播本幕剧情→working(经营期，做任务过日子)→天数攒够→播下一幕。
   _interactSenior(npc) {
-    // 1) 交付优先
-    const action = seniorInteractAction({
-      questSystem: this.questSystem,
-      story: this._story,
-      workLoopEnabled: this.workLoopEnabled,
-      act: this.act,
-    });
-    if (action.kind === 'deliver') {
-      const r = applySeniorDeliver(this.questSystem, action);
-      if (r.ok) {
-        this._showLine(npc.name, r.line || action.line);
-        if (r.progressGain && this.projectSystem) {
-          this.projectSystem.adjustProgress(r.progressGain);
-        }
-        this._updateNpcMarks();
-      }
-      return;
-    }
-
-    // 2) ready：播本幕剧情（优先于派活）
-    if (this._story.phase === 'ready') {
-      this._story.act = this.act;
-      if (LIGHT_CAREERS.includes(this.career)) {
-        this._playStory(`./data/light_${this.career}.json`);
-      } else {
-        this._playStory(`./data/${this.career}_act${this.act}.json`);
-      }
-      return;
-    }
-
-    // 3) working：里程碑 / 天数推进（优先于派活，主线 e2e 与 career 冒烟依赖此序）
-    if (this._story.phase === 'working') {
-      if (this.workLoopEnabled) {
-        const adv = tryAdvanceByMilestone(this._story, this.act, this.career, this.deep !== false);
-        if (adv.advanced) {
-          this._story = adv.story;
-          this.act = adv.act;
-          this._persistStory();
-          this._playStory(adv.playUrl);
+    // 导师身上有可交付任务 → 优先交付（senior 是多数任务 giver）
+    // 任务链：交付时说 doneLine，并按 progressGain 推动项目进度(链进度=项目进度)。
+    if (this.questSystem) {
+      for (const q of this.questSystem.active()) {
+        if (q.giver === 'senior' && this.questSystem.isReady(q.id)) {
+          this.questSystem.complete(q.id);
+          this._showLine(npc.name, q.doneLine || `「${q.title}」完成！干得漂亮。`);
+          if (q.progressGain && this.projectSystem) {
+            this.projectSystem.adjustProgress(q.progressGain);
+            this._updateProjectHud && this._updateProjectHud();
+          }
+          this._updateNpcMarks();
           return;
         }
       }
-      const need = ACT_DAYS[this.act] || 1;
-      if ((this._story.daysInAct || 0) >= need) {
-        this.act += 1;
-        this._story.act = this.act;
-        this._story.phase = 'ready';
-        this._story.daysInAct = 0;
-        this._persistStory();
-        this._playStory(
-          LIGHT_CAREERS.includes(this.career)
-            ? `./data/light_${this.career}.json`
-            : `./data/${this.career}_act${this.act}.json`,
-        );
-        return;
+      // 任务链派活/引导：只在经营期(working)且没有待播的里程碑剧情时——
+      // 剧情节点(报到/里程碑)优先于派活，保证"先见老陈听交代，再领活干"。
+      const storyPending = isStoryPending({ ...this._story, act: this.act });
+      if (this.workLoopEnabled && !storyPending) {
+        const ctx = { act: this.act };
+        // 有可派的链任务 → 接取（acceptLine 派活 + 指路第一个目标）
+        for (const q of this.questSystem.available(ctx)) {
+          if (q.giver !== 'senior') continue;
+          this.questSystem.accept(q.id);
+          const next = this.questSystem.nextObjective(q.id);
+          const hint = next ? `\n▸ ${next.text}` : '';
+          this._showLine(npc.name, `${q.acceptLine || `新任务：「${q.title}」`}${hint}`);
+          this._updateNpcMarks();
+          return;
+        }
+        // 链任务进行中 → 提示下一步（不重复派活）
+        for (const q of this.questSystem.active()) {
+          if (q.giver !== 'senior') continue;
+          const next = this.questSystem.nextObjective(q.id);
+          if (next) {
+            this._showLine(npc.name, `「${q.title}」还在你手上。\n▸ ${next.text}`);
+            return;
+          }
+        }
       }
     }
 
-    // 4) 派活 / 进行中提示
-    if (action.kind === 'accept') {
-      const r = applySeniorAccept(this.questSystem, action);
-      if (r.ok) {
-        this._showLine(npc.name, r.line);
-        this._updateNpcMarks();
-      }
-      return;
-    }
-    if (action.kind === 'hint') {
-      this._showLine(npc.name, action.line);
-      return;
-    }
-
-    // 5) 轻量回落
+    // 轻量职业：默认单文件一次播完到 ending。
+    // 若已纳入工作日循环(如设计师迷你完整版)：ready 播 light 剧情 → ending 动作改入经营期；
+    // working 时做任务链/工单；项目 100% 再走近导师进结局。
     if (LIGHT_CAREERS.includes(this.career)) {
+      if (this.workLoopEnabled) {
+        if (this._story.phase === 'ready') {
+          this._playStory(`./data/light_${this.career}.json`);
+          return;
+        }
+        if (this._story.phase === 'working') {
+          const p = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
+          if (canFinishLightWorkLoop(this._story, p)) {
+            SceneRouter.goto(this, 'EndingScene', {
+              ending: this.career, career: this.career,
+              stats: this.stateSystem.getAll(),
+              choiceLog: this.choiceLog ? this.choiceLog.serialize() : null,
+            });
+            return;
+          }
+          this._showLine(npc.name, `稿还在推进中——现在项目 ${p}%。\n把任务链和今日工单往前推，推满 100% 再来找我收尾。`);
+          return;
+        }
+      }
       this._playStory(`./data/light_${this.career}.json`);
       return;
     }
 
-    // 6) 经营中未到推进条件
+    // 深度职业状态机
+    if (this._story.phase === 'ready') {
+      // 播本幕剧情
+      this._story.act = this.act;
+      this._playStory(`./data/${this.career}_act${this.act}.json`);
+      return;
+    }
+    // working 经营期：检查能否推进下一幕
     if (this._story.phase === 'working') {
-      const left = (ACT_DAYS[this.act] || 1) - (this._story.daysInAct || 0);
-      const p = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
-      const extra = this.workLoopEnabled ? `\n（项目进度 ${p}%）` : '';
-      this._showLine(npc.name, `这阶段的活儿还没到收尾的时候。\n再忙上${Math.max(0, left)}天吧——做做手头的任务，累了就下班回家。${extra}`);
+      // 工作日循环职业(程序员)：由【项目里程碑】推进下一幕(取代"熬够N天")
+      if (this.workLoopEnabled) {
+        const adv = tryAdvanceByMilestone(this._story, this.act, this.career, this.deep !== false);
+        this._story = adv.story;
+        if (adv.advanced) {
+          this.act = adv.act;
+          this._persistStory();
+          this._playStory(adv.playUrl);
+        } else {
+          const p = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
+          this._showLine(npc.name, `这阶段的活儿还没到收尾。\n把项目往前推推——现在 ${p}%，推进到下一个节点，我们再聊下一步。`);
+        }
+        return;
+      }
+      // 其余深度职业：沿用天数攒够推进
+      const dayAdv = tryAdvanceByDays(this._story, this.act, this.career);
+      this._story = dayAdv.story;
+      if (dayAdv.advanced) {
+        this.act = dayAdv.act;
+        this._persistStory();
+        this._playStory(dayAdv.playUrl);
+      } else {
+        this._showLine(npc.name, `这阶段的活儿还没到收尾的时候。\n再忙上${dayAdv.daysLeft}天吧——做做手头的任务，累了就下班回家。等你缓过来，我们再聊下一步。`);
+      }
+      return;
     }
   }
 
   // 播一段剧情 JSON（提取自原 senior 逻辑）。播完由 dialogueEngine 的 action 驱动后续。
   _playStory(url) {
     this.dialogueActive = true;
+    this._inStoryDialogue = true;   // 标记：这是剧情对话（用于断点存档）
+    this._storyDoneThisPlay = false; // 本次是否演到幕末(next_act/ending)
     this.ePrompt.setVisible(false);
     if (this.guideText) this.guideText.setVisible(false);
     if (this.offWorkBtn) this.offWorkBtn.setVisible(false); // 剧情场景中隐藏办公室按钮
@@ -1065,12 +1563,35 @@ export class WorldScene extends Phaser.Scene {
       .then(res => { if (!res.ok) throw new Error(`加载剧情失败:HTTP ${res.status}`); return res.json(); })
       .then(data => {
         this.dialogueEngine._clearUI();
-        this.dialogueEngine.start(data);
+        // 断点续演：若本幕上次中途退出,从断点节点接着演,不再从头重播
+        const cp = this._story.checkpoint;
+        const resumeId = (cp && cp.act === this.act) ? cp.node : null;
+        this.dialogueEngine.start(data, resumeId);
       })
       .catch(err => {
         console.error('[WorldScene]', err.message);
         this.dialogueActive = false;
+        this._inStoryDialogue = false;
       });
+  }
+
+  // 自动保存：完整写档 + 右上角"💾 已保存"提示（渐显渐隐）。
+  // 关键节点调用：交付任务/里程碑/剧情推进/下班。
+  _autoSave() {
+    this._persistStory();
+    if (!this._saveToast) {
+      const { width: SW } = this.scale;
+      this._saveToast = this.add.container(SW - 20, 120).setScrollFactor(0).setDepth(9999).setAlpha(0);
+      const icon = this.add.image(-92, 0, ICON_KEYS.save).setTint(0x9fd89f).setOrigin(0.5);
+      const txt = this.add.text(-78, 0, '已保存', { fontSize: '16px', fill: '#9fd89f' }).setOrigin(0, 0.5);
+      this._saveToast.add([icon, txt]);
+      if (typeof this.attachToUICamera === 'function') this.attachToUICamera(this._saveToast);
+    }
+    this.tweens.killTweensOf(this._saveToast);
+    this.tweens.add({
+      targets: this._saveToast, alpha: 1, duration: 250, yoyo: true, hold: 1200,
+      onComplete: () => this._saveToast && this._saveToast.setAlpha(0),
+    });
   }
 
   // 持久化剧情状态（story）到存档
@@ -1079,10 +1600,13 @@ export class WorldScene extends Phaser.Scene {
     SaveSystem.saveProgress({
       career: this.career, act: this.act, stats: this.stateSystem.getAll(),
       extra: {
+        subRole: this.subRole,
         quests: this.questSystem.serialize(),
         choiceLog: this.choiceLog.serialize(),
         thought: this.thoughtSystem ? this.thoughtSystem.serialize() : null,
         daySystem: this.daySystem ? this.daySystem.serialize() : null,
+        segment: this.timeSystem ? this.timeSystem.index : null,
+        project: this.projectSystem ? this.projectSystem.serialize() : null,
         story: this._story,
       },
     });
@@ -1090,12 +1614,14 @@ export class WorldScene extends Phaser.Scene {
 
   // NPC 记忆台词：AI 按玩家选择历史生成个性化反应，让"世界记得你"。
   // 门槛：有足够选择记录 + 30% 概率触发（保持稀有）；否则/失败用固定寒暄。
-  _showNpcLineWithMemory(npc) {
+  // line 参数=按当前幕挑好的台词(linesByAct)；缺省回落 npc.line。
+  _showNpcLineWithMemory(npc, line) {
+    const say = line || npc.line;
     const summary = this._choiceSummaryShort();
     const shouldTryAI = summary && this.choiceLog.length >= 3 && Math.random() < 0.3;
-    if (!shouldTryAI) { this._showLine(npc.name, npc.line); return; }
+    if (!shouldTryAI) { this._showLine(npc.name, say); return; }
     // 先显示固定寒暄（即时反馈），AI 成功后覆盖成个性化版本
-    this._showLine(npc.name, npc.line);
+    this._showLine(npc.name, say);
     const sys = `你是职场 RPG 里的 NPC「${npc.name}」，一个${npc.label || '同事'}。`
       + `根据玩家最近的行为，说一句自然的、像老同事随口一提的话，体现"我注意到你最近的状态"。`
       + `1 句，口语化，中文，不说教、不评判，带点关心。`;
@@ -1116,7 +1642,6 @@ export class WorldScene extends Phaser.Scene {
   // 框高按正文实测高度自适应（先量后定），根治多行文字溢出遮字
   _showLine(name, text) {
     this.dialogueActive = true;
-    this._lineText = { text: String(text || '') }; // e2e / 调试可读
     this.ePrompt.setVisible(false);
     if (this.guideText) this.guideText.setVisible(false);
     const { width, height } = this.scale;
@@ -1193,8 +1718,13 @@ export class WorldScene extends Phaser.Scene {
     // 从 init 缓存的存档字段恢复任务进度 + 选择记忆（跨幕累积）
     if (this._savedQuests && this.questSystem) this.questSystem.restore(this._savedQuests);
     if (this._savedChoiceLog && this.choiceLog) this.choiceLog.restore(this._savedChoiceLog);
-    // workLoop → taskchain_{career}_{subRole}；否则 quests_{career}
-    const url = questDataUrl(this.career, this.subRole, this.workLoopEnabled);
+    // 异步加载任务定义。
+    // 工作日循环职业(程序员)：主线=任务链，按细分岗位(subRole)加载对应链(开发/测试)。
+    // 其余职业：沿用 quests_{career}.json。
+    const defaultSub = DEFAULT_SUBROLE[this.career] || 'dev';
+    const url = this.workLoopEnabled
+      ? `./data/taskchain_${this.career}_${this.subRole || defaultSub}.json`
+      : `./data/quests_${this.career}.json`;
     fetch(url)
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => {
@@ -1209,93 +1739,156 @@ export class WorldScene extends Phaser.Scene {
       });
   }
 
-  // 刷新 NPC 头顶标记：导师按剧情阶段（❗待剧情/可推进，💤经营中），其余 NPC 按任务。
+  // ==================== 剧情演出特效（fx 字段驱动）====================
+  // 高潮戏的镜头语言:比 300 字描写更有效的是 3 秒的视听打击。
+  _playStoryFx(fx) {
+    const cam = this.cameras.main;
+    switch (fx) {
+      case 'collapse': // 晕倒:BGM 骤停→画面倾斜+抖动→黑屏(黑屏由后续节点 bg 接手)
+        AudioSystem.dramaticCut();
+        AudioSystem.heartbeat();
+        this.time.delayedCall(500, () => AudioSystem.heartbeat());
+        cam.shake(700, 0.004);
+        this.tweens.add({ targets: cam, rotation: 0.05, zoom: cam.zoom * 1.06, duration: 900, ease: 'Sine.in' });
+        this.time.delayedCall(950, () => {
+          cam.setRotation(0); cam.setZoom(cam.zoom / 1.06);
+          cam.flash(120, 0, 0, 0); // 黑闪收束
+        });
+        break;
+      case 'shake': // 震屏(事故/冲击时刻)
+        cam.shake(420, 0.006);
+        AudioSystem.error();
+        break;
+      case 'flash_white': // 白闪(眩晕/惊醒)
+        cam.flash(420, 255, 255, 255);
+        break;
+      case 'heartbeat': // 心跳(身体报警)
+        AudioSystem.heartbeat();
+        this.time.delayedCall(600, () => AudioSystem.heartbeat());
+        break;
+      case 'silence': // 声音抽走(空虚/失去时刻——江野的空工位)
+        AudioSystem.dramaticCut();
+        break;
+      default:
+        break;
+    }
+  }
+
+  // ==================== 任务目标 HUD + 方向箭头 ====================
+  // 计算"现在该干什么"：{text, x, y} 或 null。优先级:交付>进行中的下一目标>可接任务>剧情。
+  _currentGoal() {
+    if (!this.questSystem) return null;
+    const npcPos = (id) => {
+      const n = (this.npcs || []).find(p => p.id === id);
+      return n ? { x: n.spr.x, y: n.spr.y } : null;
+    };
+    // 剧情待播/里程碑待推进 → 找老陈
+    if (this._story && (this._story.phase === 'ready'
+        || (this._story.pendingAct && this._story.pendingAct > this.act))) {
+      const p = npcPos('senior');
+      const seniorName = (this.npcs || []).find(n => n.id === 'senior')?.name || '导师';
+      return p && { text: `去找${seniorName}(剧情)`, ...p };
+    }
+    // 进行中的链任务：可交付→回导师；否则指向下一目标
+    for (const q of this.questSystem.active()) {
+      if (this.questSystem.isReady(q.id)) {
+        const p = npcPos(q.giver);
+        return p && { text: `交付「${q.title}」`, ...p };
+      }
+      const next = this.questSystem.nextObjective(q.id);
+      if (!next) continue;
+      if (next.kind === 'talk') {
+        const p = npcPos(next.target);
+        return p && { text: next.text, ...p };
+      }
+      if (next.kind === 'minigame' && this.playerDesk) {
+        return { text: next.text, x: this.playerDesk.chair.x, y: this.playerDesk.chair.y };
+      }
+      return { text: next.text, x: null, y: null }; // 无坐标目标只显示文字
+    }
+    // 有可接任务 → 找 giver
+    for (const q of this.questSystem.available({ act: this.act })) {
+      const p = npcPos(q.giver);
+      if (p) return { text: `领任务:「${q.title}」`, ...p };
+    }
+    return null;
+  }
+
+  // 每帧轻量更新（HUD 文本变化才 setText;箭头按目标方向环绕玩家）
+  // guideText 与 objectiveHud 共用 _currentGoal，避免静态「新人报到」与真实下一步打架。
+  _updateObjectiveHud() {
+    const goal = this._currentGoal();
+    // HUD 文本
+    const label = goal ? `▸ ${goal.text}` : '';
+    if (this._lastGoalLabel !== label) {
+      this._lastGoalLabel = label;
+      if (this.objectiveHud) {
+        this.objectiveHud.setText(label).setVisible(!!label && !this.dialogueActive);
+      }
+      // 底部引导条：与 objective 同源（bottomGuideFromGoal），避免静态「新人报到」打架
+      if (this.guideText && !this.dialogueActive) {
+        const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
+        const [gName] = gTheme.npcs.senior;
+        const bottom = bottomGuideFromGoal(goal, gName);
+        if (this._lastGuideLabel !== bottom) {
+          this._lastGuideLabel = bottom;
+          this.guideText.setText(bottom);
+        }
+      }
+    }
+    if (this.objectiveHud && this.objectiveHud.visible === this.dialogueActive && label) {
+      this.objectiveHud.setVisible(!this.dialogueActive); // 对话中隐藏
+    }
+    // 方向箭头：目标离玩家 >260px 才显示（近了看得见头顶浮标,箭头反而碍事）
+    if (!this._goalArrow) return;
+    if (!goal || goal.x == null || this.dialogueActive) { this._goalArrow.setVisible(false); return; }
+    const dx = goal.x - this.player.x, dy = goal.y - this.player.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 260) { this._goalArrow.setVisible(false); return; }
+    const ang = Math.atan2(dy, dx);
+    this._goalArrow.setVisible(true)
+      .setPosition(this.player.x + Math.cos(ang) * 52, this.player.y - 24 + Math.sin(ang) * 52)
+      .setRotation(ang)
+      .setTint(0xffd24d);
+  }
+
+  // 给某 NPC 的头顶浮标换图标+颜色（emoji 语义 → 像素图标纹理）
+  _setNpcMark(npc, emoji, colorHex) {
+    if (!npc.mark) return;
+    npc.markState = emoji; // 语义状态(测试/调试可读)
+    npc.mark.setTexture(EMOJI_TO_ICON[emoji] || ICON_KEYS.chat)
+      .setTint(Phaser.Display.Color.HexStringToColor(colorHex).color);
+  }
+
+  // 刷新 NPC 头顶标记：导师按 StoryProgress.seniorMarkVisual，其余 NPC 按任务。
   _updateNpcMarks() {
     if (!this.npcs || !this.questSystem) return;
     const ctx = { act: this.act };
     for (const npc of this.npcs) {
       if (!npc.mark) continue;
-      // 导师：剧情状态机标记（深度职业）
-      if (npc.id === 'senior' && !LIGHT_CAREERS.includes(this.career)) {
-        let emoji = '💬', color = '#7ec8ff';
-        // 可交付优先 ❓
-        for (const q of this.questSystem.active()) {
-          if (q.giver === 'senior' && this.questSystem.isReady(q.id)) {
-            emoji = '❓'; color = '#7eff7e'; break;
-          }
-        }
-        if (emoji === '💬') {
-          if (this._story.phase === 'ready') {
-            emoji = '❗'; color = '#ffdd33';
-          } else if (this._story.phase === 'working') {
-            // workLoop：可派链任务 → ❗；否则 💤
-            const hasQuest = this.workLoopEnabled
-              && this.questSystem.available(ctx).some(q => q.giver === 'senior');
-            if (hasQuest) {
-              emoji = '❗'; color = '#ffdd33';
-            } else {
-              const need = ACT_DAYS[this.act] || 1;
-              if (this._story.daysInAct >= need) { emoji = '❗'; color = '#ffdd33'; }
-              else { emoji = '💤'; color = '#8a8a9e'; }
-            }
-          }
-        }
-        npc.mark.setText(emoji).setColor(color);
-        npc.markState = emoji;
+      // 导师：剧情状态机 + 可交付优先（纯逻辑在 seniorMarkVisual）
+      if (npc.id === 'senior') {
+        const hasSeniorQuest = this.questSystem.available(ctx).some(q => q.giver === 'senior')
+          || this.questSystem.active().some(q => q.giver === 'senior');
+        const hasSeniorDeliver = this.questSystem.active().some(
+          q => q.giver === 'senior' && this.questSystem.isReady(q.id),
+        );
+        const vis = seniorMarkVisual(this._story, {
+          workLoopEnabled: this.workLoopEnabled,
+          hasSeniorQuest,
+          hasSeniorDeliver,
+          act: this.act,
+          career: this.career,
+        });
+        if (vis) this._setNpcMark(npc, vis.emoji, vis.color);
         continue;
       }
-      // 其余 NPC：按任务
+      // 其余 NPC：按任务；无任务标记时回落到名册默认(💬)，避免残留旧标记
       const mark = this.questSystem.npcMark(npc.id, ctx);
-      if (mark === 'available') {
-        npc.mark.setText('❗').setColor('#ffdd33'); npc.markState = '❗';
-      } else if (mark === 'deliver') {
-        npc.mark.setText('❓').setColor('#7eff7e'); npc.markState = '❓';
-      } else if (mark === 'progress') {
-        // 任务链「下一步 talk 目标」用 ❗（与 e2e-taskchain / peer 一致）
-        npc.mark.setText('❗').setColor('#7ec8ff'); npc.markState = '❗';
-      } else {
-        const em = npc.defaultMark || '💬';
-        npc.mark.setText(em).setColor(npc.defaultMarkColor || '#7ec8ff');
-        npc.markState = em;
-      }
-    }
-    this._syncGuideText();
-  }
-
-  // 底部引导条：跟剧情/任务真实下一步对齐（纯逻辑在 bottomGuideFromGoal）。
-  // 小改动：不引入 objectiveHud 架构，只在标记刷新时同步文案。
-  _syncGuideText() {
-    if (!this.guideText || this.dialogueActive) return;
-    const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
-    const [gName, gTitle] = gTheme.npcs.senior;
-    let goal = null;
-    if (this._story && this._story.phase === 'ready') {
-      goal = { text: `去找${gTitle}「${gName}」(剧情)` };
-    } else if (this.questSystem) {
-      const ctx = { act: this.act };
-      for (const q of this.questSystem.active()) {
-        if (this.questSystem.isReady(q.id)) {
-          goal = { text: `交付「${q.title}」` };
-          break;
-        }
-      }
-      if (!goal) {
-        for (const q of this.questSystem.available(ctx)) {
-          goal = { text: `领任务:「${q.title}」` };
-          break;
-        }
-      }
-      if (!goal && typeof this.questSystem.nextObjective === 'function') {
-        for (const q of this.questSystem.active()) {
-          const next = this.questSystem.nextObjective(q.id);
-          if (next && next.text) { goal = { text: next.text }; break; }
-        }
-      }
-    }
-    const bottom = bottomGuideFromGoal(goal, gName);
-    if (this._lastGuideLabel !== bottom) {
-      this._lastGuideLabel = bottom;
-      this.guideText.setText(bottom);
+      if (mark === 'available') this._setNpcMark(npc, '❗', '#ffdd33');
+      else if (mark === 'deliver') this._setNpcMark(npc, '❓', '#7eff7e');
+      else if (mark === 'progress') this._setNpcMark(npc, '❗', '#7ec8ff');
+      else this._setNpcMark(npc, npc.defaultMark || '💬', npc.defaultMarkColor || '#7ec8ff');
     }
   }
 
@@ -1382,16 +1975,398 @@ export class WorldScene extends Phaser.Scene {
   // 更新天数/时段 HUD
   _updateDayHud() {
     if (this.dayText && this.daySystem) {
-      this.dayText.setText(`第 ${this.daySystem.day} 天 · ${this.daySystem.phaseName()}`);
+      const seg = this.timeSystem ? ` · ${this.timeSystem.hudText()}` : ` · ${this.daySystem.phaseName()}`;
+      this.dayText.setText(`第 ${this.daySystem.day} 天${seg}`);
+    }
+  }
+
+  // 进入新时段：切灯光 + 调在岗人数 + 刷新时钟 HUD（由 TimeSystem 的 segmentChange 驱动）。
+  _onSegmentChange(seg) {
+    if (!seg) return;
+    this._applyAmbient(seg.ambient);
+    this._setPopulation(seg.population);
+    this._refreshAllMoods(); // 心情随时段变（上午精神→加班疲惫→深夜困顿）
+    this._updateDayHud();
+    // BGM 随时段换：深夜(人数≤0.25)转冷调慢板，白天回轻快 office
+    AudioSystem.playBgm(seg.population <= 0.25 ? 'office_night' : 'office');
+  }
+
+  // 按比例决定在岗背景同事人数：白天坐满，午休/加班走一半，深夜只剩零星几个——
+  // 营造"加班到深夜，办公室空荡只剩你"的真实感。走的人淡出，来的人淡入。
+  _setPopulation(ratio) {
+    if (!this.workers) return;
+    const keep = Math.round(Phaser.Math.Clamp(ratio, 0, 1) * this.workers.length);
+    this.workers.forEach((w, i) => {
+      const show = i < keep;
+      if (!w.spr) return;
+      if (w._body && w._body.body) w._body.body.enable = show; // 隐藏的人不挡路
+      if (w._mood) w._mood.setVisible(show); // 隐藏的人不显示状态泡泡
+      if (show === w.spr.visible) return;
+      if (!show && w.agent) w.agent.reset(); // 下班的人若正在走动，先归位再淡出
+      this.tweens.add({
+        targets: w.spr, alpha: show ? 1 : 0, duration: 500,
+        onStart: () => { if (show) w.spr.setVisible(true); },
+        onComplete: () => { if (!show) w.spr.setVisible(false); },
+      });
+    });
+  }
+
+  // 推进日内时间一格（完成任务 / 剧情节点时调用）。已到深夜则不再推进。
+  _advanceTime() {
+    if (this.timeSystem) this.timeSystem.advance();
+  }
+
+  // 功能栏·手机：给家里打个电话（回状态 + 内心独白），每天一次。
+  _usePhone() {
+    if (this.dialogueActive) return;
+    if (this._cooldowns['phone']) {
+      this._showThoughtBubble('（刚跟家里聊过了，晚点再打吧。）', '#9a9ac0');
+      return;
+    }
+    this._cooldowns['phone'] = true;
+    this.stateSystem.change('san', 10);
+    this.stateSystem.change('passion', 4);
+    this.stateSystem.change('stress', -6);
+    if (this.questSystem) { this.questSystem.progress('interact', 'phone'); this._updateNpcMarks(); }
+    this._triggerMonologue('auto');
+  }
+
+  // ==================== 工作日循环：项目 / 工单 / 工位电脑 ====================
+  _updateProjectHud() {
+    if (!this.projectSystem || !this._projBarFill) return;
+    const p = this.projectSystem.progress;
+    this._projBarFill.width = (this._projW || 236) * p / 100;
+    this._projText.setText(`项目 ${Math.round(p)}% · 绩效 ${this.projectSystem.performance}`);
+    if (this._projDeadline) {
+      const day = this.daySystem ? this.daySystem.day : 1;
+      const left = this.projectSystem.daysLeft(day);
+      const behind = this.projectSystem.isBehind(day);
+      this._projDeadline.setText(`⏳ 距交付 ${left} 天`).setColor(behind ? '#ff7a7a' : '#bfb0d0');
+    }
+  }
+
+  // 项目跨过里程碑 → 解锁下一幕剧情：老陈召唤(❗)，玩家走近他推进剧情。
+  // 取代旧的"熬够N天"：现在是"把项目推到节点→剧情自然解锁"。
+  _onProjectMilestone(pct) {
+    const r = applyProjectMilestone(this._story, pct, this.act);
+    this._story = r.story;
+    if (!r.unlocked) {
+      this._showThoughtBubble(`（项目推进到 ${pct}% —— 一个阶段完成了。）`, '#ffd24d');
+      return;
+    }
+    this._autoSave(); // 里程碑=存档点
+    this._updateNpcMarks(); // 老陈头顶亮 ❗
+    this._showThoughtBubble(`（项目推进到 ${pct}%！导师想找你聊聊下一步——去找他（头顶 ❗）。）`, '#ffd24d');
+  }
+
+  // 启动程序员 Debug 小游戏，完成后回调 onComplete(result{correct,total,ratio})
+  // 启动"干活"小游戏：两种玩法轮替(找bug行 / 流程排序)，防止单一玩法腻。
+  // 细分岗位真差异：dev/test 各有自己的排序题库；找bug对测试岗是"缺陷排查"框架。
+  _launchCoding(onComplete, difficulty = null) {
+    this._workGameFlip = !this._workGameFlip;
+    const gameKey = this._workGameFlip ? 'DebugGameScene' : 'SequenceGameScene';
+    this.scene.pause();
+    this.scene.launch(gameKey, {
+      act: this.act, difficulty, fromScene: null,
+      career: this.career,
+      subRole: this.subRole,
+      // 保留旧 flavor 字段兼容；场景内优先用 career+subRole 解析 10 职业文案/题库
+      flavor: this.subRole === 'test' ? 'test' : (this.subRole === 'dev' ? 'dev' : undefined),
+      onComplete: (result) => {
+        this.scene.stop(gameKey);
+        this.scene.resume();
+        if (onComplete) onComplete(result || { correct: 0, total: 1, ratio: 0 });
+      },
+    });
+  }
+
+  // 打开【今日工单】面板：走到工位电脑按 E 触发。选一件活开工。
+  // 坐到某把椅子上（面向椅子朝向）。可坐任意空椅;只有自己的工位椅能"开始工作"。
+  _sitOnChair(chair) {
+    if (!this.player || !chair) return;
+    const dir = chair.dir || 'down';
+    const s = SIT_SHIFT[dir] || SIT_SHIFT.down;
+    this.player.setVelocity(0, 0);
+    if (this.playerSkin.sitFrame) this.player.setFrame(this.playerSkin.sitFrame(dir));
+    // 玩家是中心锚点(0.5,0.5),直接用 SkyOffice 的 sittingShiftData 定位中心+深度,
+    // 让人物真正坐进椅子(根治"浮在座位上")。
+    const cx = chair.x + s.dx, cy = chair.y + s.dy;
+    this.player.setPosition(cx, cy);
+    this.player.body.reset(cx, cy);
+    this.player.anims.stop();
+    this.player.setDepth(chair.y + s.depth);
+    this.facing = dir;
+    this._sitting = chair;
+    if (this.ePrompt) {
+      this.ePrompt.setText(chair.isPlayerDesk ? '［ E ］开始工作　·　移动=起身' : '（移动=起身）').setVisible(true);
+    }
+  }
+
+  _standUp() {
+    if (!this.player) return;
+    this._sitting = null;
+    this.player.anims.stop();
+    this.player.setFrame(this.playerSkin.idleFrame(this.facing || 'down'));
+    if (this.ePrompt) this.ePrompt.setVisible(false);
+  }
+
+  _openWorkBoard() {
+    if (this.dialogueActive || this._workBoardUI) return;
+    if (!this.projectSystem) return;
+    this.dialogueActive = true; // 冻结移动（玩家此时已坐在工位上）
+    if (this.guideText) this.guideText.setVisible(false);
+    const { width, height } = this.scale;
+    const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10000);
+    if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
+    const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.72)
+      .setScrollFactor(0).setInteractive();
+    c.add(mask);
+    const pw = 760, ph = 560, px = width / 2, py = height / 2;
+    c.add(this.add.rectangle(px, py, pw, ph, 0x14141f, 0.98).setStrokeStyle(2, 0xd4a353));
+    c.add(this.add.text(px, py - ph / 2 + 30, '📋 今日任务清单', { fontSize: '28px', fill: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
+    c.add(this.add.text(px, py - ph / 2 + 64, '主线任务链 + 今日工单 —— 干完活,项目才往前走', { fontSize: '15px', fill: '#9aa0b0' }).setOrigin(0.5));
+
+    // ── 主线任务链条(当前环 + 下一步)。做任何一件工单都算"回工位干活"。
+    const my = py - ph / 2 + 104;
+    const hud = chainHudStep(this.questSystem, this.act);
+    c.add(this.add.rectangle(px, my, pw - 80, 56, 0x1e2a3e, 0.96).setStrokeStyle(2, 0x4a7ab5));
+    if (hud.title) {
+      c.add(this.add.text(px - pw / 2 + 60, my - 12, `⛓ 主线 · ${hud.title}`, { fontSize: '17px', fill: '#8fc3ff', fontStyle: 'bold' }).setOrigin(0, 0.5));
+      c.add(this.add.text(px - pw / 2 + 60, my + 13, hud.step, { fontSize: '13px', fill: '#c8d8ec' }).setOrigin(0, 0.5));
+    } else {
+      c.add(this.add.text(px - pw / 2 + 60, my, hud.step, { fontSize: '15px', fill: '#8fc3ff' }).setOrigin(0, 0.5));
+    }
+    const pj = Math.round(this.projectSystem.progress);
+    c.add(this.add.text(px + pw / 2 - 56, my, `项目 ${pj}%`, { fontSize: '15px', fill: '#f0c060' }).setOrigin(1, 0.5));
+
+    const orders = this.projectSystem.getOrders();
+    const DIFF = { easy: { t: '简单', c: '#6fcf7f' }, mid: { t: '中等', c: '#f0c060' }, hard: { t: '困难', c: '#e8735a' } };
+    orders.forEach((o, i) => {
+      const oy = py - 92 + i * 96;
+      const done = o.done;
+      const card = this.add.rectangle(px, oy, pw - 80, 82, done ? 0x18261a : 0x232338, 0.96)
+        .setStrokeStyle(2, done ? 0x3a5a3a : 0x4a4a6a);
+      if (!done) {
+        card.setInteractive({ useHandCursor: true })
+          .on('pointerover', () => card.setFillStyle(0x33334e))
+          .on('pointerout', () => card.setFillStyle(0x232338))
+          .on('pointerdown', () => { this._closeWorkBoard(c); this._doWorkOrder(o); });
+      }
+      c.add(card);
+      const d = DIFF[o.difficulty] || DIFF.mid;
+      c.add(this.add.text(px - pw / 2 + 60, oy - 16, `${done ? '✅ ' : ''}${o.title}`, {
+        fontSize: '20px', fill: done ? '#7a9a7a' : '#ffffff', fontStyle: 'bold',
+      }).setOrigin(0, 0.5));
+      c.add(this.add.text(px - pw / 2 + 60, oy + 16, `难度 ${d.t} · 预计 ${o.est}h · 推进 +${o.progress}% · 绩效 +${o.performance}`, {
+        fontSize: '13px', fill: '#9aa0b0',
+      }).setOrigin(0, 0.5));
+      c.add(this.add.text(px + pw / 2 - 56, oy, done ? '已完成' : '▶ 开工', {
+        fontSize: '18px', fill: done ? '#6a8a6a' : d.c, fontStyle: 'bold',
+      }).setOrigin(1, 0.5));
+    });
+
+    const closeBtn = this.add.text(px + pw / 2 - 18, py - ph / 2 + 14, '✕', { fontSize: '24px', fill: '#8a8a9e' })
+      .setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerover', () => closeBtn.setColor('#ff9a9a'));
+    closeBtn.on('pointerdown', () => this._closeWorkBoard(c));
+    c.add(closeBtn);
+    mask.on('pointerdown', () => this._closeWorkBoard(c)); // 点空白关闭
+    this._workBoardUI = c;
+  }
+
+  _closeWorkBoard(c) {
+    if (c) c.destroy(true);
+    this._workBoardUI = null;
+    this.dialogueActive = false;
+    this._standUp(); // 收工起身
+    if (this.guideText) this.guideText.setVisible(true);
+  }
+
+  // 开工做某工单 → 小游戏 → 成绩 quality 决定推进/绩效,并按工单消耗身心。
+  _doWorkOrder(order) {
+    this._launchCoding((result) => {
+      const quality = (result && result.ratio != null)
+        ? result.ratio : ((result.correct || 0) / (result.total || 1));
+      const r = this.projectSystem.completeOrder(order.id, quality);
+      if (order.cost) for (const [k, v] of Object.entries(order.cost)) this.stateSystem.change(k, v);
+      if (quality >= 0.99) this.stateSystem.change('passion', 3);       // 做得漂亮,有成就感
+      else if (quality <= 0.34) this.stateSystem.change('stress', 3);   // 搞砸了,额外焦虑
+      this._updateProjectHud();
+      this.questSystem.progress('minigame', 'coding');
+      this.questSystem.progress('minigame', 'work');     // 任务链的"回工位干活"目标
+      this.questSystem.progress('interact', 'computer'); // 兼容老任务的"用电脑"目标
+      this._updateNpcMarks();
+      this._advanceTime(); // 完成一件活=事件推进→时段前进
+      if (r) {
+        Juice.celebrate(this, this.player.x, this.player.y - 30, 0x5fbf7f);
+        this._showThoughtBubble(`✅「${order.title}」完成 · 项目 +${r.progressGain}% · 绩效 +${r.perfGain}`, '#5fbf7f');
+      }
+      if (this.projectSystem.allOrdersDone()) {
+        this.time.delayedCall(1800, () => {
+          if (!this.dialogueActive) this._showThoughtBubble('（今天的活都干完了,可以下班回家了。）', '#f0c060');
+        });
+      }
+    }, order.difficulty); // 按工单难度抽对应难度的关卡
+  }
+
+  // ==================== 随机办公室事件 ====================
+  _startOfficeEvents() {
+    const data = this.cache.json.get('office_events');
+    this._officeEvents = (data && data.events) || [];
+    this._eventSeen = new Set();
+    if (!this._officeEvents.length) return;
+    if (this._eventTimer) this._eventTimer.remove();
+    // 每 ~32 秒掷一次,约 55% 概率触发一个随机事件(工作时段、非弹窗时)
+    this._eventTimer = this.time.addEvent({
+      delay: 32000, loop: true, callback: () => this._maybeTriggerEvent(),
+    });
+  }
+
+  _maybeTriggerEvent() {
+    if (this.dialogueActive || this._workBoardUI || this._eventUI || this._sitting) return;
+    if (!this._officeEvents || !this._officeEvents.length) return;
+    if (Phaser.Math.RND.frac() > 0.55) return;
+    // 优先没见过的,尽量不重复
+    let pool = this._officeEvents.filter(e => !this._eventSeen.has(e.id));
+    if (!pool.length) { this._eventSeen.clear(); pool = this._officeEvents; }
+    const ev = Phaser.Utils.Array.GetRandom(pool);
+    this._eventSeen.add(ev.id);
+    this._showOfficeEvent(ev);
+  }
+
+  _showOfficeEvent(ev) {
+    if (this._eventUI) return;
+    this.dialogueActive = true;
+    if (this.guideText) this.guideText.setVisible(false);
+    AudioSystem.playSfx && AudioSystem.playSfx('notify');
+    const { width, height } = this.scale;
+    const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10001);
+    if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
+    const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.78)
+      .setScrollFactor(0).setInteractive();
+    c.add(mask);
+    const pw = 780, ph = 420, px = width / 2, py = height / 2;
+    const accent = ev.urgent ? 0xe8735a : 0xd4a353;
+    c.add(this.add.rectangle(px, py, pw, ph, 0x14141f, 0.98).setStrokeStyle(3, accent));
+    c.add(this.add.text(px, py - ph / 2 + 34, `${ev.icon} ${ev.title}`, {
+      fontSize: '30px', fill: ev.urgent ? '#ff9a7a' : '#ffd24d', fontStyle: 'bold',
+    }).setOrigin(0.5));
+    if (ev.urgent) {
+      const badge = this.add.text(px + pw / 2 - 24, py - ph / 2 + 22, '紧急', {
+        fontSize: '15px', fill: '#fff', backgroundColor: '#c0392b', padding: { x: 8, y: 3 },
+      }).setOrigin(1, 0.5);
+      c.add(badge);
+      this.tweens.add({ targets: badge, alpha: 0.4, duration: 500, yoyo: true, repeat: -1 });
+    }
+    c.add(this.add.text(px, py - ph / 2 + 96, ev.text, {
+      fontSize: '19px', fill: '#dfe3ea', wordWrap: { width: pw - 90, useAdvancedWrap: true },
+      align: 'center', lineSpacing: 8,
+    }).setOrigin(0.5, 0));
+
+    const choices = ev.choices || [];
+    const startY = py + 10;
+    choices.forEach((ch, i) => {
+      const by = startY + i * 72;
+      const btn = this.add.rectangle(px, by, pw - 90, 60, 0x232338, 0.96)
+        .setStrokeStyle(2, 0x4a4a6a).setInteractive({ useHandCursor: true });
+      btn.on('pointerover', () => btn.setFillStyle(0x33334e));
+      btn.on('pointerout', () => btn.setFillStyle(0x232338));
+      btn.on('pointerdown', () => this._resolveEvent(ev, ch, c));
+      c.add(btn);
+      c.add(this.add.text(px, by, ch.label, {
+        fontSize: '18px', fill: '#ffffff', wordWrap: { width: pw - 130 }, align: 'center',
+      }).setOrigin(0.5));
+    });
+    this._eventUI = c;
+  }
+
+  _resolveEvent(ev, choice, c) {
+    // 应用数值 + 项目回退 + 可能插入紧急工单
+    if (choice.effects) for (const [k, v] of Object.entries(choice.effects)) this.stateSystem.change(k, v);
+    if (choice.projectDelta && this.projectSystem) {
+      this.projectSystem.adjustProgress(choice.projectDelta);
+      this._updateProjectHud();
+    }
+    if (choice.addOrder && this.projectSystem) this.projectSystem.addUrgentOrder();
+    // 关闭事件框 → 显示结果小气泡
+    if (c) c.destroy(true);
+    this._eventUI = null;
+    this.dialogueActive = false;
+    if (this.guideText) this.guideText.setVisible(true);
+    if (choice.result) this._showThoughtBubble(choice.result, ev.urgent ? '#ff9a7a' : '#ffd24d');
+    if (choice.addOrder) {
+      this.time.delayedCall(1600, () => {
+        if (!this.dialogueActive) this._showThoughtBubble('（今日工单里多了一张紧急插单,去工位电脑处理。）', '#e8735a');
+      });
     }
   }
 
   // 下班回家：转场到 HomeScene，带当前状态快照 + 天数
-  // e2e-fullloop 别名
-  _doGoHome() { return this._goHome(); }
-
   _goHome() {
     if (this.dialogueActive || this._goingHome) return;
+    // 工作日循环：先弹【今日工作日报】结算,点继续再真正下班回家
+    if (this.workLoopEnabled && !this._reportShown) {
+      this._showDailyReport();
+      return;
+    }
+    this._doGoHome();
+  }
+
+  // 今日工作日报：下班时结算今天的产出/绩效/身心变化,让"一天"有反馈。
+  _showDailyReport() {
+    if (this._reportUI) return;
+    this._reportShown = true;
+    this.dialogueActive = true;
+    if (this.guideText) this.guideText.setVisible(false);
+    const { width, height } = this.scale;
+    const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10002);
+    if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
+    c.add(this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.82).setScrollFactor(0).setInteractive());
+    const pw = 620, ph = 500, px = width / 2, py = height / 2;
+    c.add(this.add.rectangle(px, py, pw, ph, 0x14141f, 0.99).setStrokeStyle(2, 0xd4a353));
+    c.add(this.add.text(px, py - ph / 2 + 34, '📋 今日工作日报', { fontSize: '30px', fill: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
+    const day = this.daySystem ? this.daySystem.day : 1;
+    c.add(this.add.text(px, py - ph / 2 + 72, `第 ${day} 天`, { fontSize: '16px', fill: '#9aa0b0' }).setOrigin(0.5));
+
+    const progNow = this.projectSystem.progress;
+    const progGain = Math.max(0, Math.round((progNow - (this._dayStartProgress || 0)) * 10) / 10);
+    const perfToday = this.projectSystem.todayPerformance;
+    const nowStats = this.stateSystem.getAll();
+    const start = this._dayStartStats || nowStats;
+    const rows = [
+      ['📈 项目推进', `+${progGain}%`, '#5fbf7f'],
+      ['⭐ 今日绩效', `+${perfToday}`, '#ffd24d'],
+      ['📊 项目总进度', `${Math.round(progNow)}%`, '#8fd0ff'],
+      ['⏳ 距交付', `${this.projectSystem.daysLeft(day)} 天`, this.projectSystem.isBehind(day) ? '#ff7a7a' : '#bfb0d0'],
+    ];
+    // 身心变化（有变动的键）
+    const LABELS = { health: '健康', energy: '精力', san: '理智', stress: '压力', passion: '热情', skill: '技能' };
+    for (const [k, lbl] of Object.entries(LABELS)) {
+      const d = Math.round((nowStats[k] ?? 0) - (start[k] ?? 0));
+      if (d !== 0) {
+        const good = (k === 'stress') ? d < 0 : d > 0;
+        rows.push([`　${lbl}`, `${d > 0 ? '+' : ''}${d}`, good ? '#8fd08f' : '#e08a8a']);
+      }
+    }
+    let ry = py - 150;
+    for (const [label, val, color] of rows) {
+      c.add(this.add.text(px - pw / 2 + 56, ry, label, { fontSize: '19px', fill: '#dfe3ea' }).setOrigin(0, 0.5));
+      c.add(this.add.text(px + pw / 2 - 56, ry, val, { fontSize: '20px', fill: color, fontStyle: 'bold' }).setOrigin(1, 0.5));
+      ry += 40;
+    }
+
+    const btn = this.add.rectangle(px, py + ph / 2 - 44, 260, 52, 0x2a4a3e, 0.96)
+      .setStrokeStyle(2, 0x5fbf7f).setInteractive({ useHandCursor: true });
+    btn.on('pointerover', () => btn.setFillStyle(0x35604e));
+    btn.on('pointerout', () => btn.setFillStyle(0x2a4a3e));
+    btn.on('pointerdown', () => { c.destroy(true); this._reportUI = null; this.dialogueActive = false; this._doGoHome(); });
+    c.add(btn);
+    c.add(this.add.text(px, py + ph / 2 - 44, '下班回家 🏠', { fontSize: '20px', fill: '#eafff0', fontStyle: 'bold' }).setOrigin(0.5));
+    this._reportUI = c;
+  }
+
+  _doGoHome() {
+    if (this._goingHome) return;
     this._goingHome = true;
     // 存档（含天数 + 剧情阶段，缺 story 会导致下班后剧情进度被抹、卡在第一幕重播）
     SaveSystem.saveProgress({
@@ -1402,12 +2377,13 @@ export class WorldScene extends Phaser.Scene {
         choiceLog: this.choiceLog.serialize(),
         thought: this.thoughtSystem ? this.thoughtSystem.serialize() : null,
         daySystem: this.daySystem.serialize(),
+        segment: 0, // 下班回家=一天结束，明天从早晨（早会）重新开始
         project: this.projectSystem ? this.projectSystem.serialize() : null,
         story: this._story,
       },
     });
     SceneRouter.goto(this, 'HomeScene', {
-      career: this.career, act: this.act, subRole: this.subRole,
+      career: this.career, act: this.act,
       day: this.daySystem.day, stats: this.stateSystem.getAll(),
     });
   }
@@ -1491,19 +2467,16 @@ export class WorldScene extends Phaser.Scene {
   // 渲染交互物件（图标浮标在世界坐标，随镜头滚动）
   _buildInteractables(defs) {
     this._interactableDefs = defs;
+    // 不再在地上摆浮空 emoji 图标（那样很假）。交互点=真实家具本身,
+    // 走近时用一个柔和高亮圈 + [E] 提示指示"这里能交互",更真实。
     for (const def of defs) {
       const [x, y] = def.pos;
-      // 图标浮标（世界坐标，主相机渲染）
-      const icon = this.add.text(x, y - 20, def.icon, { fontSize: '26px' })
-        .setOrigin(0.5, 1).setDepth(y);
-      this.tweens.add({
-        targets: icon, y: icon.y - 5,
-        duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut',
-      });
-      // UI 相机不渲染世界物件图标（归主相机）
-      if (this.uiCamera) this.uiCamera.ignore(icon);
-      this._interactables.push({ ...def, x, y, icon });
+      this._interactables.push({ ...def, x, y });
     }
+    // 高亮圈（世界坐标，跟随当前最近可交互物；平时隐藏）
+    this._objHighlight = this.add.ellipse(0, 0, 44, 22, 0xffe08a, 0.0)
+      .setStrokeStyle(2, 0xffe08a, 0.9).setDepth(2).setVisible(false);
+    if (this.uiCamera) this.uiCamera.ignore(this._objHighlight);
   }
 
   // ==================== 剧情引擎事件（移植自 OfficeScene）====================
@@ -1516,14 +2489,23 @@ export class WorldScene extends Phaser.Scene {
       if (self.sceneBackdrop) self.sceneBackdrop.show(bg); // 非办公室场景盖对应场景画面
     });
 
+    // 节点级演出特效（剧情数据 fx 字段驱动）——高潮戏的镜头语言
+    eng.on('fx', (fx) => self._playStoryFx(fx));
+
     eng.on('dialogueEnd', () => {
       self.dialogueActive = false;
       if (self.guideText) self.guideText.setVisible(true); // 对话结束恢复引导语
-      self._syncGuideText();
       if (self.offWorkBtn) self.offWorkBtn.setVisible(true);
       // 剧情结束回办公室：移除场景背景 + 恢复办公室色调，露出办公室地图
       if (self.sceneBackdrop) self.sceneBackdrop.show('office');
       self._applyAmbient('office');
+      // 断点存档：剧情中途退出→记住演到哪(下次接着演,不重播)；演到幕末→清断点。
+      if (self._inStoryDialogue) {
+        if (self._storyDoneThisPlay) self._story.checkpoint = null;
+        else self._story.checkpoint = { act: self.act, node: eng.currentId };
+        self._inStoryDialogue = false;
+        self._persistStory();
+      }
     });
 
     // 选择记忆：玩家每次选选项都记录（choiceLog 是结局 AI 画像的数据源）
@@ -1560,8 +2542,7 @@ export class WorldScene extends Phaser.Scene {
             if (ok === total) { self.stateSystem.change('skill', 5); self.stateSystem.change('passion', 4); }
             else if (ok > 0) { self.stateSystem.change('skill', 3); self.stateSystem.change('energy', -3); }
             else { self.stateSystem.change('stress', 3); self.stateSystem.change('skill', 1); }
-            // workLoop 任务链 o2 target='work'；同时推 mgType + interact computer
-            reportMinigameProgress(self.questSystem, mgType);
+            self.questSystem.progress('minigame', mgType); // 上报任务进度
             self._updateNpcMarks();
             self.scene.stop(gameScene);
             self.scene.resume();
@@ -1587,16 +2568,16 @@ export class WorldScene extends Phaser.Scene {
             const eng = self.dialogueEngine;
             if (!eng || !eng.currentId) return;
             const n = eng.data && eng.data.nodes[eng.currentId];
-            if (n && n.choices && n.choices.length) {
-              // 有选项：重新渲染当前节点（展示选择）
-              eng._showNode(eng.currentId);
-            } else {
-              // 无选项：结束本段对话
-              eng._endDialogue();
-            }
+            // 统一重新渲染当前节点：有选项展示选择；无选项(结束节点)走它自己的
+            // advance 收尾——直接 _endDialogue 会吞掉结束节点的 action(如 act5 的
+            // 'ending')，玩家会被卡在世界里进不了结局。
+            if (n) eng._showNode(eng.currentId);
+            else eng._endDialogue();
           });
           break;
         case 'next_act':
+          self._storyDoneThisPlay = true; // 演到幕末,清断点
+          self._story.checkpoint = null;
           self._loadNextAct();
           break;
         case 'phone_message':
@@ -1604,9 +2585,29 @@ export class WorldScene extends Phaser.Scene {
           self._showFamilyByAct(self.act, node && node.phoneKeyword);
           break;
         case 'ending':
-          // 转场淡出（替代硬切），让结局有仪式感
+          self._storyDoneThisPlay = true;
+          self._story.checkpoint = null;
+          // 轻量+工作日循环：light 剧情的 ending 先进入经营期(做迷你任务链)，
+          // 项目 100% 后再由导师交互进真正结局——否则迷你完整版会被剧情直接送走。
+          if (shouldDeferLightEnding(self.workLoopEnabled, self.career,
+              self.projectSystem ? self.projectSystem.progress : 0)) {
+            self._story = enterWorkingFromLightEnding(self._story, self.act);
+            self._persistStory();
+            self._updateNpcMarks();
+            self.dialogueActive = false;
+            if (self.guideText) self.guideText.setVisible(true);
+            if (self.offWorkBtn) self.offWorkBtn.setVisible(true);
+            if (self.sceneBackdrop) self.sceneBackdrop.show('office');
+            self.time.delayedCall(300, () => {
+              self._showRitual('📅 开场故事告一段落。\n✅ 下一步：找导师（头顶 ❗）领任务链\n→ 对接 → 工位开工 → 项目推到 100% 再找导师收尾。');
+            });
+            break;
+          }
+          // 转场淡出（替代硬切），让结局有仪式感。
+          // ending 取剧情节点的 ending 字段(backbone/quit/health/switch/light 五结局)，
+          // 缺省才退回 career——之前误传 career 导致结局标题显示"programmer"。
           SceneRouter.goto(self, 'EndingScene', {
-            ending: self.career,
+            ending: (node && node.ending) || self.career,
             career: self.career,
             stats: self.stateSystem.getAll(),
             choiceLog: self.choiceLog.serialize(),
@@ -1712,9 +2713,8 @@ export class WorldScene extends Phaser.Scene {
   _loadNextAct() {
     this.dialogueEngine._clearUI();
     this.dialogueActive = false;
-    // 若下一幕不存在（act5 后）→ 直接进结局
-    const next = this.act + 1;
-    if (next > 5) {
+    const r = enterWorkingAfterAct(this._story, this.act);
+    if (r.shouldEnd) {
       SceneRouter.goto(this, 'EndingScene', {
         ending: this.career, career: this.career,
         stats: this.stateSystem.getAll(), choiceLog: this.choiceLog.serialize(),
@@ -1722,129 +2722,19 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     // 进入本幕经营期
-    this._story.phase = 'working';
-    this._story.act = this.act;
-    this._story.daysInAct = 0;
+    this._story = r.story;
     this._persistStory();
     this._updateNpcMarks();
     // 本幕家人消息 + 引导提示"去过日子"
     this._showFamilyByAct(this.act);
     const need = ACT_DAYS[this.act] || 1;
-    const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
-    const [seniorName] = gTheme.npcs.senior;
+    const seniorName = (this.npcs || []).find(n => n.id === 'senior')?.name || '导师';
     this.time.delayedCall(400, () => {
-      this._showRitual(
-        `📅 报到故事告一段落。\n✅ 下一步：找${seniorName}（头顶 ❗）领任务 / 做手头的活\n→ 和同事聊聊 → 累了就右上角「下班回家」。\n（本阶段约 ${need} 天经营，攒够天数再找导师推进剧情。）`,
-      );
-    });
-  }
-
-  // ---------- workLoop 工单板（e2e-taskchain / 工位电脑）----------
-  _openWorkBoard() {
-    if (this._workBoardUI) { this._closeWorkBoard(this._workBoardUI); }
-    const { width: W, height: H } = this.scale;
-    const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10050);
-    this._workBoardUI = c;
-    this.dialogueActive = true;
-    c.add(this.add.rectangle(W / 2, H / 2, W, H, 0x08080f, 0.72).setInteractive()
-      .on('pointerdown', () => this._closeWorkBoard(c)));
-    const pw = 720, ph = 420;
-    c.add(this.add.rectangle(W / 2, H / 2, pw, ph, 0x16161f, 0.98).setStrokeStyle(2, 0x4a6a52));
-    c.add(this.add.text(W / 2, H / 2 - ph / 2 + 28, '📋 今日任务清单', {
-      fontSize: '28px', color: '#ffd24d', fontStyle: 'bold',
-    }).setOrigin(0.5));
-    // 主线链标题
-    let y = H / 2 - ph / 2 + 70;
-    const chainQ = this.questSystem
-      ? (this.questSystem.active().find(q => q.giver === 'senior')
-        || this.questSystem.available({ act: this.act }).find(q => q.giver === 'senior'))
-      : null;
-    if (chainQ) {
-      c.add(this.add.text(W / 2, y, `⛓ 主线 · ${chainQ.title}`, {
-        fontSize: '20px', color: '#e8e8f4',
-      }).setOrigin(0.5));
-      y += 36;
-    }
-    const prog = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
-    c.add(this.add.text(W / 2, y, `项目 ${prog}%`, {
-      fontSize: '18px', color: '#5fbf7f',
-    }).setOrigin(0.5));
-    y += 40;
-    const orders = this.projectSystem ? this.projectSystem.getOrders() : [];
-    if (orders.length === 0) {
-      c.add(this.add.text(W / 2, y, '（今日工单空 — 点开工直接练手）', {
-        fontSize: '16px', color: '#8a8a9e',
-      }).setOrigin(0.5));
-    } else {
-      orders.forEach((o, i) => {
-        const label = o.done ? `✓ ${o.title}` : `▸ ${o.title}`;
-        const t = this.add.text(W / 2, y + i * 36, label, {
-          fontSize: '18px', color: o.done ? '#6a8a6a' : '#dfe3ff',
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        if (!o.done) {
-          t.on('pointerdown', () => {
-            this._closeWorkBoard(c);
-            this._doSimpleWork(o);
-          });
-        }
-        c.add(t);
-      });
-    }
-    // 一键开工（无工单时也能推进 work 目标）
-    const go = this.add.text(W / 2, H / 2 + ph / 2 - 48, '［ 开工 / 做小游戏 ］', {
-      fontSize: '20px', color: '#ffe08a', backgroundColor: '#2a4a3e', padding: { x: 16, y: 10 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    go.on('pointerdown', () => {
-      this._closeWorkBoard(c);
-      this._doSimpleWork(orders.find(o => !o.done) || null);
-    });
-    c.add(go);
-    if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
-  }
-
-  _closeWorkBoard(c) {
-    if (c && c.destroy) c.destroy(true);
-    if (this._workBoardUI === c) this._workBoardUI = null;
-    this.dialogueActive = false;
-    this._syncGuideText();
-  }
-
-  // 工位小游戏 + 上报 minigame work（任务链 o2）
-  _doSimpleWork(order) {
-    this._launchCoding((result) => {
-      const quality = (result && result.ratio != null)
-        ? result.ratio
-        : ((result?.correct || 0) / (result?.total || 1));
-      if (order && this.projectSystem) {
-        this.projectSystem.completeOrder(order.id, quality);
-      }
-      reportMinigameProgress(this.questSystem, 'coding');
-      this._updateNpcMarks();
-      Juice.celebrate(this, this.player.x, this.player.y - 30, 0x5fbf7f);
-    });
-  }
-
-  /**
-   * 启动 coding 小游戏（Debug 找茬）。供 e2e-taskchain 与工单板调用。
-   * @param {function} onComplete
-   * @param {string} [difficulty]
-   */
-  _launchCoding(onComplete, difficulty = 'normal') {
-    const self = this;
-    const flavor = this.subRole === 'test' ? 'test' : 'dev';
-    self.scene.pause();
-    self.scene.launch('DebugGameScene', {
-      act: self.act,
-      fromScene: null,
-      flavor,
-      difficulty,
-      career: self.career,
-      subRole: self.subRole,
-      onComplete: (result) => {
-        try { if (typeof onComplete === 'function') onComplete(result || {}); } catch (e) { /* */ }
-        self.scene.stop('DebugGameScene');
-        self.scene.resume();
-      },
+      // workLoop：下一步是领链任务；非 workLoop：攒天再推进
+      const body = this.workLoopEnabled
+        ? `📅 报到故事告一段落。\n✅ 下一步：再找${seniorName}（头顶 ❗）领第一环任务\n→ 对接同事 → 自己的工位「坐下→开始工作」→ 右上角下班。`
+        : `📅 这一阶段的故事告一段落。\n接下来的${need}天，好好经营你的职场日常——\n做做任务、和同事聊聊、累了就下班回家。\n等你过完这几天，去找${seniorName}聊下一步。`;
+      this._showRitual(body);
     });
   }
 

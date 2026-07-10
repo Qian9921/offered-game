@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "title": "高校行政办公室·具名可交互同事名册",
+    "desc": "行政完整版：id 用于任务链 giver/target。senior=王主任、peer=小方、vet=刘姐、teach=教务赵老师、fin=财务孙姐、stu=学工小陈。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "王主任",
+      "role": "办公室主任",
+      "skin": "so_adam",
+      "tint": "0xd0d8e0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小方",
+      "role": "同批入职",
+      "skin": "so_nancy",
+      "tint": "0xe8d0ff",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「表格一定要按模板。改格式比改内容还要命。」"
+    },
+    {
+      "id": "vet",
+      "name": "刘姐",
+      "role": "老科员",
+      "skin": "so_lucy",
+      "tint": "0xc0e0d0",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「章要盖对，人要对得起章。稳，是门手艺。」"
+    },
+    {
+      "id": "teach",
+      "name": "赵老师",
+      "role": "教务老师",
+      "skin": "so_ash",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「课表冲突先别慌，对时间、对教室、对人，三对才能动。」"
+    },
+    {
+      "id": "fin",
+      "name": "孙姐",
+      "role": "财务窗口",
+      "skin": "so_nancy",
+      "tint": "0xffe0c0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「票据缺一张都不收。别跟我说『人已经走了』。」"
+    },
+    {
+      "id": "stu",
+      "name": "小陈",
+      "role": "学工老师",
+      "skin": "so_lucy",
+      "tint": "0xc0d8ff",
+      "x": 1200,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「学生的事急，但流程不能省。急也要走对门。」"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "civilservant",
+    "title": "公务员工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "co_recv",
+      "title": "完成窗口收件登记",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 2
+      }
+    },
+    {
+      "id": "co_notice",
+      "title": "起草一则办事须知",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "co_sign",
+      "title": "整理会签材料",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "co_archive",
+      "title": "归档一批办结件",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 6
+      }
+    },
+    {
+      "id": "co_phone",
+      "title": "接听并记录咨询电话",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -9,
+        "stress": 3
+      }
+    },
+    {
+      "id": "co_minutes",
+      "title": "整理科室例会纪要",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 11,
+      "cost": {
+        "energy": -13,
+        "stress": 4
+      }
+    },
+    {
+      "id": "co_inspect",
+      "title": "迎检台账自查",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -20,
+        "stress": 8
+      }
+    },
+    {
+      "id": "co_reply",
+      "title": "草拟群众留言答复",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "co_form",
+      "title": "校对申请表模板",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "co_track",
+      "title": "更新督办进度表",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 15,
+      "cost": {
+        "energy": -17,
+        "stress": 6
+      }
+    }
+  ]
+}

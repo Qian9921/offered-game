@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "title": "律师·非诉/公司 迷你任务链",
+    "desc": "3 环：尽调清单→合同审查→意见书交付。"
+  },
+  "quests": [
+    {
+      "id": "cp_c1",
+      "title": "尽调清单",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先问清交易目的，再列要什么材料，别无的放矢。",
+      "acceptLine": "「非诉第一课：清单。找林律对交易结构，再出尽调文件清单。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "corp",
+          "text": "与林律对齐交易结构与风险点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成尽调文件清单"
+        }
+      ],
+      "talkLines": {
+        "corp": "「股权代持、或有负债、知识产权权属，这三项漏一个都够喝一壶。」"
+      },
+      "doneLine": "「清单过了。好的尽调从会提问开始。」",
+      "reward": {
+        "skill": 4,
+        "passion": 2
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "cp_c2",
+      "title": "合同审查",
+      "giver": "senior",
+      "requires": [
+        "cp_c1"
+      ],
+      "ordered": true,
+      "desc": "权利义务、违约、管辖、退出机制，逐条过。",
+      "acceptLine": "「合同你主审。拿不准的条款问林律，别用『建议友好协商』糊弄。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "corp",
+          "text": "就高风险条款请林律把关"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成审查意见表"
+        }
+      ],
+      "talkLines": {
+        "corp": "「无限连带和单方解除权，标红。客户爱听好话，你要写坏话。」"
+      },
+      "doneLine": "「审查完了。律师的价值，常常是让人少签一份后悔。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6,
+        "stress": 2
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "cp_c3",
+      "title": "法律意见书",
+      "giver": "senior",
+      "requires": [
+        "cp_c2"
+      ],
+      "ordered": true,
+      "desc": "结论要可执行，假设与保留写清楚。找阿宁排版归档。",
+      "acceptLine": "「意见书收口。结构问小袁，归档找阿宁，别拖到客户催。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小袁过意见书结构与表述"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成意见书与归档"
+        }
+      ],
+      "talkLines": {
+        "peer": "「结论先写，理由后写。客户先看能不能做，再看为什么。」"
+      },
+      "doneLine": "「交付了。非诉的体面，是让商业决策少踩雷。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

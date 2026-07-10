@@ -48,9 +48,41 @@ export function npcDefsFromRoster(roster, career) {
     markColor: n.markColor || '#7ec8ff',
     act: n.act,
     line: n.line,
+    linesByAct: n.linesByAct || null,
     defaultMark: n.mark || '💬',
     defaultMarkColor: n.markColor || '#7ec8ff',
   }));
+}
+
+/**
+ * NPC 寒暄台词随剧情幕变化：世界"记得"现在演到哪了。
+ * linesByAct: { "1": [...], "3": [...] } —— 取 ≤ 当前幕的最大 key（act2 没写就沿用 act1）。
+ * 数组内随机（rng 可注入便于单测）；没有 linesByAct 或全空时回落到 npc.line。
+ *
+ * @param {object} npc  含 linesByAct / line
+ * @param {number} act  当前幕(1-5)
+ * @param {() => number} [rng]  0..1 随机源，默认 Math.random
+ * @returns {string|null}
+ */
+export function npcLineForAct(npc, act, rng = Math.random) {
+  if (!npc) return null;
+  const byAct = npc.linesByAct;
+  if (byAct && typeof byAct === 'object') {
+    const a = Number.isFinite(act) && act >= 1 ? Math.floor(act) : 1;
+    // 找 ≤ act 的最大 key
+    let best = -1;
+    for (const k of Object.keys(byAct)) {
+      const kn = Number(k);
+      if (Number.isFinite(kn) && kn <= a && kn > best && Array.isArray(byAct[k]) && byAct[k].length) {
+        best = kn;
+      }
+    }
+    if (best >= 0) {
+      const pool = byAct[String(best)];
+      return pool[Math.floor(rng() * pool.length) % pool.length];
+    }
+  }
+  return npc.line || null;
 }
 
 /**

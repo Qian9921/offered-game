@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（教师）",
+    "desc": "家长、课堂突发、检查、同事互助。"
+  },
+  "events": [
+    {
+      "id": "tev_parent_call",
+      "icon": "📱",
+      "title": "家长深夜来电",
+      "urgent": true,
+      "text": "22:40，电话响了：「老师，孩子作业不会，你再讲一遍？」",
+      "choices": [
+        {
+          "label": "简短回应，约明早办公室",
+          "result": "你守住了边界，也没撕破脸。",
+          "effects": {
+            "san": 3,
+            "stress": 3,
+            "performance": 2
+          }
+        },
+        {
+          "label": "线上讲完",
+          "result": "家长满意了，你睡迟了。",
+          "effects": {
+            "stress": 6,
+            "energy": -8,
+            "passion": 1,
+            "health": -2
+          }
+        },
+        {
+          "label": "转家委协调答疑时间",
+          "result": "李姐帮你挡了一阵。",
+          "effects": {
+            "stress": 2,
+            "san": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "tev_class_chaos",
+      "icon": "🎒",
+      "title": "课堂失控边缘",
+      "urgent": true,
+      "text": "后排起哄，前排起哄。公开课的影子在脑中闪过。",
+      "choices": [
+        {
+          "label": "停课立规矩，点名到人",
+          "result": "安静回来了，你嗓子哑了。",
+          "effects": {
+            "stress": 5,
+            "performance": 4,
+            "skill": 2
+          }
+        },
+        {
+          "label": "用小组任务把注意力拉回",
+          "result": "软着陆，进度慢半拍。",
+          "effects": {
+            "san": 2,
+            "performance": 2,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "tev_inspect",
+      "icon": "📋",
+      "title": "教学常规检查",
+      "urgent": false,
+      "text": "教务通知：抽查教案与听课笔记。你有两本还空着。",
+      "choices": [
+        {
+          "label": "今晚补齐并自查",
+          "result": "过关，也更累。",
+          "effects": {
+            "stress": 5,
+            "performance": 3,
+            "energy": -6
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先借同事笔记应急",
+          "result": "险过，心里发虚。",
+          "effects": {
+            "stress": 3,
+            "performance": -1,
+            "san": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "tev_student_cry",
+      "icon": "💧",
+      "title": "学生在办公室哭了",
+      "urgent": false,
+      "text": "一个孩子站在门口，眼睛红着，说不想回家。",
+      "choices": [
+        {
+          "label": "先安抚，再联系家长/心理老师",
+          "result": "你接住了人，流程也走了。",
+          "effects": {
+            "passion": 4,
+            "san": 2,
+            "stress": 3
+          }
+        },
+        {
+          "label": "只劝回教室，事后再跟",
+          "result": "课没耽误，心事悬着。",
+          "effects": {
+            "performance": 1,
+            "passion": -2,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "tev_peer_help",
+      "icon": "📚",
+      "title": "小许求听课",
+      "urgent": false,
+      "text": "小许抱着教案：「明天公开课，你能不能来听一节给意见？」你自己也堆着作业。",
+      "choices": [
+        {
+          "label": "去听，认真写反馈",
+          "result": "你累一点，她稳一点。",
+          "effects": {
+            "san": 3,
+            "passion": 3,
+            "energy": -4
+          }
+        },
+        {
+          "label": "抱歉，这周真顶不住",
+          "result": "你保住了精力，气氛淡了点。",
+          "effects": {
+            "energy": 2,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "tev_coffee_t",
+      "icon": "☕",
+      "title": "办公室茶水间",
+      "urgent": false,
+      "text": "吴老师递来一杯热水：「别和分数较劲，孩子比分数长得慢，也比分数长久。」",
+      "choices": [
+        {
+          "label": "听完，回工位继续改作业",
+          "result": "心里暖了，笔也稳了。",
+          "effects": {
+            "san": 4,
+            "passion": 2
+          }
+        },
+        {
+          "label": "多聊一会儿再走",
+          "result": "压力降了，进度慢了。",
+          "effects": {
+            "san": 5,
+            "performance": -1
+          }
+        }
+      ]
+    }
+  ]
+}

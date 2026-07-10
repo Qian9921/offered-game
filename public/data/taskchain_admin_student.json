@@ -1,0 +1,178 @@
+{
+  "_meta": {
+    "title": "高校行政·学工教务 任务链",
+    "desc": "学工/教务向：学生事务、课表、资助、活动。对接学工小陈、教务赵老师、财务。"
+  },
+  "quests": [
+    {
+      "id": "stu_c1",
+      "title": "熟悉学生事务入口",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先搞清哪些事归学工、哪些归教务，别把学生推错窗口。",
+      "acceptLine": "「学工线第一课：入口。找小陈把事务清单过一遍——推错门比办慢更伤人。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "stu",
+          "text": "向学工小陈了解事务分类"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理学生事务导引表"
+        }
+      ],
+      "talkLines": {
+        "stu": "「请假归辅导员，学籍异动归教务，助学贷款找资助中心。你背熟，窗口才不吵。」"
+      },
+      "doneLine": "「导引清楚了。行政的温柔，是让学生少跑一趟冤枉路。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 12
+    },
+    {
+      "id": "stu_c2",
+      "title": "课表冲突排查",
+      "giver": "senior",
+      "requires": [
+        "stu_c1"
+      ],
+      "ordered": true,
+      "desc": "开学季经典：两门课抢同一教室。",
+      "acceptLine": "「赵老师说有冲突。去对齐课表，别只改系统不通知人。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "teach",
+          "text": "和赵老师核对冲突课程"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成调课方案与通知"
+        }
+      ],
+      "talkLines": {
+        "teach": "「周三三四节，A101 被两门课占了。先保必修，选修挪到晚班。」"
+      },
+      "doneLine": "「冲突解开了。课表是学校的呼吸，乱一格全楼喘不上气。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "stu_c3",
+      "title": "资助材料审核",
+      "giver": "senior",
+      "requires": [
+        "stu_c2"
+      ],
+      "ordered": true,
+      "desc": "助学金材料：缺一项，学生的一个月就悬着。",
+      "acceptLine": "「资助名单要报。先找孙姐对经费口径，再审材料——心软不能替流程签字。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "fin",
+          "text": "和财务孙姐确认资助口径"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位审核资助材料清单"
+        }
+      ],
+      "talkLines": {
+        "fin": "「名额按学院切。超了不批，少了浪费。你按表勾，别凭感觉加。」"
+      },
+      "doneLine": "「材料过了。规则冷一点，是为了公平热一点。」",
+      "reward": {
+        "skill": 4,
+        "san": 2,
+        "performance": 5
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "stu_c4",
+      "title": "学生活动报批",
+      "giver": "senior",
+      "requires": [
+        "stu_c3"
+      ],
+      "ordered": true,
+      "desc": "社团要办晚会：场地、安全、经费，三关。",
+      "acceptLine": "「社团报了晚会。找小陈对安全预案，别只看热闹不看出口。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "stu",
+          "text": "与小陈过安全与场地预案"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成活动报批表"
+        }
+      ],
+      "talkLines": {
+        "stu": "「人数超 200 要加志愿者和出口引导。口号再响，疏散图不能省。」"
+      },
+      "doneLine": "「批了。成全热闹的前提，是先把风险写在纸上。」",
+      "reward": {
+        "skill": 6,
+        "stress": 2,
+        "performance": 7
+      },
+      "progressGain": 24
+    },
+    {
+      "id": "stu_c5",
+      "title": "学期末归档",
+      "giver": "senior",
+      "requires": [
+        "stu_c4"
+      ],
+      "ordered": true,
+      "desc": "学期结束：学籍异动、处分、奖励，全部入档。",
+      "acceptLine": "「期末归档。去问刘姐档案目录，再自己把本学期学工材料收口。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "向刘姐确认归档目录与时限"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成学期归档"
+        }
+      ],
+      "talkLines": {
+        "vet": "「处分和奖励分盒。十年后有人来查，靠的是你今天有没有偷懒。」"
+      },
+      "doneLine": "「归档完了。行政的功不在当下被看见，在以后被需要时还找得到。」",
+      "reward": {
+        "skill": 5,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 24
+    }
+  ]
+}

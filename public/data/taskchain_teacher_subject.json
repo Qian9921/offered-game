@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "教师·任课 迷你任务链",
+    "desc": "3 环：备课→课堂→作业讲评。"
+  },
+  "quests": [
+    {
+      "id": "sb_c1",
+      "title": "单元备课",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "目标、重难点、例题，先过教研再进课堂。",
+      "acceptLine": "「任课第一课：备课。去找吴老师对单元目标，别只堆知识点。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "和吴老师对齐单元目标"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成单元教案"
+        }
+      ],
+      "talkLines": {
+        "vet": "「一节课只攻一个难点。全讲完等于全没讲透。」"
+      },
+      "doneLine": "「教案过了。好课是做减法。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "sb_c2",
+      "title": "教室与课表确认",
+      "giver": "senior",
+      "requires": [
+        "sb_c1"
+      ],
+      "ordered": true,
+      "desc": "多媒体、教室冲突、调课——先找教务堵坑。",
+      "acceptLine": "「上课前找赵老师确认教室设备。投影罢工时你要有 Plan B。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "admin",
+          "text": "向教务确认教室与设备"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位准备板书/离线方案"
+        }
+      ],
+      "talkLines": {
+        "admin": "「周三那间教室投影不稳。你自备转接，或者改用板书主线。」"
+      },
+      "doneLine": "「预案有了。课堂事故一半是准备不足。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "sb_c3",
+      "title": "作业讲评",
+      "giver": "senior",
+      "requires": [
+        "sb_c2"
+      ],
+      "ordered": true,
+      "desc": "批改不是打钩，是找到共性问题再讲透。",
+      "acceptLine": "「作业堆来了。找小许对一下共性错题，再写讲评课。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小许对照共性错题"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成讲评课设计"
+        }
+      ],
+      "talkLines": {
+        "peer": "「第三题错一片，是审题不是计算。讲评先练『题目在问什么』。」"
+      },
+      "doneLine": "「讲评过了。学生进步时，你会记得这些深夜。」",
+      "reward": {
+        "skill": 6,
+        "passion": 4,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

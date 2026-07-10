@@ -58,6 +58,14 @@ const MOODS = {
       [N.A3, N.C4, N.E4], [N.G3, N.B3, N.D4, N.G4],
     ],
   },
+  // 深夜办公室：更慢更冷（小调低音区、无琶音）——加班的孤独感
+  office_night: {
+    step: 4.6, wave: 'sine', filter: 750, arp: false,
+    chords: [
+      [N.A3, N.C4, N.E4], [N.F3, N.A3, N.C4],
+      [N.D3, N.F3, N.A3], [N.E3, N.G3, N.B3],
+    ],
+  },
 };
 
 function _readSettings() {
@@ -239,6 +247,21 @@ export const AudioSystem = {
     [523, 659, 784, 1047].forEach((f, i) => {
       setTimeout(() => this._tone(f, f, 'triangle', 0.12, 0.14), i * 70);
     });
+  },
+
+  // 剧情演出：BGM 骤停（晕倒/高潮戏用）——"声音被抽走"本身就是演出
+  dramaticCut() {
+    if (!ctx || !duckGain) { this.stopBgm(); return; }
+    try {
+      duckGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+      setTimeout(() => { this.stopBgm(); if (duckGain) duckGain.gain.value = 1; }, 500);
+    } catch (e) { this.stopBgm(); }
+  },
+
+  // 心跳声：低频双跳（晕倒前的身体报警演出）
+  heartbeat() {
+    this._tone(55, 45, 'sine', 0.14, 0.30);
+    setTimeout(() => this._tone(50, 40, 'sine', 0.18, 0.26), 220);
   },
 
   // PauseScene 滑块实时调音量（0-100）

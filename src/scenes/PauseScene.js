@@ -255,18 +255,27 @@ export class PauseScene extends Phaser.Scene {
     }
   }
 
-  // NPC id → 显示名（任务给取者提示用；覆盖常见名册 id）
+  // NPC id → 显示名（任务给取者提示用；覆盖各职业名册常用 id）
   _npcName(id) {
     const map = {
       senior: '导师', peer: '同事', vet: '前辈',
+      // 程序员
       zhao: '小赵', lin: '小林', ting: '婷婷',
+      // 产品
       dev: '研发', data: '数据', ops: '运营',
+      // 行政
       teach: '教务', fin: '财务', stu: '学工',
+      // 设计/运营
       pm: '产品', design: '设计',
+      // 教师
       parent: '家长', admin: '行政',
+      // 医护
       lab: '检验', pharm: '药房',
+      // 公务员
       archive: '档案', legal: '法制',
+      // 销售
       sol: '售前', cs: '客成',
+      // 律师
       corp: '公司组', clerk: '书记员',
     };
     return map[id] || '同事';
@@ -328,22 +337,31 @@ export class PauseScene extends Phaser.Scene {
     slider(180, '背景音乐', 'bgm');
     slider(230, '音效', 'sfx');
 
+    // 文字速度（对话打字机）：慢/中/快 三档循环
+    const SPEED_NAMES = ['慢', '中', '快(瞬显)'];
+    const speedVal = () => settings.textSpeed ?? 1;
+    const speedBtn = this._menuButton(290, '', () => {
+      settings.textSpeed = (speedVal() + 1) % 3; save();
+      speedBtn.label.setText(`💬  文字速度：${SPEED_NAMES[speedVal()]}`);
+    }, 300);
+    speedBtn.label.setText(`💬  文字速度：${SPEED_NAMES[speedVal()]}`);
+
     // 全屏切换
-    this._menuButton(290, '⛶  全屏 / 退出全屏', () => {
+    this._menuButton(345, '⛶  全屏 / 退出全屏', () => {
       if (this.scale.isFullscreen) this.scale.stopFullscreen();
       else this.scale.startFullscreen();
     }, 300);
 
     // 辅助模式（Celeste 式）：开启后负面状态消耗减半，让任何人都能走到结局
     const assistOn = () => !!settings.assist;
-    const assistBtn = this._menuButton(345, '', () => {
+    const assistBtn = this._menuButton(400, '', () => {
       settings.assist = !settings.assist; save();
       assistBtn.label.setText(`💗  叙事辅助：${assistOn() ? '开' : '关'}（减轻状态消耗）`);
     }, 300, assistOn() ? 0x2a4436 : 0x2a2a3e);
     assistBtn.label.setText(`💗  叙事辅助：${assistOn() ? '开' : '关'}（减轻状态消耗）`);
 
     // 返回标题（确认）
-    this._menuButton(405, '🏠  返回标题', () => {
+    this._menuButton(455, '🏠  返回标题', () => {
       this._confirm('确定返回标题？当前进度会保留在存档。', () => {
         this.scene.stop(this.origin);
         this.scene.stop();

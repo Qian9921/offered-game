@@ -34,12 +34,14 @@ export class QuestSystem extends Phaser.Events.EventEmitter {
     }
   }
 
-  // 当前可接的任务（未接、未完成、触发条件满足）
+  // 当前可接的任务（未接、未完成、触发条件满足、前置链已完成）
   available(context = {}) {
     return this.order
       .map(id => this.defs[id])
       .filter(q => {
         if (this.accepted[q.id] || this.completed[q.id]) return false;
+        // 任务链前置：requires 里的任务全部完成才解锁（一环扣一环）
+        if (Array.isArray(q.requires) && !q.requires.every(rid => this.completed[rid])) return false;
         return this._triggerMet(q.trigger, context);
       });
   }
@@ -74,15 +76,18 @@ export class QuestSystem extends Phaser.Events.EventEmitter {
     return true;
   }
 
-  // 上报一个行为，推进匹配的进行中任务的目标
+  // 上报一个行为，推进匹配的进行中任务的目标。
+  // 任务定义带 ordered:true 时目标必须按顺序完成（前一个没完成,后面的不亮）——任务链用。
   progress(kind, target) {
     for (const id of Object.keys(this.accepted)) {
       if (this.completed[id]) continue;
       const q = this.defs[id];
       if (!q || !q.objectives) continue;
       const prog = this.accepted[id];
-      for (const o of q.objectives) {
+      for (let i = 0; i < q.objectives.length; i++) {
+        const o = q.objectives[i];
         if (prog.objectives[o.id]) continue;       // 已完成的目标跳过
+        if (q.ordered && i > 0 && !prog.objectives[q.objectives[i - 1].id]) break; // 有序:前一环未完成
         if (o.kind !== kind) continue;
         if (o.target && target && o.target !== target) continue;
         prog.objectives[o.id] = true;
@@ -90,6 +95,17 @@ export class QuestSystem extends Phaser.Events.EventEmitter {
         this.emit('objectiveDone', id, o.id);
       }
     }
+  }
+
+  // 当前任务的"下一个未完成目标"（有序任务链的引导提示用）
+  nextObjective(id) {
+    const q = this.defs[id];
+    const prog = this.accepted[id];
+    if (!q || !prog) return null;
+    for (const o of (q.objectives || [])) {
+      if (!prog.objectives[o.id]) return o;
+    }
+    return null;
   }
 
   // 任务是否所有目标都完成（可交付）
@@ -127,11 +143,12 @@ export class QuestSystem extends Phaser.Events.EventEmitter {
     for (const q of this.active()) {
       if (q.giver === npcId && this.isReady(q.id)) return 'deliver';
     }
-    // 进行中目标指向该 NPC（talk 目标）
+    // 进行中目标指向该 NPC（talk 目标）——有序任务链只指向"下一环"的目标,引导明确
     for (const q of this.active()) {
-      if ((q.objectives || []).some(o => o.kind === 'talk' && o.target === npcId && !this._objDone(q.id, o.id))) {
-        return 'progress';
-      }
+      const pending = q.ordered
+        ? [this.nextObjective(q.id)].filter(Boolean)
+        : (q.objectives || []).filter(o => !this._objDone(q.id, o.id));
+      if (pending.some(o => o.kind === 'talk' && o.target === npcId)) return 'progress';
     }
     return null;
   }

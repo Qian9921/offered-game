@@ -1,0 +1,176 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（公务员）",
+    "desc": "窗口高峰、材料争议、迎检、舆情、同事协作。"
+  },
+  "events": [
+    {
+      "id": "cev_queue",
+      "icon": "🎫",
+      "title": "窗口排长队",
+      "urgent": true,
+      "text": "大厅屏幕上等候数跳到 40+。有人拍玻璃：「能不能快点？」",
+      "choices": [
+        {
+          "label": "加开导办，先分流材料齐全的",
+          "result": "队伍动了，你嗓子哑了。",
+          "effects": {
+            "stress": 6,
+            "performance": 5,
+            "skill": 2
+          }
+        },
+        {
+          "label": "按号来，不插队不加速",
+          "result": "公平在，抱怨也在。",
+          "effects": {
+            "stress": 4,
+            "performance": 2,
+            "san": 1
+          }
+        },
+        {
+          "label": "请科长协调临时窗口",
+          "result": "支援来了，你也欠了人情。",
+          "effects": {
+            "stress": 3,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_dispute",
+      "icon": "📄",
+      "title": "材料认定争议",
+      "urgent": true,
+      "text": "群众坚持『别的窗口收过』。你按目录应退件。",
+      "choices": [
+        {
+          "label": "出示目录与依据，书面告知补正",
+          "result": "有理有据，场面稳住。",
+          "effects": {
+            "skill": 3,
+            "performance": 4,
+            "stress": 3
+          }
+        },
+        {
+          "label": "先收下，内部再协调",
+          "result": "对方走了，你埋了雷。",
+          "effects": {
+            "stress": 5,
+            "performance": -2,
+            "san": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_inspect",
+      "icon": "🔍",
+      "title": "突然迎检",
+      "urgent": true,
+      "text": "通知：半小时后检查组到窗口。台账有两本还乱。",
+      "choices": [
+        {
+          "label": "立刻自查补齐关键页",
+          "result": "险过，人透支。",
+          "effects": {
+            "stress": 7,
+            "performance": 4,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "分工：你对群众线，小闵对台账",
+          "result": "协作过关。",
+          "effects": {
+            "stress": 4,
+            "performance": 3,
+            "san": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_complaint",
+      "icon": "📣",
+      "title": "网上投诉",
+      "urgent": false,
+      "text": "平台转来一条：指责『态度差、推诿』。监控显示你只是按规退件。",
+      "choices": [
+        {
+          "label": "据实回复流程与依据，语气克制",
+          "result": "说明白了，也学会了留痕。",
+          "effects": {
+            "skill": 3,
+            "stress": 4,
+            "performance": 3
+          }
+        },
+        {
+          "label": "先道歉安抚，细节内部再核",
+          "result": "火压下了，真相悬着。",
+          "effects": {
+            "san": 1,
+            "performance": 1,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_help",
+      "icon": "🤝",
+      "title": "小闵卡在系统",
+      "urgent": false,
+      "text": "小闵盯着报错红字：「这号办不下去了，你帮我看一眼？」",
+      "choices": [
+        {
+          "label": "一起排查，顺手教他留痕",
+          "result": "问题解决，团队更顺。",
+          "effects": {
+            "san": 3,
+            "passion": 2,
+            "energy": -3
+          }
+        },
+        {
+          "label": "丢一句工单号让他自己找信息中心",
+          "result": "你省时间，他更慌。",
+          "effects": {
+            "performance": 1,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_tea",
+      "icon": "🍵",
+      "title": "老周的茶",
+      "urgent": false,
+      "text": "老周给你续了杯茶：「窗口站久了，膝盖和脾气都要养。」",
+      "choices": [
+        {
+          "label": "喝完回岗，把微笑挂好",
+          "result": "稳了一点。",
+          "effects": {
+            "san": 4,
+            "stress": -2
+          }
+        },
+        {
+          "label": "多聊两句再走",
+          "result": "心宽了，号又积了。",
+          "effects": {
+            "san": 5,
+            "performance": -1
+          }
+        }
+      ]
+    }
+  ]
+}

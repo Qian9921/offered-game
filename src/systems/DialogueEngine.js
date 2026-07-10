@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AudioSystem } from './AudioSystem.js';
+import { checkChoiceCondition } from './DialogueRules.js';
 
 // DialogueEngine：对话树演出引擎。
 // 读 data/schema.md 格式的对话 JSON：渲染对话框+选项，进入节点/选选项时应用 effects，
@@ -54,8 +55,17 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     this._typeTarget = textObj;
     this._typeFull = fullText;
     let i = 0;
+    // 文字速度：读设置 textSpeed(0慢/1中/2快)，快=瞬间显示
+    let speed = 1;
+    try { speed = JSON.parse(localStorage.getItem('wdwtb_settings') || '{}').textSpeed ?? 1; } catch (e) {}
+    if (speed >= 2) {
+      textObj.setText(fullText);
+      this._typing = false;
+      this._updateMoreHint();
+      return;
+    }
     this._typeTimer = this.scene.time.addEvent({
-      delay: 34,
+      delay: speed === 0 ? 52 : 34,
       repeat: fullText.length - 1,
       callback: () => {
         i++;
@@ -136,14 +146,17 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     }
   }
 
-  // 接收对话树 JSON 对象，从其 start 节点开始演出
-  start(dialogueData) {
+  // 接收对话树 JSON 对象，从其 start 节点开始演出。
+  // resumeId：断点续演——从上次退出的节点接着演，而不是从头重播（可空）。
+  start(dialogueData, resumeId) {
     this.data = dialogueData;
-    this.currentId = dialogueData.start;
     // 幕信息（可选）
     if (dialogueData.act != null) this.currentAct = dialogueData.act;
     if (dialogueData.actName != null) this.currentActName = dialogueData.actName;
-    this._showNode(this.currentId);
+    const startAt = (resumeId && dialogueData.nodes && dialogueData.nodes[resumeId])
+      ? resumeId : dialogueData.start;
+    this.currentId = startAt;
+    this._showNode(startAt);
   }
 
   _showNode(nodeId) {
@@ -165,6 +178,8 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
 
     // 若节点指定背景，emit 事件让外部场景切换
     if (node.bg) this.emit('bgChange', node.bg);
+    // 节点级演出特效(fx: 'collapse'|'shake'|'flash_white'|'heartbeat'|'silence')——高潮戏的镜头语言
+    if (node.fx) this.emit('fx', node.fx, node);
 
     // 布局：框锚定屏幕底部（底边恒定），框高按【当前页】实际行数逐页自适应——
     // 短页矮框、长页高框，翻页重算。根治"框大文字少、下面一片空黑"的业余感。
@@ -247,7 +262,7 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     // 情况1：真正的结束节点（原始 choices 为空）
     if (isEndNode) {
       const endLabel = this.scene.add
-        .text(boxX + PAD, boxY + boxH - 14, '(结束)', {
+        .text(boxX + PAD, boxBottom - 14, '(结束)', {
           fontSize: '17px', color: '#9aa0a6',
         })
         .setOrigin(0, 1);
@@ -372,15 +387,9 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     this._endDialogue();
   }
 
-  // 条件判断：检查 choice.condition 中所有状态键是否满足 min（≥）/ max（≤）
+  // 条件判断：委托纯函数（单测见 test-dialogue-rules.mjs）
   _checkCondition(condition) {
-    if (!condition) return true; // 无 condition → 总是显示
-    for (const [key, rule] of Object.entries(condition)) {
-      const value = this.state.get(key);
-      if (rule.min != null && value < rule.min) return false;
-      if (rule.max != null && value > rule.max) return false;
-    }
-    return true;
+    return checkChoiceCondition(condition, (key) => this.state.get(key));
   }
 
   _applyEffects(effects) {

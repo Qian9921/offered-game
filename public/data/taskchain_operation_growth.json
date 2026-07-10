@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "运营·增长运营 迷你任务链",
+    "desc": "3 环：活动方案→物料协作→效果复盘。"
+  },
+  "quests": [
+    {
+      "id": "grw_c1",
+      "title": "活动目标对齐",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先问清楚：要拉新、促活还是转化？目标糊，活动必糊。",
+      "acceptLine": "「增长第一课：目标。找强哥对齐指标，别一上来就想玩法。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "和强哥对齐活动北极星指标"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位写活动目标与路径"
+        }
+      ],
+      "talkLines": {
+        "vet": "「这期只盯次日留存。拉新数字好看但留不住，是自嗨。」"
+      },
+      "doneLine": "「目标清楚了。增长不是热闹，是可复盘的实验。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "grw_c2",
+      "title": "物料与触达",
+      "giver": "senior",
+      "requires": [
+        "grw_c1"
+      ],
+      "ordered": true,
+      "desc": "视觉找阿棠，文案触达找小鹿，通道别自己空想。",
+      "acceptLine": "「物料并行：阿棠出视觉，小鹿出触达文案。你收口排期。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "design",
+          "text": "和阿棠确认活动主视觉"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成活动排期与触达清单"
+        }
+      ],
+      "talkLines": {
+        "design": "「主 KV 两版：促销感 / 品牌感。你定一个，别两个都『再看看』。」"
+      },
+      "doneLine": "「物料齐了。协作的本质是按时交界面。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "grw_c3",
+      "title": "效果复盘",
+      "giver": "senior",
+      "requires": [
+        "grw_c2"
+      ],
+      "ordered": true,
+      "desc": "活动结束：漏斗、成本、学到什么，写成下一期输入。",
+      "acceptLine": "「复盘找小析要数，再自己写结论——别只贴截图。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "data",
+          "text": "找小析拉活动漏斗数据"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成增长复盘"
+        }
+      ],
+      "talkLines": {
+        "data": "「曝光够，点击弱=物料；点击够，转化弱=落地页。别全怪渠道。」"
+      },
+      "doneLine": "「复盘立住了。增长的体面，是承认哪一刀砍错了。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

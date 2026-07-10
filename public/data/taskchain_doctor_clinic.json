@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "医护·临床医生 迷你任务链",
+    "desc": "3 环：接诊→检验会诊→病程收束。giver=张主任。"
+  },
+  "quests": [
+    {
+      "id": "cl_c1",
+      "title": "接诊与问诊",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先问清主诉和过敏史，再动手。护士长看过太多『跳步骤』。",
+      "acceptLine": "「第一课：接诊。去跟护士长对交接班重点，再自己完成首诊病历。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "向护士长了解交班与高危病人"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成首诊病历与医嘱草稿(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「3 床夜里喘，吸氧别断。过敏史写在第一行，别埋在备注里。」"
+      },
+      "doneLine": "「病历过了。临床的体面，是字迹也敢给人看。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "cl_c2",
+      "title": "检验与用药",
+      "giver": "senior",
+      "requires": [
+        "cl_c1"
+      ],
+      "ordered": true,
+      "desc": "该查的查，该问药房的问，别凭感觉加药。",
+      "acceptLine": "「去检验科对危急值流程，再找老金核这台病人的用药。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "lab",
+          "text": "与检验小周确认危急值与报告时限"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理检验解读与用药方案"
+        }
+      ],
+      "talkLines": {
+        "lab": "「钾高的电话我打了。你回执别拖，拖到下一班就是事故隐患。」"
+      },
+      "doneLine": "「方案齐了。检查单不是护身符，解读才是。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "cl_c3",
+      "title": "查房汇报",
+      "giver": "senior",
+      "requires": [
+        "cl_c2"
+      ],
+      "ordered": true,
+      "desc": "查房讲重点：变化、风险、下一步。找小蒋对一遍口径。",
+      "acceptLine": "「查房前和小蒋对病例。汇报别念小说，三句话讲清。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小蒋对查房汇报口径"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成病程记录与查房要点"
+        }
+      ],
+      "talkLines": {
+        "peer": "「主任爱问『最担心什么』。你先想好，别现场编。」"
+      },
+      "doneLine": "「过了。你会发现：医院里成长最快的，是被问倒再站起来的人。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

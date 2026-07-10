@@ -9,13 +9,7 @@ export class OpeningScene extends Phaser.Scene {
 
   preload() {
     this.load.json('assessment', './data/assessment.json');
-    // LimeZu 四款 16×32
-    for (const n of ['Adam', 'Alex', 'Amelia', 'Bob']) {
-      this.load.spritesheet(n.toLowerCase(), `./assets/limezu/characters/${n}.png`, {
-        frameWidth: 16, frameHeight: 32,
-      });
-    }
-    // SkyOffice 四款 atlas（更精细，捏人可选）
+    // 主角与 NPC 统一用 SkyOffice（同一 32×48 体系,尺寸/画风一致,不再混用 LimeZu）
     for (const c of ['adam', 'ash', 'lucy', 'nancy']) {
       this.load.atlas(`so_${c}`, `./assets/skyoffice/character/${c}.png`, `./assets/skyoffice/character/${c}.json`);
     }
@@ -32,14 +26,10 @@ export class OpeningScene extends Phaser.Scene {
     // 每条带 type/pv(预览缩放)/th(缩略图缩放)/idle(静止帧)，捏人 UI 只调工厂、不碰底层格式。
     // pv/th 让两套素材缩放后等高：LimeZu 32px×3.6≈115，SkyOffice 48px×2.4≈115（视觉齐平不遮标题）。
     this.charSkins = [
-      { key: 'alex',   name: '利落短发 · 男',  gender: 'male',    type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'bob',    name: '沉稳黑发 · 男',  gender: 'male',    type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'amelia', name: '栗色长发 · 女',  gender: 'female',  type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'adam',   name: '慵懒绿发 · 中性', gender: 'neutral', type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'so_adam',  cap: 'Adam',  name: '干练寸头 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Adam_idle_anim_19.png' },
-      { key: 'so_ash',   cap: 'Ash',   name: '金棕短发 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Ash_idle_anim_19.png' },
-      { key: 'so_lucy',  cap: 'Lucy',  name: '棕发利落 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Lucy_idle_anim_19.png' },
-      { key: 'so_nancy', cap: 'Nancy', name: '黑发知性 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Nancy_idle_anim_19.png' },
+      { key: 'so_adam',  cap: 'Adam',  name: '干练寸头 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Adam_idle_anim_19.png' },
+      { key: 'so_ash',   cap: 'Ash',   name: '金棕短发 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Ash_idle_anim_19.png' },
+      { key: 'so_lucy',  cap: 'Lucy',  name: '棕发利落 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Lucy_idle_anim_19.png' },
+      { key: 'so_nancy', cap: 'Nancy', name: '黑发知性 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Nancy_idle_anim_19.png' },
     ];
     // 色调滤镜：给立绘加一层轻染色,四款皮肤 × 五种色调 = 20 种组合
     this.tints = [

@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "医院科室·具名可交互同事名册",
+    "desc": "医护迷你完整版：senior=张主任、peer=小蒋 规培、vet=护士长、lab=检验小周、pharm=药房老金。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "张主任",
+      "role": "科室主任",
+      "skin": "so_adam",
+      "tint": "0xd0e8f0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小蒋",
+      "role": "规培同期",
+      "skin": "so_ash",
+      "tint": "0xc0e0ff",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「病历别拖到下班。拖一次，病人安全就悬一次。」"
+    },
+    {
+      "id": "vet",
+      "name": "护士长",
+      "role": "二十年资历",
+      "skin": "so_lucy",
+      "tint": "0xffd0e0",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「这里没有慢班。跟上节奏，也照顾好自己。」"
+    },
+    {
+      "id": "lab",
+      "name": "小周",
+      "role": "检验科",
+      "skin": "so_nancy",
+      "tint": "0xe0ffe0",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「危急值电话先打床旁。报告系统慢，人命不慢。」"
+    },
+    {
+      "id": "pharm",
+      "name": "老金",
+      "role": "药房",
+      "skin": "so_nancy",
+      "tint": "0xfff0c0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「过敏史写清楚。含糊开药，锅是两边的。」"
+    }
+  ]
+}

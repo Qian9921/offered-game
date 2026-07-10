@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "律所·具名可交互同事名册",
+    "desc": "律师迷你完整版：senior=沈律师 合伙人、peer=小袁 实习、vet=何律 诉讼、corp=公司部林律、clerk=书记员阿宁。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "沈律师",
+      "role": "合伙人",
+      "skin": "so_adam",
+      "tint": "0xd8d0c0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小袁",
+      "role": "实习律师",
+      "skin": "so_ash",
+      "tint": "0xc0d8ff",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「案卷先看三遍再开口。第一遍找事实，第二遍找争点，第三遍找漏洞。」"
+    },
+    {
+      "id": "vet",
+      "name": "何律",
+      "role": "资深诉讼",
+      "skin": "so_lucy",
+      "tint": "0xe0d0ff",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「法条是死的，当事人是活的。别忘了这点。」"
+    },
+    {
+      "id": "corp",
+      "name": "林律",
+      "role": "公司业务",
+      "skin": "so_nancy",
+      "tint": "0xd0ffe8",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「合同不是文学。每个义务都要有主体、期限、违约后果。」"
+    },
+    {
+      "id": "clerk",
+      "name": "阿宁",
+      "role": "书记员",
+      "skin": "so_nancy",
+      "tint": "0xffe8d0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「证据目录编号别乱。开庭那天找不到原件，等于没证据。」"
+    }
+  ]
+}

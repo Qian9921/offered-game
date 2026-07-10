@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "lawyer",
+    "title": "律师工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "lo_timeline",
+      "title": "整理案件时间线",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 3
+      }
+    },
+    {
+      "id": "lo_research",
+      "title": "检索类案与法条",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "lo_evidence",
+      "title": "补证据目录编号",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -13,
+        "stress": 4
+      }
+    },
+    {
+      "id": "lo_brief",
+      "title": "起草代理意见提纲",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 7
+      }
+    },
+    {
+      "id": "lo_contract",
+      "title": "审查合同高风险条款",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 6
+      }
+    },
+    {
+      "id": "lo_client",
+      "title": "整理客户会议纪要",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "lo_filing",
+      "title": "准备立案/仲裁材料",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "lo_opinion",
+      "title": "写法律意见书一节",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 15,
+      "cost": {
+        "energy": -17,
+        "stress": 6
+      }
+    },
+    {
+      "id": "lo_check",
+      "title": "校对文书引用法条",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "lo_mock",
+      "title": "庭前模拟问答卡",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "销售团队·具名可交互同事名册",
+    "desc": "销售迷你完整版：senior=Vincent 总监、peer=小柯、vet=彪哥 销冠、sol=售前阿哲、cs=客成小满。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "Vincent",
+      "role": "销售总监",
+      "skin": "so_adam",
+      "tint": "0xffe0c0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小柯",
+      "role": "同期入职",
+      "skin": "so_ash",
+      "tint": "0xc0e0ff",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「CRM 字段填全。漏一次跟进，线索就冷了。」"
+    },
+    {
+      "id": "vet",
+      "name": "彪哥",
+      "role": "销冠",
+      "skin": "so_lucy",
+      "tint": "0xffd0d0",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「单子是跑出来的，不是等出来的。走，带你见客户。」"
+    },
+    {
+      "id": "sol",
+      "name": "阿哲",
+      "role": "售前方案",
+      "skin": "so_nancy",
+      "tint": "0xd0ffe0",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「别承诺做不到的功能。方案里写边界，比写形容词重要。」"
+    },
+    {
+      "id": "cs",
+      "name": "小满",
+      "role": "客户成功",
+      "skin": "so_nancy",
+      "tint": "0xffe8f0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「签约不是结束。交接不清，续费就是雷。」"
+    }
+  ]
+}

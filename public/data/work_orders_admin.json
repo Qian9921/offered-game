@@ -1,0 +1,153 @@
+{
+  "_meta": {
+    "career": "admin",
+    "title": "高校行政工单池",
+    "desc": "每天抽 3 张今日工单。公文/盖章/会议/迎检类事务。"
+  },
+  "orders": [
+    {
+      "id": "ao_register",
+      "title": "完成今日收文登记",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 2
+      }
+    },
+    {
+      "id": "ao_notice",
+      "title": "起草部门通知",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 9,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "ao_stamp",
+      "title": "整理用章材料",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 6
+      }
+    },
+    {
+      "id": "ao_meeting",
+      "title": "筹备院务会材料",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 8
+      }
+    },
+    {
+      "id": "ao_archive",
+      "title": "归档上月文件",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 18,
+      "cost": {
+        "energy": -20,
+        "stress": 7
+      }
+    },
+    {
+      "id": "ao_room",
+      "title": "协调会议室冲突",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 9,
+      "cost": {
+        "energy": -8,
+        "stress": 3
+      }
+    },
+    {
+      "id": "ao_form",
+      "title": "审核报销粘贴单",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -15,
+        "stress": 5
+      }
+    },
+    {
+      "id": "ao_inspect",
+      "title": "迎检台账自查",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 9
+      }
+    },
+    {
+      "id": "ao_phone",
+      "title": "接听并记录外线事务",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "ao_roster",
+      "title": "更新人员通讯录",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 7,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "ao_conflict",
+      "title": "处理课表教室冲突",
+      "difficulty": "hard",
+      "est": 5,
+      "progress": 15,
+      "performance": 18,
+      "cost": {
+        "energy": -22,
+        "stress": 10
+      }
+    },
+    {
+      "id": "ao_minutes",
+      "title": "整理会议纪要",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -15,
+        "stress": 4
+      }
+    }
+  ]
+}

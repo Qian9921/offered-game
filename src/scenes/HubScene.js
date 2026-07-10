@@ -29,6 +29,60 @@ export class HubScene extends Phaser.Scene {
       });
     }
 
+    // 细分职业（目前只有程序员开了；rec 用测评分推荐一个）。
+    // dev=造东西(I/A/R + 开放性O)；test=守质量(C + 尽责性)。
+    this.SUBROLES = {
+      programmer: [
+        { key: 'dev',  name: '开发工程师', desc: '把需求变成能跑的代码', rec: (r, b) => (r.I || 0) + (r.A || 0) + (r.R || 0) + (b.O || 0) },
+        { key: 'test', name: '测试工程师', desc: '守住质量的最后一道关', rec: (r, b) => (r.C || 0) * 1.6 + (b.C || 0) },
+      ],
+      // 产品：业务产品偏数据/商业(E/C)，体验产品偏设计/共情(A/S + O)
+      product: [
+        { key: 'biz', name: '业务产品', desc: '指标、排期、把需求推上线', rec: (r, b) => (r.E || 0) + (r.C || 0) + (b.C || 0) },
+        { key: 'ux',  name: '体验产品', desc: '走查、原型、好不好用', rec: (r, b) => (r.A || 0) + (r.S || 0) + (b.O || 0) },
+      ],
+      // 行政：综合办偏规范/文书(C)，学工教务偏服务/沟通(S/E)
+      admin: [
+        { key: 'office',  name: '综合办', desc: '公文、跑章、会议、迎检', rec: (r, b) => (r.C || 0) * 1.4 + (b.C || 0) },
+        { key: 'student', name: '学工教务', desc: '学生事务、课表、资助', rec: (r, b) => (r.S || 0) + (r.E || 0) + (b.A || 0) },
+      ],
+      // 设计师迷你完整版：视觉偏审美(A)，UI/体验偏结构(C/I)
+      designer: [
+        { key: 'visual', name: '视觉设计', desc: '品牌、主视觉、出稿改稿', rec: (r, b) => (r.A || 0) * 1.5 + (b.O || 0) },
+        { key: 'ui',     name: 'UI / 体验', desc: '组件、走查、标注交付', rec: (r, b) => (r.C || 0) + (r.I || 0) + (b.C || 0) },
+      ],
+      // 运营迷你完整版：内容偏表达(A/S)，增长偏数据(C/E)
+      operation: [
+        { key: 'content', name: '内容运营', desc: '选题、成稿、投放复盘', rec: (r, b) => (r.A || 0) + (r.S || 0) + (b.O || 0) },
+        { key: 'growth',  name: '增长运营', desc: '活动、渠道、ROI', rec: (r, b) => (r.E || 0) + (r.C || 0) + (b.C || 0) },
+      ],
+      // 教师迷你完整版：班主任偏带班(S)，任课偏专业(I/C)
+      teacher: [
+        { key: 'homeroom', name: '班主任', desc: '建班、家校、班会公开课', rec: (r, b) => (r.S || 0) * 1.4 + (b.A || 0) },
+        { key: 'subject',  name: '任课教师', desc: '备课、课堂、作业讲评', rec: (r, b) => (r.I || 0) + (r.C || 0) + (b.C || 0) },
+      ],
+      // 医护迷你完整版：临床偏诊断(I/C)，护理偏执行与照护(S/C)
+      doctor: [
+        { key: 'clinic', name: '临床医生', desc: '接诊、检验、查房汇报', rec: (r, b) => (r.I || 0) + (r.C || 0) + (b.C || 0) },
+        { key: 'nurse',  name: '护理', desc: '交接、执行医嘱、宣教', rec: (r, b) => (r.S || 0) + (r.C || 0) + (b.A || 0) },
+      ],
+      // 公务员迷你完整版：窗口偏服务(S)，内勤偏文书规范(C)
+      civilservant: [
+        { key: 'window', name: '窗口服务', desc: '收件、会商、办结归档', rec: (r, b) => (r.S || 0) * 1.3 + (r.C || 0) },
+        { key: 'desk',   name: '综合内勤', desc: '拟稿、会签、督办反馈', rec: (r, b) => (r.C || 0) * 1.4 + (b.C || 0) },
+      ],
+      // 销售迷你完整版：野外/大客户偏开拓(E)，电销内勤偏节奏与转化(C/E)
+      sales: [
+        { key: 'field',  name: '大客户销售', desc: '线索、拜访、逼单复盘', rec: (r, b) => (r.E || 0) * 1.4 + (r.S || 0) },
+        { key: 'inside', name: '电销 / 内勤', desc: '触达、商机、签约交接', rec: (r, b) => (r.E || 0) + (r.C || 0) + (b.C || 0) },
+      ],
+      // 律师迷你完整版：诉讼偏对抗与证据(C/I)，非诉偏交易与合同(C/E)
+      lawyer: [
+        { key: 'litigation', name: '诉讼律师', desc: '阅卷、证据、开庭预案', rec: (r, b) => (r.C || 0) + (r.I || 0) + (b.C || 0) },
+        { key: 'corporate',  name: '非诉 / 公司', desc: '尽调、合同、意见书', rec: (r, b) => (r.C || 0) + (r.E || 0) + (b.O || 0) },
+      ],
+    };
+
     const careers = [
       // 深度职业（3 个）—— 金边 + 亮色填充
       { key: 'programmer',  name: '程序员',     desc: '代码会跑，人也会累',           deep: true },
@@ -52,8 +106,8 @@ export class HubScene extends Phaser.Scene {
     this.add.text(480, 100, '选择一个职业，开始你的职场故事', {
       fontSize: '15px', color: '#9aa0a6',
     }).setOrigin(0.5);
-    // 3 分钟评委路径：进办公室前先建立心智模型
-    this.add.text(480, 122, '办公室循环：找 ❗ 导师 → 对话/接任务 → 走近 💻 电脑按 E 干活 → 下班', {
+    // 3 分钟评委路径：进办公室前先建立心智模型（找人→对接→工位→下班）
+    this.add.text(480, 122, '办公室循环：找 ❗ 导师领任务 → 对接同事 → 工位坐下开工 → 右上角下班', {
       fontSize: '12px', color: '#c8b070',
     }).setOrigin(0.5);
     // 分类小标签
@@ -107,6 +161,14 @@ export class HubScene extends Phaser.Scene {
       this.add.text(cx, cy + 14, career.desc, {
         fontSize: '11px', color: descColor,
       }).setOrigin(0.5);
+      // 内容量角标：程序员=完整版(任务链+细分岗位)；其余按类型标注,不让人误期待
+      const FULL = new Set(['programmer', 'product', 'admin', 'designer', 'operation', 'teacher', 'doctor', 'civilservant', 'sales', 'lawyer']);
+      const tag = FULL.has(career.key)
+        ? { t: (['designer','operation','teacher','doctor','civilservant','sales','lawyer'].includes(career.key)) ? '★迷你完整' : '★完整版', c: '#ffd24d' }
+        : isDeep ? { t: '剧情版', c: '#9ab4dc' } : { t: '短篇', c: '#7a7a92' };
+      this.add.text(cx + cardW / 2 - 7, cy - cardH / 2 + 5, tag.t, {
+        fontSize: '9px', color: tag.c,
+      }).setOrigin(1, 0);
 
       // 交互：hover 放大 + 点击音 + 淡出进场
       const cardParts = [interactiveRect];
@@ -120,10 +182,53 @@ export class HubScene extends Phaser.Scene {
       });
       interactiveRect.on('pointerdown', () => {
         AudioSystem.uiClick();
-        this.cameras.main.fadeOut(400, 10, 8, 20);
-        this.cameras.main.once('camerafadeoutcomplete', () =>
-          this.scene.start('WorldScene', { career: career.key, deep: career.deep, act: 1 }));
+        // 有细分职业的(程序员) → 先选方向；否则直接进
+        if (this.SUBROLES[career.key]) { this._showSpecModal(career); return; }
+        this._enterWorld(career, null);
       });
     });
+  }
+
+  _enterWorld(career, subRole) {
+    this.cameras.main.fadeOut(400, 10, 8, 20);
+    this.cameras.main.once('camerafadeoutcomplete', () =>
+      this.scene.start('WorldScene', { career: career.key, subRole, deep: career.deep, act: 1 }));
+  }
+
+  // 细分职业选择弹窗：两个方向卡 + 测评推荐高亮
+  _showSpecModal(career) {
+    const subs = this.SUBROLES[career.key];
+    let prof = {}; try { prof = JSON.parse(localStorage.getItem('wdwtb_profile') || '{}'); } catch (e) {}
+    const r = prof.riasec || {}, big = prof.big5 || {};
+    const recKey = subs.map(s => ({ k: s.key, v: s.rec(r, big) })).sort((a, b) => b.v - a.v)[0].k;
+
+    const els = [];
+    els.push(this.add.rectangle(480, 270, 960, 540, 0x0a0a16, 0.84).setInteractive().setDepth(50));
+    els.push(this.add.rectangle(480, 270, 580, 320, 0x191930).setStrokeStyle(2, 0xd4a353).setDepth(51));
+    els.push(this.add.text(480, 158, `选择你的方向 · ${career.name}`, { fontSize: '22px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5).setDepth(52));
+    els.push(this.add.text(480, 182, '不同方向 = 不同的导师任务、对接的人、小游戏', { fontSize: '12px', color: '#9aa0a6' }).setOrigin(0.5).setDepth(52));
+    els.push(this.add.text(480, 204, '进办公室：找 ❗ 导师 → 对接 → 自己的椅子「坐下办公」→「开始工作」→ 下班', {
+      fontSize: '11px', color: '#c8b070',
+    }).setOrigin(0.5).setDepth(52));
+
+    subs.forEach((sub, i) => {
+      const cx = 480 + (i === 0 ? -145 : 145), cy = 295;
+      const isRec = sub.key === recKey;
+      const card = this.add.rectangle(cx, cy, 250, 150, isRec ? 0x2a4a3e : 0x23233a)
+        .setStrokeStyle(2, isRec ? 0xffd24d : 0x4a4a6a).setInteractive({ useHandCursor: true }).setDepth(52);
+      els.push(card);
+      els.push(this.add.text(cx, cy - 42, sub.name, { fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(53));
+      els.push(this.add.text(cx, cy - 6, sub.desc, { fontSize: '12px', color: '#c8c8d8', wordWrap: { width: 215 }, align: 'center' }).setOrigin(0.5).setDepth(53));
+      if (isRec) els.push(this.add.text(cx, cy + 48, '⭐ 测评推荐', { fontSize: '12px', color: '#ffd24d' }).setOrigin(0.5).setDepth(53));
+      card.on('pointerover', () => card.setFillStyle(isRec ? 0x35604e : 0x33334e));
+      card.on('pointerout', () => card.setFillStyle(isRec ? 0x2a4a3e : 0x23233a));
+      card.on('pointerdown', () => { AudioSystem.uiClick(); this._enterWorld(career, sub.key); });
+    });
+
+    const close = this.add.text(748, 148, '✕', { fontSize: '20px', color: '#8a8a9e' })
+      .setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(53);
+    close.on('pointerover', () => close.setColor('#ff9a9a'));
+    close.on('pointerdown', () => { els.push(close); els.forEach(e => e.destroy()); });
+    els.push(close);
   }
 }

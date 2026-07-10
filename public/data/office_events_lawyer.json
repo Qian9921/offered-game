@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（律师）",
+    "desc": "期限、客户施压、对方律师、利益冲突、加班出文书。"
+  },
+  "events": [
+    {
+      "id": "lev_deadline",
+      "icon": "⏰",
+      "title": "诉讼时效卡点",
+      "urgent": true,
+      "text": "小袁冲进来：「这案时效还剩三天！」卷宗还缺两份关键材料。",
+      "choices": [
+        {
+          "label": "立刻列补证清单并同步客户",
+          "result": "节奏拉满，风险可控。",
+          "effects": {
+            "stress": 7,
+            "performance": 5,
+            "skill": 2
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先报沈律决策是否先立案",
+          "result": "专业，但你少扛了一次。",
+          "effects": {
+            "stress": 3,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_client",
+      "icon": "😤",
+      "title": "客户要『保证赢』",
+      "urgent": true,
+      "text": "电话那头：『你们律师不就是保证结果的吗？』",
+      "choices": [
+        {
+          "label": "讲清风险区间与策略，拒绝打包票",
+          "result": "诚实换专业信任。",
+          "effects": {
+            "skill": 3,
+            "stress": 4,
+            "performance": 3,
+            "san": 1
+          }
+        },
+        {
+          "label": "含糊安抚，先把委托稳住",
+          "result": "委托在，隐患也在。",
+          "effects": {
+            "stress": 3,
+            "performance": 2,
+            "passion": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_opp",
+      "icon": "⚖️",
+      "title": "对方律师发难",
+      "urgent": false,
+      "text": "函件措辞很冲，暗示你们证据造假。何律把函丢给你。",
+      "choices": [
+        {
+          "label": "逐条书面回应，留痕不抬杠",
+          "result": "专业回击。",
+          "effects": {
+            "skill": 4,
+            "stress": 5,
+            "performance": 4
+          }
+        },
+        {
+          "label": "先内部核查证据链再回",
+          "result": "稳，但显得慢。",
+          "effects": {
+            "stress": 3,
+            "skill": 2,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_conflict",
+      "icon": "🚧",
+      "title": "利益冲突苗头",
+      "urgent": false,
+      "text": "新咨询客户与老客户同行业竞品。林律提醒：『先查冲突。』",
+      "choices": [
+        {
+          "label": "停接待，走利益冲突检索流程",
+          "result": "规矩保住了。",
+          "effects": {
+            "skill": 3,
+            "performance": 2,
+            "san": 2
+          }
+        },
+        {
+          "label": "先聊需求，回头再查",
+          "result": "可能踩线。",
+          "effects": {
+            "stress": 4,
+            "performance": -2,
+            "passion": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_allnighter",
+      "icon": "🌙",
+      "title": "文书通宵边缘",
+      "urgent": false,
+      "text": "明天上午交代理词。现在 22:40，引用法条还没核完。",
+      "choices": [
+        {
+          "label": "留下核完关键引用",
+          "result": "质量在，人垮一点。",
+          "effects": {
+            "performance": 5,
+            "energy": -12,
+            "health": -3,
+            "stress": 5
+          }
+        },
+        {
+          "label": "拆给小袁半段，你盯结构",
+          "result": "协作过关。",
+          "effects": {
+            "performance": 3,
+            "san": 1,
+            "energy": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_tea",
+      "icon": "☕",
+      "title": "茶水间何律",
+      "urgent": false,
+      "text": "何律：「别把当事人的仇当成你的仇。你是律师，不是刺客。」",
+      "choices": [
+        {
+          "label": "点头，回工位继续改稿",
+          "result": "边界更清。",
+          "effects": {
+            "san": 4,
+            "stress": -2
+          }
+        },
+        {
+          "label": "多聊两句再走",
+          "result": "心宽了。",
+          "effects": {
+            "san": 5,
+            "passion": 1
+          }
+        }
+      ]
+    }
+  ]
+}

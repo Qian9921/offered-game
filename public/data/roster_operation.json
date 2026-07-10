@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "title": "运营办公室·具名可交互同事名册",
+    "desc": "运营迷你完整版：senior=雅姐、peer=小鹿 内容、vet=强哥 增长、design=设计师阿棠、data=数据小析。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "雅姐",
+      "role": "运营负责人",
+      "skin": "so_lucy",
+      "tint": "0xffe0b0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小鹿",
+      "role": "内容运营",
+      "skin": "so_nancy",
+      "tint": "0xffd0e0",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「标题党只能骗一次点击，留存要靠内容真有用。」"
+    },
+    {
+      "id": "vet",
+      "name": "强哥",
+      "role": "增长老兵",
+      "skin": "so_adam",
+      "tint": "0xc0e0ff",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「流量是假的，留存是真的。记住这句就够了。」"
+    },
+    {
+      "id": "design",
+      "name": "阿棠",
+      "role": "视觉支持",
+      "skin": "so_nancy",
+      "tint": "0xe0d0ff",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「封面我先出两版，你定调性再细修。」"
+    },
+    {
+      "id": "data",
+      "name": "小析",
+      "role": "数据分析",
+      "skin": "so_ash",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「先看漏斗再拍板。感觉很丰满，数据很骨感。」"
+    }
+  ]
+}

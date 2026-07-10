@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "title": "政务窗口·具名可交互同事名册",
+    "desc": "公务员迷你完整版：senior=赵科长、peer=小闵、vet=老周、archive=档案室小何、legal=法规股王股长。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "赵科长",
+      "role": "窗口科科长",
+      "skin": "so_adam",
+      "tint": "0xd8d8e0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小闵",
+      "role": "同批考入",
+      "skin": "so_nancy",
+      "tint": "0xe0d0ff",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「材料目录贴墙上那份为准。少一项就退，别心软先收。」"
+    },
+    {
+      "id": "vet",
+      "name": "老周",
+      "role": "临退老同志",
+      "skin": "so_lucy",
+      "tint": "0xc0e0d0",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「章要盖对，人要对得起章。就这么简单。」"
+    },
+    {
+      "id": "archive",
+      "name": "小何",
+      "role": "档案室",
+      "skin": "so_ash",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「归档编号别自创。十年后有人来查，靠的是你今天规矩。」"
+    },
+    {
+      "id": "legal",
+      "name": "王股长",
+      "role": "法规股",
+      "skin": "so_nancy",
+      "tint": "0xffe0c0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「依据条款写清楚。口头承诺出了门不算数。」"
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（销售）",
+    "desc": "砍价、丢单、撞单、回款、鸡血会。"
+  },
+  "events": [
+    {
+      "id": "sev_discount",
+      "icon": "💸",
+      "title": "客户逼折扣",
+      "urgent": true,
+      "text": "电话那头：『再降 15 个点，今天就能签。』你知道底线只剩 8 个点。",
+      "choices": [
+        {
+          "label": "守价，换付款/服务条款",
+          "result": "你没破价，谈资还在。",
+          "effects": {
+            "skill": 3,
+            "stress": 4,
+            "performance": 3
+          }
+        },
+        {
+          "label": "申请特批折扣冲业绩",
+          "result": "单子近了，利润薄了。",
+          "effects": {
+            "performance": 5,
+            "stress": 5,
+            "passion": -1
+          },
+          "addOrder": true
+        },
+        {
+          "label": "拉 Vincent 一起谈",
+          "result": "压力分散，你也露了怯。",
+          "effects": {
+            "stress": 2,
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "sev_lost",
+      "icon": "📉",
+      "title": "丢单复盘",
+      "urgent": false,
+      "text": "跟了两周的客户选了竞品。群里静了一秒。",
+      "choices": [
+        {
+          "label": "写复盘：阶段、失分点、下次动作",
+          "result": "痛，但长进。",
+          "effects": {
+            "skill": 4,
+            "san": -1,
+            "passion": 2
+          }
+        },
+        {
+          "label": "先喝酒，明天再说",
+          "result": "今晚轻松，线索继续冷。",
+          "effects": {
+            "stress": -2,
+            "performance": -2,
+            "passion": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sev_conflict",
+      "icon": "⚔️",
+      "title": "撞单",
+      "urgent": true,
+      "text": "CRM 里同一客户被两人跟。小柯说他先建的档。",
+      "choices": [
+        {
+          "label": "按规则公开裁定，留痕",
+          "result": "场面尴尬，团队规则更硬。",
+          "effects": {
+            "stress": 5,
+            "performance": 2,
+            "skill": 2
+          }
+        },
+        {
+          "label": "私下让一步换人情",
+          "result": "关系在，单子可能丢。",
+          "effects": {
+            "san": 2,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "sev_payment",
+      "icon": "🏦",
+      "title": "回款拖延",
+      "urgent": false,
+      "text": "合同签了，款没到。财务开始@你。",
+      "choices": [
+        {
+          "label": "列回款计划并升级关键人",
+          "result": "有节奏地追。",
+          "effects": {
+            "skill": 2,
+            "stress": 4,
+            "performance": 3
+          }
+        },
+        {
+          "label": "先签新单再补旧款",
+          "result": "数字好看，风险堆着。",
+          "effects": {
+            "performance": 2,
+            "stress": 2,
+            "san": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "sev_rally",
+      "icon": "📣",
+      "title": "周一鸡血会",
+      "urgent": false,
+      "text": "Vincent：『本周 pipeline 不够的，别坐办公室。』",
+      "choices": [
+        {
+          "label": "当场报出本周三步动作",
+          "result": "你被看见了，也更紧张。",
+          "effects": {
+            "performance": 3,
+            "stress": 3,
+            "passion": 1
+          }
+        },
+        {
+          "label": "低头记笔记，会后狂补名单",
+          "result": "安全，但存在感低。",
+          "effects": {
+            "stress": 2,
+            "skill": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sev_coffee_s",
+      "icon": "☕",
+      "title": "茶水间彪哥语录",
+      "urgent": false,
+      "text": "彪哥：「被拒绝一百次很正常。不正常的是，你还没被拒绝够。」",
+      "choices": [
+        {
+          "label": "笑笑，回去再打十个",
+          "result": "火又起来了。",
+          "effects": {
+            "passion": 3,
+            "energy": -2
+          }
+        },
+        {
+          "label": "多听两句再走",
+          "result": "心宽了点。",
+          "effects": {
+            "san": 4,
+            "stress": -2
+          }
+        }
+      ]
+    }
+  ]
+}

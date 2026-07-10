@@ -1,0 +1,176 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（设计师）",
+    "desc": "甲方改改、评审、切图、灵感枯竭。"
+  },
+  "events": [
+    {
+      "id": "dev_client_change",
+      "icon": "🔄",
+      "title": "甲方：再改改",
+      "urgent": true,
+      "text": "客户在群里丢了句：「整体不错，再年轻一点？说不清，你懂的。」",
+      "choices": [
+        {
+          "label": "追问：年轻=更亮、更圆、还是更插画？",
+          "result": "你把模糊反馈翻译成可执行项。",
+          "effects": {
+            "skill": 3,
+            "stress": 3,
+            "performance": 3
+          }
+        },
+        {
+          "label": "连夜出三版碰运气",
+          "result": "你累瘫了，有一版碰巧对了。",
+          "effects": {
+            "stress": 8,
+            "energy": -10,
+            "performance": 4
+          },
+          "addOrder": true
+        },
+        {
+          "label": "拉 Kay 一起定边界",
+          "result": "总监帮你挡了无理需求。",
+          "effects": {
+            "san": 2,
+            "stress": 2,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "dev_review",
+      "icon": "👀",
+      "title": "设计评审",
+      "urgent": false,
+      "text": "投屏上是你的稿。老葛先开口：「层级有点糊。」阿棠在点头。",
+      "choices": [
+        {
+          "label": "记要点，会后改一版",
+          "result": "你接住了专业反馈。",
+          "effects": {
+            "skill": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "当场辩解创作意图",
+          "result": "意图说清了，空气有点僵。",
+          "effects": {
+            "stress": 5,
+            "passion": 1,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "dev_export_rush",
+      "icon": "📦",
+      "title": "前端催切图",
+      "urgent": true,
+      "text": "阿码：「今晚要联调，标注呢？」你还有两屏没标完。",
+      "choices": [
+        {
+          "label": "先交主路径，其余明早补",
+          "result": "联调没卡死，你也留了命。",
+          "effects": {
+            "performance": 4,
+            "stress": 4
+          }
+        },
+        {
+          "label": "通宵标完",
+          "result": "全交了。黑眼圈也交了。",
+          "effects": {
+            "performance": 6,
+            "health": -5,
+            "energy": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "dev_inspiration",
+      "icon": "🌫️",
+      "title": "灵感枯竭",
+      "urgent": false,
+      "text": "光标闪了二十分钟。阿棠递了罐汽水：「出去走两步？」",
+      "choices": [
+        {
+          "label": "下楼走十分钟再回来",
+          "result": "风吹醒一点。",
+          "effects": {
+            "san": 5,
+            "passion": 2,
+            "energy": 3
+          }
+        },
+        {
+          "label": "硬抠，先出量再挑",
+          "result": "量有了，心累了。",
+          "effects": {
+            "performance": 2,
+            "stress": 4,
+            "passion": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "dev_color_fight",
+      "icon": "🎨",
+      "title": "配色之争",
+      "urgent": false,
+      "text": "产品坚持品牌橙再饱和 20%。你知道对比度会挂。",
+      "choices": [
+        {
+          "label": "出示无障碍对比数据",
+          "result": "数据比嗓门有用。",
+          "effects": {
+            "skill": 3,
+            "performance": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "先按他们的，另存合规版备用",
+          "result": "政治正确，也多了一份活。",
+          "effects": {
+            "stress": 3,
+            "performance": 1
+          },
+          "projectDelta": -3
+        }
+      ]
+    },
+    {
+      "id": "dev_coffee",
+      "icon": "☕",
+      "title": "茶水间灵感盗窃现场",
+      "urgent": false,
+      "text": "有人在夸竞品的新视觉。阿棠小声：「其实我们去年提案里有。」",
+      "choices": [
+        {
+          "label": "笑笑，回去把差异化做绝",
+          "result": "你把火气炼成了动力。",
+          "effects": {
+            "passion": 3,
+            "skill": 2
+          }
+        },
+        {
+          "label": "吐槽完再干活",
+          "result": "爽了五分钟，进度慢了半步。",
+          "effects": {
+            "san": 2,
+            "performance": -1
+          }
+        }
+      ]
+    }
+  ]
+}

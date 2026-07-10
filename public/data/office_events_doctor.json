@@ -1,0 +1,169 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（医护）",
+    "desc": "危急值、家属情绪、加班、物资、同事支援。"
+  },
+  "events": [
+    {
+      "id": "mev_critical",
+      "icon": "🚨",
+      "title": "危急值来电",
+      "urgent": true,
+      "text": "电话里：小周报危急值。你手头还在写另一份病历。",
+      "choices": [
+        {
+          "label": "立刻停笔，到床旁处理",
+          "result": "你接住了急。病历堆更高了。",
+          "effects": {
+            "stress": 7,
+            "performance": 6,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先让同期顶上，你两分钟收尾",
+          "result": "分工清楚，风险可控。",
+          "effects": {
+            "stress": 4,
+            "skill": 2,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_family",
+      "icon": "🗣️",
+      "title": "家属情绪爆发",
+      "urgent": true,
+      "text": "走廊里家属提高了音量：「到底行不行？」护士长看你一眼。",
+      "choices": [
+        {
+          "label": "拉到谈话间，讲清现状与计划",
+          "result": "火压下去了，你出了一身汗。",
+          "effects": {
+            "stress": 6,
+            "san": 2,
+            "performance": 4,
+            "skill": 2
+          }
+        },
+        {
+          "label": "请上级出面，你补材料",
+          "result": "场面稳了，你也少练了一次沟通。",
+          "effects": {
+            "stress": 3,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_overtime",
+      "icon": "🌙",
+      "title": "加班写病历",
+      "urgent": false,
+      "text": "时钟指向 21:10。系统还弹着未完成的病程。",
+      "choices": [
+        {
+          "label": "留下写完关键三项",
+          "result": "合规了，黑眼圈也深了。",
+          "effects": {
+            "performance": 4,
+            "energy": -10,
+            "health": -3,
+            "stress": 4
+          }
+        },
+        {
+          "label": "记待办，明早第一件事补",
+          "result": "你保住了命，也担了点风险。",
+          "effects": {
+            "san": 2,
+            "performance": -2,
+            "stress": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_supply",
+      "icon": "📦",
+      "title": "耗材告急",
+      "urgent": false,
+      "text": "护士站：某规格导管只剩两根。下周有台操作。",
+      "choices": [
+        {
+          "label": "立刻报备并走紧急申领",
+          "result": "你挡下了潜在断档。",
+          "effects": {
+            "skill": 2,
+            "performance": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "先顶着用，明天再说",
+          "result": "省事一天，隐患多一天。",
+          "effects": {
+            "stress": -1,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_peer",
+      "icon": "🤝",
+      "title": "小蒋求支援",
+      "urgent": false,
+      "text": "小蒋压低声音：「我这台穿刺不稳，你能不能来看着？」",
+      "choices": [
+        {
+          "label": "去，当第二双眼睛",
+          "result": "他稳了，你也更累。",
+          "effects": {
+            "passion": 3,
+            "san": 2,
+            "energy": -4
+          }
+        },
+        {
+          "label": "远程嘱咐要点，自己赶病历",
+          "result": "进度保住了，人情淡了点。",
+          "effects": {
+            "performance": 2,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_coffee_m",
+      "icon": "☕",
+      "title": "值班室的热水",
+      "urgent": false,
+      "text": "护士长塞给你一杯热水：「别把自己熬成病人。」",
+      "choices": [
+        {
+          "label": "喝完，继续把清单清掉",
+          "result": "暖了一下，又扎回节奏。",
+          "effects": {
+            "san": 3,
+            "energy": 2,
+            "stress": -2
+          }
+        },
+        {
+          "label": "坐五分钟再走",
+          "result": "人回了点血，单子还在。",
+          "effects": {
+            "san": 5,
+            "performance": -1
+          }
+        }
+      ]
+    }
+  ]
+}

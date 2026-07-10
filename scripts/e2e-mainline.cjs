@@ -74,16 +74,27 @@ const ok = (n, c, d) => { if (c) { pass++; console.log(`  ✓ ${n}`); } else { f
   st = await p.evaluate(() => window.__game.scene.getScene('WorldScene')._story);
   ok('续档恢复 story(working, 天数保留)', st.phase === 'working' && st.daysInAct >= 1, JSON.stringify(st));
 
-  // 6. 走近老陈 → 天数攒够(ACT_DAYS[1]=1) → 推进到 act2
+  // 6. workLoop：项目里程碑(≥25%) → 走近老陈推进 act2（与 Claude 设计一致，非纯攒天）
   errors.length = 0;
   const advanced = await p.evaluate(async () => {
     const ws = window.__game.scene.getScene('WorldScene');
+    // 跨 25% 里程碑 → pendingAct=2
+    if (ws.projectSystem) ws.projectSystem.adjustProgress(26);
+    // 关掉可能挡住交互的 UI
+    ws.dialogueActive = false;
+    ws.children.list.filter(o => o.depth === 10001).forEach(o => o.destroy());
     const senior = ws.npcs.find(n => n.id === 'senior');
-    ws._interactSenior(senior); // working 期 + 天数够 → 推进 act2 + 播剧情
+    ws._interactSenior(senior);
     await new Promise(r => setTimeout(r, 800));
-    return { act: ws.act, storyAct: ws._story.act, phase: ws._story.phase };
+    return {
+      act: ws.act,
+      storyAct: ws._story.act,
+      phase: ws._story.phase,
+      pending: ws._story.pendingAct,
+      progress: ws.projectSystem ? ws.projectSystem.progress : null,
+    };
   });
-  ok('天数攒够 → 走近老陈推进到 act2（主线能通！）', advanced.act === 2 && advanced.storyAct === 2, JSON.stringify(advanced));
+  ok('项目里程碑→走近老陈推进到 act2（主线能通！）', advanced.act === 2 && advanced.storyAct === 2, JSON.stringify(advanced));
   ok('推进无报错', errors.length === 0, errors[0]);
 
   // 7. 坏节点兜底（BUG-4）：坏 next 不冻死

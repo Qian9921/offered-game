@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "title": "产品办公室·具名可交互同事名册",
+    "desc": "产品经理完整版：id 用于任务链 giver/target。senior=导师林姐、peer=交互小杜、vet=资深大鹏、dev=研发阿码、data=数据小析、ops=运营小鹿。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "林姐",
+      "role": "产品总监",
+      "skin": "so_lucy",
+      "tint": "0xffe0c0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小杜",
+      "role": "交互设计",
+      "skin": "so_nancy",
+      "tint": "0xffd0e8",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「原型我先丢飞书了，你有空批注一下——别只说『再改改』哈。」"
+    },
+    {
+      "id": "vet",
+      "name": "大鹏",
+      "role": "资深产品",
+      "skin": "so_adam",
+      "tint": "0xc0d8ff",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「需求会改的。先想清楚为什么做，再画怎么做。」"
+    },
+    {
+      "id": "dev",
+      "name": "阿码",
+      "role": "研发负责人",
+      "skin": "so_ash",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「排期按人天估的。你再加需求，就得砍别的——别问我能不能『顺手』。」"
+    },
+    {
+      "id": "data",
+      "name": "小析",
+      "role": "数据分析",
+      "skin": "so_nancy",
+      "tint": "0xd0ffd0",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「先看漏斗再拍板。感觉很丰满，数据很骨感。」"
+    },
+    {
+      "id": "ops",
+      "name": "小鹿",
+      "role": "运营同学",
+      "skin": "so_lucy",
+      "tint": "0xfff0b0",
+      "x": 1200,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「活动位就这么几个，你的入口想塞哪儿？先排队。」"
+    }
+  ]
+}

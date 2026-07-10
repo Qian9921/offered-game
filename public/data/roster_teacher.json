@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "title": "学校教师办公室·具名可交互同事名册",
+    "desc": "教师迷你完整版：senior=陈校长、peer=小许、vet=吴老师、parent=家委李姐、admin=教务赵老师。"
+  },
+  "npcs": [
+    {
+      "id": "senior",
+      "name": "陈校长",
+      "role": "教学校长",
+      "skin": "so_adam",
+      "tint": "0xd0e0c0",
+      "x": 1008,
+      "y": 400,
+      "mark": "❗",
+      "markColor": "#ffdd33",
+      "act": 1
+    },
+    {
+      "id": "peer",
+      "name": "小许",
+      "role": "同组新老师",
+      "skin": "so_nancy",
+      "tint": "0xffe0d0",
+      "x": 752,
+      "y": 528,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「教案模板我共享给你了。第一周别贪多，把流程走顺。」"
+    },
+    {
+      "id": "vet",
+      "name": "吴老师",
+      "role": "老教师",
+      "skin": "so_lucy",
+      "tint": "0xc0d8ff",
+      "x": 240,
+      "y": 656,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「讲台站久了就知道，教的是书，带的是人。」"
+    },
+    {
+      "id": "parent",
+      "name": "李姐",
+      "role": "家委会",
+      "skin": "so_nancy",
+      "tint": "0xffd0e8",
+      "x": 1104,
+      "y": 448,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「家长群消息我帮你顶一阵。有事直接说，别一个人硬扛。」"
+    },
+    {
+      "id": "admin",
+      "name": "赵老师",
+      "role": "教务",
+      "skin": "so_ash",
+      "x": 560,
+      "y": 260,
+      "mark": "💬",
+      "markColor": "#7ec8ff",
+      "line": "「课表和教室以教务系统为准。冲突先报我，别私下对调。」"
+    }
+  ]
+}

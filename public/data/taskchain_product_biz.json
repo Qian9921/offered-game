@@ -1,0 +1,178 @@
+{
+  "_meta": {
+    "title": "产品经理·业务产品 任务链",
+    "desc": "主线=任务链：林姐派活→找研发/数据/运营对接→回工位做产品活(小游戏)→回林姐交付。requires 一环扣一环；ordered；progressGain 合计≈100。"
+  },
+  "quests": [
+    {
+      "id": "biz_c1",
+      "title": "摸清产品现状",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "新人第一课：别急着画需求，先搞清楚现在线上在跑什么。",
+      "acceptLine": "「第一课：现状。去找大鹏聊透当前主路径——别一上来就开新需求。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "找大鹏了解现有产品主路径"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理产品现状笔记(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「主路径就三条：注册→激活→付费。别被边角功能带跑。」"
+      },
+      "doneLine": "「摸清了？好。产品不是从白纸开始的，是从『已经很乱』的现实开始的。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 12
+    },
+    {
+      "id": "biz_c2",
+      "title": "第一份 PRD",
+      "giver": "senior",
+      "requires": [
+        "biz_c1"
+      ],
+      "ordered": true,
+      "desc": "写登录改版的 PRD。技术边界先问研发，别写完才发现做不了。",
+      "acceptLine": "「登录要改。PRD 你来写——先找阿码确认技术边界，别闭门造车。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "dev",
+          "text": "找阿码确认技术边界与工期"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位写完 PRD 初稿"
+        }
+      ],
+      "talkLines": {
+        "dev": "「验证码通道要接新供应商，至少三天。扫码登录这期砍掉，别硬塞。」"
+      },
+      "doneLine": "「结构清楚，边界也写了。能被研发看懂的 PRD，才算 PRD。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "biz_c3",
+      "title": "用数据说话",
+      "giver": "senior",
+      "requires": [
+        "biz_c2"
+      ],
+      "ordered": true,
+      "desc": "评审前补数据：转化漏斗和流失点，找小析要数。",
+      "acceptLine": "「评审会有人问『凭什么改』。去找小析把漏斗跑出来，别只靠感觉。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "data",
+          "text": "找小析要登录漏斗数据"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位把数据写进 PRD 决策依据"
+        }
+      ],
+      "talkLines": {
+        "data": "「验证码失败率 12%，比你想的高。改文案可能比改流程更便宜。」"
+      },
+      "doneLine": "「有数了。感觉和数据打架时，先信数据，再追问数据。」",
+      "reward": {
+        "skill": 4,
+        "san": 2,
+        "performance": 5
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "biz_c4",
+      "title": "需求评审会",
+      "giver": "senior",
+      "requires": [
+        "biz_c3"
+      ],
+      "ordered": true,
+      "desc": "拉上运营对齐资源，再把评审材料收束成可拍板版本。",
+      "acceptLine": "「评审前先找小鹿对齐入口资源——会上被运营一票否决很尴尬。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "ops",
+          "text": "找小鹿确认活动位与触达资源"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位准备评审材料并模拟拍板"
+        }
+      ],
+      "talkLines": {
+        "ops": "「首页 banner 这周满了。你要入口，要么等下周，要么换站内信。」"
+      },
+      "doneLine": "「评审过了。记住：会上吵清楚，比上线后甩锅值钱。」",
+      "reward": {
+        "skill": 6,
+        "stress": 2,
+        "performance": 7
+      },
+      "progressGain": 24
+    },
+    {
+      "id": "biz_c5",
+      "title": "上线复盘",
+      "giver": "senior",
+      "requires": [
+        "biz_c4"
+      ],
+      "ordered": true,
+      "desc": "功能上线后做复盘：指标有没有动，决策有没有偏。",
+      "acceptLine": "「上线了不是结束。去找大鹏学复盘框架，再自己写一版复盘。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "听大鹏讲复盘怎么写才有用"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成上线复盘"
+        }
+      ],
+      "talkLines": {
+        "vet": "「复盘三问：预期是什么、实际怎样、下一刀砍哪。别写成表扬信。」"
+      },
+      "doneLine": "「复盘交了。你会慢慢发现：产品最难的不是想法，是迭代。」",
+      "reward": {
+        "skill": 5,
+        "passion": 4,
+        "performance": 8
+      },
+      "progressGain": 24
+    }
+  ]
+}

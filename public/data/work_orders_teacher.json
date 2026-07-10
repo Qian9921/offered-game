@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "teacher",
+    "title": "教师工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "to_plan",
+      "title": "写明日教案一页",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 2
+      }
+    },
+    {
+      "id": "to_grade",
+      "title": "批改一组作业",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "to_msg",
+      "title": "回复家长群私信",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 9,
+      "performance": 11,
+      "cost": {
+        "energy": -12,
+        "stress": 5
+      }
+    },
+    {
+      "id": "to_slide",
+      "title": "做课件 8 页",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 6
+      }
+    },
+    {
+      "id": "to_duty",
+      "title": "值日与教室巡查",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "to_talk",
+      "title": "约谈一位学生",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -13,
+        "stress": 4
+      }
+    },
+    {
+      "id": "to_exam",
+      "title": "出一份小测",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 7
+      }
+    },
+    {
+      "id": "to_record",
+      "title": "填写过程性评价",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "to_open",
+      "title": "公开课材料打磨",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -20,
+        "stress": 8
+      }
+    },
+    {
+      "id": "to_lab",
+      "title": "准备实验/教具",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 3
+      }
+    }
+  ]
+}
