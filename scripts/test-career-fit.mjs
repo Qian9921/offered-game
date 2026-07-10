@@ -4,6 +4,7 @@ import {
   scoreCareer, rankCareers, buildTryFirstAdvice,
   bodySignalsFromStats, summarizeChoices, buildEndingReportContext,
   buildReportHistoryEntry, mergeReportHistory,
+  formatTriedCareersLine, resolveInteractGoalPos,
 } from '../src/systems/CareerFit.js';
 
 let pass = 0, fail = 0;
@@ -75,6 +76,14 @@ ok('history 截断', mergeReportHistory([1, 2, 3], entry, 2).length === 2);
 
 // CAREER_NAMES 与锚点 key 一致
 ok('NAMES 覆盖锚点', Object.keys(CAREER_ANCHORS).every(k => CAREER_NAMES[k]));
+
+ok('formatTried 空', formatTriedCareersLine(null) === '' && formatTriedCareersLine([]) === '');
+ok('formatTried 有职业', formatTriedCareersLine([
+  { career: 'designer', careerName: '设计师' },
+]).includes('设计师'));
+ok('resolveInteract 从 pos', resolveInteractGoalPos('vending', {
+  interactables: [{ id: 'vending', pos: [1, 2] }],
+})?.x === 1);
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);

@@ -1,6 +1,11 @@
 import Phaser from 'phaser';
 import { AudioSystem } from '../systems/AudioSystem.js';
-import { buildTryFirstAdvice, CAREER_NAMES } from '../systems/CareerFit.js';
+import {
+  buildTryFirstAdvice,
+  CAREER_NAMES,
+  formatTriedCareersLine,
+  REPORT_HISTORY_KEY,
+} from '../systems/CareerFit.js';
 
 // HubScene：职业选择大厅。玩家捏完人后选职业进入体验。
 // 职业列表暂时硬编码，以后可挪到 data/ 目录的 JSON。
@@ -135,6 +140,18 @@ export class HubScene extends Phaser.Scene {
       fontSize: '12px', color: recLine ? '#ffd24d' : '#6a6a8a',
     }).setOrigin(0.5);
 
+    // 多职业试玩历史（报告柱回灌 → 对照适合/喜欢）
+    let triedLine = '';
+    try {
+      const hist = JSON.parse(localStorage.getItem(REPORT_HISTORY_KEY) || '[]');
+      triedLine = formatTriedCareersLine(hist, 3);
+    } catch (e) { /* */ }
+    if (triedLine) {
+      this.add.text(480, 160, triedLine, {
+        fontSize: '11px', color: '#9ab4dc',
+      }).setOrigin(0.5);
+    }
+
     // 左上角返回按钮
     const back = this.add.text(24, 16, '← 返回', {
       fontSize: '15px', color: '#9aa0a6',
@@ -149,7 +166,8 @@ export class HubScene extends Phaser.Scene {
     const gapX = 16, gapY = 26;
     const totalW = cols * cardW + (cols - 1) * gapX;
     const startX = (960 - totalW) / 2;
-    const rowCY = [252, 366]; // 两行卡片中心 y
+    // 有历史条时卡片略下移，避免挤标题
+    const rowCY = triedLine ? [268, 382] : [252, 366];
 
     careers.forEach((career, i) => {
       const col = i % cols;

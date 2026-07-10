@@ -42,6 +42,7 @@ import {
   seniorMarkVisual,
 } from '../systems/StoryProgress.js';
 import { npcLineForAct } from '../systems/WorkLoopOffice.js';
+import { resolveInteractGoalPos } from '../systems/CareerFit.js';
 
 // WorldScene — LimeZu 现代办公室俯视角 RPG 探索 + NPC 交互 + 剧情合体
 //
@@ -568,13 +569,12 @@ export class WorldScene extends Phaser.Scene {
     c.add(mask);
     // 内容卡片（给文字一个容器，清晰不糊）
     c.add(this.add.rectangle(W / 2, H / 2, 760, 420, 0x16161f, 0.98).setStrokeStyle(2, 0x3a3a5a));
+    // 4 步：评委 3 分钟路径（找人→工位→下班），可点跳过
     const steps = [
-      { icon: '🎮', title: '欢迎来到你的第一天', text: '这是一段关于「你想成为谁」的职场旅程。\n没有标准答案，只有你的选择。' },
-      { icon: '🚶', title: '自由探索', text: 'WASD / 方向键 移动 · Shift 冲刺。\n手机上用左下角的虚拟摇杆。' },
-      { icon: '💬', title: '与人互动', text: '走近头顶有 ❗/❓ 的同事，按 E 交谈、接任务、交付。\n左上角金色「▸ 下一步」+ 箭头会带你走。' },
-      { icon: '💻', title: '坐工位开工', text: '接到「去工位干活」后，找到自己的椅子：\n［ E ］坐下办公 → 再按 E「开始工作」→ 做工单/小游戏。\n别坐错别人的位子。' },
-      { icon: '🧠', title: '状态与内心', text: '左上角状态条：精力/压力会变；Tab 可展开详情。\n按 T 倾听内心；ESC 打开任务日志。' },
-      { icon: '🌙', title: '经营你的每一天', text: '右上角「下班回家」可休息、见家人、进入下一天。\n建议先完成当前 ▸ 目标再下班——一天才有故事。' },
+      { icon: '🎮', title: '欢迎来到你的第一天', text: '试一种职业生活——没有标准答案。\nWASD 移动 · E 交互 · ESC 任务日志。' },
+      { icon: '💬', title: '找 ❗ 领任务', text: '走近头顶 ❗/❓ 的导师或同事，按 E。\n左上「▸ 下一步」+ 金色箭头会指路。' },
+      { icon: '💻', title: '自己的椅子开工', text: '接到干活后：找自己的椅子［E］坐下办公\n→ 再 E「开始工作」做工单/小游戏（别坐别人位）。' },
+      { icon: '🌙', title: '下班与对照', text: '右上角「下班回家」进下一天。\n左下 📱 可给家人打电话。试完可换职业对照喜不喜欢。' },
     ];
     let idx = 0;
     const iconT = this.add.text(W / 2, H / 2 - 130, '', { fontSize: '64px' }).setOrigin(0.5);
@@ -582,7 +582,10 @@ export class WorldScene extends Phaser.Scene {
     const bodyT = this.add.text(W / 2, H / 2 + 28, '', { fontSize: '22px', color: '#e8e8f4', align: 'center', lineSpacing: 12, wordWrap: { width: 640 } }).setOrigin(0.5);
     const dotsT = this.add.text(W / 2, H / 2 + 120, '', { fontSize: '16px', color: '#5a5a7a' }).setOrigin(0.5);
     const hintT = this.add.text(W / 2, H / 2 + 160, '点击继续 →', { fontSize: '18px', color: '#8b8ba0' }).setOrigin(0.5);
-    c.add([iconT, titleT, bodyT, dotsT, hintT]);
+    const skipT = this.add.text(W / 2 + 300, H / 2 - 175, '跳过', {
+      fontSize: '16px', color: '#8a8a9e',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    c.add([iconT, titleT, bodyT, dotsT, hintT, skipT]);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
     const render = () => {
       const s = steps[idx];
@@ -598,10 +601,17 @@ export class WorldScene extends Phaser.Scene {
       (this._hudHiddenForOnboard || []).forEach(o => o && o.setVisible(true));
       if (this.ePrompt) this.ePrompt.setVisible(false); // ePrompt 由交互逻辑控制，默认隐藏
       this.dialogueActive = false;
+      if (typeof this._syncGuideText === 'function') this._syncGuideText();
+      else if (typeof this._updateObjectiveHud === 'function') this._updateObjectiveHud();
     };
     const advance = () => { idx++; if (idx >= steps.length) finish(); else render(); };
     render();
-    this.time.delayedCall(100, () => mask.on('pointerdown', advance));
+    this.time.delayedCall(100, () => {
+      mask.on('pointerdown', advance);
+      skipT.on('pointerover', () => skipT.setColor('#ffd24d'));
+      skipT.on('pointerout', () => skipT.setColor('#8a8a9e'));
+      skipT.on('pointerdown', (ev) => { if (ev && ev.stopPropagation) ev.stopPropagation(); finish(); });
+    });
   }
 
   // 把动态 UI（对话框/仪式弹窗/气泡）指派给 UI 相机：
@@ -1501,7 +1511,7 @@ export class WorldScene extends Phaser.Scene {
           const p = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
           if (canFinishLightWorkLoop(this._story, p)) {
             SceneRouter.goto(this, 'EndingScene', {
-              ending: this.career, career: this.career, subRole: this.subRole,
+              ending: 'light', career: this.career, subRole: this.subRole,
               stats: this.stateSystem.getAll(),
               choiceLog: this.choiceLog ? this.choiceLog.serialize() : null,
               projectProgress: this.projectSystem ? this.projectSystem.progress : null,
@@ -1805,6 +1815,14 @@ export class WorldScene extends Phaser.Scene {
       }
       if (next.kind === 'minigame' && this.playerDesk) {
         return { text: next.text, x: this.playerDesk.chair.x, y: this.playerDesk.chair.y };
+      }
+      if (next.kind === 'interact') {
+        // 地图交互物 / 工位电脑 / 手机 → 有坐标才画箭头
+        const pos = resolveInteractGoalPos(next.target, {
+          interactables: this._interactables || [],
+          playerDesk: this.playerDesk,
+        });
+        return pos ? { text: next.text, ...pos } : { text: next.text, x: null, y: null };
       }
       return { text: next.text, x: null, y: null }; // 无坐标目标只显示文字
     }

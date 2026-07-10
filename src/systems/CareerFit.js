@@ -27,7 +27,8 @@ export const CAREER_ANCHORS = {
     tryHint: '开发/测试两条细分，体感差很大，值得都点开看看。',
   },
   product: {
-    codes: ['E', 'I', 'A', 'S'],
+    // 与 assessment.json careerAnchors.product 对齐：E/I/A（S 在运营/教师更突出）
+    codes: ['E', 'I', 'A'],
     why: '既要想清楚「做什么」，又要推动一群人对齐——夹心层最见性格。',
     tryHint: '业务向 vs 体验向：一个盯指标，一个盯好不好用。',
   },
@@ -271,4 +272,49 @@ export function mergeReportHistory(prevList, entry, max = 8) {
   const list = Array.isArray(prevList) ? prevList.slice() : [];
   list.unshift(entry);
   return list.slice(0, max);
+}
+
+/**
+ * Hub/暂停用：把试过的职业历史格式化成一行提示（关闭测评→体验→报告多周目）。
+ * @param {Array|null} hist
+ * @param {number} maxNames
+ */
+export function formatTriedCareersLine(hist, maxNames = 3) {
+  if (!Array.isArray(hist) || hist.length === 0) return '';
+  const seen = [];
+  const keys = new Set();
+  for (const e of hist) {
+    if (!e || !e.career || keys.has(e.career)) continue;
+    keys.add(e.career);
+    seen.push(e.careerName || CAREER_NAMES[e.career] || e.career);
+    if (seen.length >= maxNames) break;
+  }
+  if (!seen.length) return '';
+  const more = hist.length > seen.length ? '…' : '';
+  return `你试过：${seen.join('、')}${more} · 再点一条职业对照体感`;
+}
+
+/**
+ * 解析 interact 目标的世界坐标（供 WorldScene._currentGoal 使用，可单测）。
+ * @param {string} targetId
+ * @param {{ interactables?: Array<{id,x?,y?,pos?}>, playerDesk?: {chair?:{x,y}, computer?:{x,y}} }} world
+ */
+export function resolveInteractGoalPos(targetId, world = {}) {
+  if (!targetId) return null;
+  // 手机：HUD 功能，引导回工位区附近即可（或列表里的 phone 点）
+  const list = world.interactables || [];
+  for (const o of list) {
+    if (o && o.id === targetId) {
+      if (o.x != null && o.y != null) return { x: o.x, y: o.y };
+      if (Array.isArray(o.pos) && o.pos.length >= 2) return { x: o.pos[0], y: o.pos[1] };
+    }
+  }
+  if (targetId === 'computer' && world.playerDesk?.chair) {
+    return { x: world.playerDesk.chair.x, y: world.playerDesk.chair.y };
+  }
+  if (targetId === 'phone' && world.playerDesk?.chair) {
+    // 无地图 phone 时仍指向工位，避免箭头失踪
+    return { x: world.playerDesk.chair.x, y: world.playerDesk.chair.y };
+  }
+  return null;
 }
