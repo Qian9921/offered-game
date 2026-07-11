@@ -3074,17 +3074,53 @@ export class WorldScene extends Phaser.Scene {
       this._updateProjectHud();
     }
     if (plan.addOrder && this.projectSystem) this.projectSystem.addUrgentOrder();
+    // 深化:事件也塑造人格(喂报告)、牵动同事关系、留下记忆——真正"牵一发动全身"
+    if (plan.axes && Object.keys(plan.axes).length && this.choiceLog) {
+      this.choiceLog.record({ nodeId: `event:${ev.id || ''}`, choiceLabel: choice.label, tag: ev.id || null, axes: plan.axes });
+    }
+    if (this.relations) {
+      // 好感涟漪：显式 affinity;若无但事件由具名信使带来,默认按结果情绪轻微涨落
+      const aff = plan.affinity && Object.keys(plan.affinity).length
+        ? plan.affinity
+        : (ev.courierNpc ? { [ev.courierNpc]: 2 } : {});
+      for (const [id, d] of Object.entries(aff)) this.relations.bump(id, d);
+      if (plan.remember && plan.remember.npcId) this.relations.remember(plan.remember.npcId, plan.remember.tag);
+    }
     if (c) c.destroy(true);
     this._eventUI = null;
     this.dialogueActive = false; // 解冻
     this._releaseCourier();
     if (this.guideText) this.guideText.setVisible(true);
     if (plan.result) this._showThoughtBubble(plan.result, plan.resultColor);
+    // 清清楚楚的后果小结：让玩家一眼看懂这个选择改变了什么(根治"找完就不懂了")
+    this._showConsequenceToast(plan.summary);
     if (plan.addOrder) {
       this.time.delayedCall(1600, () => {
         if (!this.dialogueActive) this._showThoughtBubble('（今日工单里多了一张紧急插单,去工位电脑处理。）', '#e8735a');
       });
     }
+  }
+
+  // 事件后果小结：屏幕右侧一张小卡,逐条列出变化(状态/项目/关系/插单),几秒后淡出。
+  _showConsequenceToast(summary) {
+    if (!summary || !summary.length) return;
+    const { width, height } = this.scale;
+    const lines = summary.slice(0, 5);
+    const cw = 260, lh = 30, ch = 44 + lines.length * lh;
+    const cx = width - cw / 2 - 30, cy = height / 2;
+    const con = this.add.container(cx, cy).setScrollFactor(0).setDepth(10050);
+    if (typeof this.attachToUICamera === 'function') this.attachToUICamera(con);
+    const g = this.add.graphics().setScrollFactor(0);
+    g.fillStyle(0x161628, 0.97); g.fillRoundedRect(-cw / 2, -ch / 2, cw, ch, 16);
+    g.lineStyle(2, 0xd4a353, 0.9); g.strokeRoundedRect(-cw / 2, -ch / 2, cw, ch, 16);
+    con.add(g);
+    con.add(this.add.text(0, -ch / 2 + 18, '· 这个选择的后果 ·', { fontSize: '14px', color: '#c8b070', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0));
+    lines.forEach((s, i) => {
+      con.add(this.add.text(0, -ch / 2 + 44 + i * lh, s.text, { fontSize: '15px', color: s.color || '#e8e8f4' }).setOrigin(0.5).setScrollFactor(0));
+    });
+    con.setAlpha(0);
+    this.tweens.add({ targets: con, alpha: 1, x: cx - 8, duration: 260, ease: 'Back.out' });
+    this.tweens.add({ targets: con, alpha: 0, duration: 400, delay: 2600, onComplete: () => con.destroy(true) });
   }
 
   // 下班回家：转场到 HomeScene，带当前状态快照 + 天数

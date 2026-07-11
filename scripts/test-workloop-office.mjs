@@ -287,6 +287,24 @@ console.log('\n-- event choice + daily report --');
   const empty = planEventChoiceEffects(null, null);
   ok('空 choice 安全', empty.projectDelta === 0 && empty.addOrder === false && !empty.result);
 
+  // 深化：人格轴 / 好感涟漪 / 记忆 / 后果小结
+  {
+    const deep = planEventChoiceEffects({
+      effects: { stress: 4, san: -2 }, projectDelta: -6, addOrder: true,
+      axes: { empathy: 2, risk: 1 }, affinity: { peer: 3 }, remember: { npcId: 'peer', tag: 'helped_me' }, result: '算了',
+    }, { urgent: true, courierNpc: 'peer' });
+    ok('axes 透出', deep.axes.empathy === 2 && deep.axes.risk === 1);
+    ok('affinity 透出', deep.affinity.peer === 3);
+    ok('remember 透出', deep.remember.npcId === 'peer' && deep.remember.tag === 'helped_me');
+    ok('summary 含状态/项目/关系/插单', deep.summary.some(s => s.text.includes('压力')) && deep.summary.some(s => s.text.includes('项目进度')) && deep.summary.some(s => s.text.includes('关系')) && deep.summary.some(s => s.text.includes('插单')));
+    ok('summary 无非法状态键', deep.summary.every(s => typeof s.text === 'string' && s.text.length > 0));
+    // remember 兜底用 ev.courierNpc
+    const rmDefault = planEventChoiceEffects({ remember: { tag: 't' } }, { courierNpc: 'vet' });
+    ok('remember npcId 兜底 courierNpc', rmDefault.remember.npcId === 'vet');
+    // 无深化字段时干净
+    ok('无深化字段→空对象', Object.keys(empty.axes).length === 0 && Object.keys(empty.affinity).length === 0 && empty.remember === null);
+  }
+
   const rep = buildDailyReportRows({
     day: 2,
     progressNow: 24,
