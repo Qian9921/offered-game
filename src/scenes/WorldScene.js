@@ -23,6 +23,7 @@ import { Pathfinder } from '../systems/Pathfinder.js';
 import { makeCuteChoice } from '../systems/UI.js';
 import { normalizeAxes, microInsight } from '../systems/PersonalityAxes.js';
 import { makePortrait } from '../systems/CharacterPortrait.js';
+import { resolveNpcSeat } from '../systems/CareerFit.js';
 import {
   ACT_DAYS as SP_ACT_DAYS,
   LIGHT_CAREERS as SP_LIGHT_CAREERS,
@@ -2892,7 +2893,8 @@ export class WorldScene extends Phaser.Scene {
     const w = this._eventCourier;
     this._eventCourier = null;
     if (!w || !w.agent) return;
-    const seat = w.seat || { x: w.chair.x, y: w.chair.y };
+    // 座位解析兼容两类信使：背景同事(w.seat/w.chair) 与 具名NPC(w._seat)。纯函数可单测。
+    const seat = resolveNpcSeat(w) || { x: w.spr.x, y: w.spr.y };
     const pathBack = this._findPath(w.spr.x, w.spr.y, seat.x, seat.y);
     if (pathBack && pathBack.length) {
       pathBack[pathBack.length - 1] = { x: seat.x, y: seat.y };

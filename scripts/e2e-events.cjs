@@ -52,6 +52,19 @@ const puppeteer=require('puppeteer'); const sleep=ms=>new Promise(r=>setTimeout(
     return {hasUI, sanDelta:w.stateSystem.get('san')-sanBefore};});
   t('事件弹窗+选择生效(san+4)', trig.hasUI&&trig.sanDelta===4, JSON.stringify(trig));
 
+  // 具名信使(peer)事件闭环：解析后信使被释放、对话解冻、NPC仍可见、无崩溃(回归护栏)
+  const courier=await p.evaluate(async()=>{const w=window.__game.scene.getScene('WorldScene');
+    const ev=(w._officeEvents||[]).find(e=>e.courierNpc==='peer')||(w._officeEvents||[])[0];
+    const peer=(w.npcs||[]).find(n=>n.id==='peer');
+    if(!peer) return {noPeer:true};
+    w._eventCourier=peer; w._showOfficeEvent(ev,peer);
+    await new Promise(r=>setTimeout(r,300));
+    let btn=null; w._eventUI&&w._eventUI.iterate(o=>{if(btn||o.type!=='Container'||!o.list)return;o.iterate(ch=>{if(!btn&&ch.type==='Zone'&&ch.input&&ch.input.enabled)btn=ch;});});
+    if(btn)btn.emit('pointerdown');
+    await new Promise(r=>setTimeout(r,500));
+    return {released:w._eventCourier===null, unfrozen:w.dialogueActive===false, closed:!w._eventUI, visible:peer.spr.visible};});
+  t('具名信使事件解析后:信使释放+解冻+NPC可见+无崩溃', courier.released&&courier.unfrozen&&courier.closed&&courier.visible, JSON.stringify(courier));
+
   console.log(`\n${ok} passed, ${bad} failed | pageerrors: ${errs.length}`);
   errs.slice(0,5).forEach(e=>console.log(' ',e));
   await b.close(); process.exit(bad||errs.length?1:0);

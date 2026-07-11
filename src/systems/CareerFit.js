@@ -381,6 +381,19 @@ export function formatTriedCareersLine(hist, maxNames = 3) {
 }
 
 /**
+ * 解析一个 NPC/同事的"座位"世界坐标（兼容两类信使数据形状，可单测）。
+ * 背景同事：w.seat 或 w.chair；具名 NPC：w._seat；兜底用当前精灵位置。
+ * 根治：事件信使回座时因数据形状不一致(w.chair.x)崩溃、把 NPC 滞留原地。
+ * @param {{seat?:{x,y},_seat?:{x,y},chair?:{x,y},spr?:{x,y}}} w
+ * @returns {{x:number,y:number}|null}
+ */
+export function resolveNpcSeat(w) {
+  if (!w) return null;
+  const pick = (o) => (o && o.x != null && o.y != null) ? { x: o.x, y: o.y } : null;
+  return pick(w.seat) || pick(w._seat) || pick(w.chair) || pick(w.spr) || null;
+}
+
+/**
  * 解析 interact 目标的世界坐标（供 WorldScene._currentGoal 使用，可单测）。
  * @param {string} targetId
  * @param {{ interactables?: Array<{id,x?,y?,pos?}>, playerDesk?: {chair?:{x,y}, computer?:{x,y}} }} world
