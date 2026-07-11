@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "title": "医护·护理 迷你任务链",
+    "desc": "3 环：交接班→执行医嘱→健康宣教。"
+  },
+  "quests": [
+    {
+      "id": "nu_c1",
+      "title": "交接班",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "听清、记清、问清。护士长最烦『我以为』。",
+      "acceptLine": "「护理第一课：交接。跟护士长走一遍班，再自己写交班记录。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "跟护士长完成床旁交接"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成交班记录"
+        }
+      ],
+      "talkLines": {
+        "vet": "「液体余量、管道、疼痛评分，三项漏一就返工。别靠记忆。」"
+      },
+      "doneLine": "「交接干净了。护理的安全感，写在下一班能看懂的字里。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "nu_c2",
+      "title": "执行医嘱",
+      "giver": "senior",
+      "requires": [
+        "nu_c1"
+      ],
+      "ordered": true,
+      "desc": "三查七对。有疑问先问医生和药房，别硬执行。",
+      "acceptLine": "「医嘱下来了。有疑先问小蒋，用药找老金核，再执行。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "pharm",
+          "text": "与药房老金核对用药与配置"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成执行单与观察记录"
+        }
+      ],
+      "talkLines": {
+        "pharm": "「这瓶要避光。标签贴歪了就当没贴——重贴再走。」"
+      },
+      "doneLine": "「执行完了。细心不是性格，是训练出来的肌肉。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6,
+        "stress": 2
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "nu_c3",
+      "title": "宣教与出院",
+      "giver": "senior",
+      "requires": [
+        "nu_c2"
+      ],
+      "ordered": true,
+      "desc": "出院不是结束，是把护理交到家属手里。",
+      "acceptLine": "「出院宣教。先问小蒋医嘱重点，再写成家属能听懂的话。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小蒋确认出院医嘱要点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成宣教清单与签字"
+        }
+      ],
+      "talkLines": {
+        "peer": "「用药时间说具体，别说『按时』。家属听不懂医学黑话。」"
+      },
+      "doneLine": "「送走了。你会慢慢明白：温柔和专业可以是同一件事。」",
+      "reward": {
+        "skill": 6,
+        "passion": 4,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

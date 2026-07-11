@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "title": "办公室人员配置",
+    "desc": "白天坐满办公室的背景同事（让办公室像一个真实公司）。用 4 个 SkyOffice 角色 atlas + tint 色调区分出多个视觉不同的人。skin=皮肤key，tint=十六进制色调(null=原色)，name=名字(可选，用于闲聊气泡)，role=职位标签。这些是背景群演，坐在工位/会议区/茶水间。主要剧情 NPC(senior/peer/vet)单独在代码里。"
+  },
+  "workers": [
+    { "skin": "so_adam",  "tint": null,     "name": "小赵", "role": "后端" },
+    { "skin": "so_ash",   "tint": null,     "name": "阿May", "role": "前端" },
+    { "skin": "so_lucy",  "tint": null,     "name": "婷婷", "role": "测试" },
+    { "skin": "so_nancy", "tint": null,     "name": "琳达", "role": "产品" },
+    { "skin": "so_adam",  "tint": "0xffd0b0", "name": "老王", "role": "架构" },
+    { "skin": "so_ash",   "tint": "0xb0d0ff", "name": "小马", "role": "算法" },
+    { "skin": "so_lucy",  "tint": "0xffc0d8", "name": "小雨", "role": "运维" },
+    { "skin": "so_nancy", "tint": "0xc0ffc8", "name": "静静", "role": "设计" },
+    { "skin": "so_adam",  "tint": "0xd0c0ff", "name": "大刘", "role": "后端" },
+    { "skin": "so_ash",   "tint": "0xffe0a0", "name": "阿杰", "role": "前端" },
+    { "skin": "so_lucy",  "tint": "0xa0e0d0", "name": "小陈", "role": "测试" },
+    { "skin": "so_nancy", "tint": "0xf0b0b0", "name": "圆圆", "role": "运营" },
+    { "skin": "so_adam",  "tint": "0xb0e0b0", "name": "小周", "role": "实习" },
+    { "skin": "so_ash",   "tint": "0xd8c0a0", "name": "阿凯", "role": "后端" }
+  ]
+}

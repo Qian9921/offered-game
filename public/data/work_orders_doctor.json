@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "doctor",
+    "title": "医护工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "mo_note",
+      "title": "补写病程记录",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 3
+      }
+    },
+    {
+      "id": "mo_order",
+      "title": "开具/核对一组医嘱",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "mo_lab",
+      "title": "解读检验报告",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "mo_talk",
+      "title": "完成一次病情告知",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 8
+      }
+    },
+    {
+      "id": "mo_round",
+      "title": "整理查房清单",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "mo_vitals",
+      "title": "复核生命体征异常",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 13,
+      "cost": {
+        "energy": -13,
+        "stress": 5
+      }
+    },
+    {
+      "id": "mo_handover",
+      "title": "写交班重点",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "mo_consent",
+      "title": "准备知情同意材料",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 7
+      }
+    },
+    {
+      "id": "mo_edu",
+      "title": "做一份出院宣教",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 3
+      }
+    },
+    {
+      "id": "mo_emr",
+      "title": "补电子病历缺项",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 15,
+      "cost": {
+        "energy": -17,
+        "stress": 6
+      }
+    }
+  ]
+}

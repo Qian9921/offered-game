@@ -1,0 +1,178 @@
+{
+  "_meta": {
+    "title": "高校行政·综合办 任务链",
+    "desc": "综合办主线：公文、跑章、会议、迎检。giver=王主任；对接刘姐/小方/教务/财务。"
+  },
+  "quests": [
+    {
+      "id": "off_c1",
+      "title": "学会收文",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "新人第一课：收文登记、分发、归档，别把文弄丢。",
+      "acceptLine": "「第一课：收文。去找刘姐看她怎么登——格式错了后面全乱。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "跟刘姐学收文登记流程"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成今日收文登记(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「来文先看文号，再看缓急。急件红笔标，别堆在抽屉里。」"
+      },
+      "doneLine": "「登得清楚。行政的信用，从一张不错的登记表开始。」",
+      "reward": {
+        "skill": 4,
+        "passion": 2
+      },
+      "progressGain": 12
+    },
+    {
+      "id": "off_c2",
+      "title": "你的第一份公文",
+      "giver": "senior",
+      "requires": [
+        "off_c1"
+      ],
+      "ordered": true,
+      "desc": "起草通知：标题、主送、落款、附件，一个都不能糊。",
+      "acceptLine": "「写一份开会通知。先找小方要模板——自己发明格式会被打回来。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "向小方要公文模板"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位起草通知并自检"
+        }
+      ],
+      "talkLines": {
+        "peer": "「模板在共享盘『公文-通知』。主送单位别写错，错一个要重印。」"
+      },
+      "doneLine": "「能发出去了。公文不是文采，是把事说准、说稳。」",
+      "reward": {
+        "skill": 5,
+        "performance": 5
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "off_c3",
+      "title": "跑章",
+      "giver": "senior",
+      "requires": [
+        "off_c2"
+      ],
+      "ordered": true,
+      "desc": "材料齐了才能盖章。先过财务，再回办公室盖。",
+      "acceptLine": "「这份协议要章。先找孙姐核票据附件，别空着手去盖章室丢人。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "fin",
+          "text": "找财务孙姐核验附件与票据"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理用章材料清单"
+        }
+      ],
+      "talkLines": {
+        "fin": "「合同金额和预算单对不上。回去改，改完再来——我五点下班。」"
+      },
+      "doneLine": "「材料齐了。章不是权力的炫耀，是责任的落款。」",
+      "reward": {
+        "skill": 4,
+        "stress": 2,
+        "performance": 6
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "off_c4",
+      "title": "筹备会议",
+      "giver": "senior",
+      "requires": [
+        "off_c3"
+      ],
+      "ordered": true,
+      "desc": "会议室、议程、材料、通知，少一样会场就冷场。",
+      "acceptLine": "「下周院务会你筹备。找赵老师对议程，别自己排一桌子空话。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "teach",
+          "text": "和教务赵老师对齐会议议程"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成会议材料与通知"
+        }
+      ],
+      "talkLines": {
+        "teach": "「议程压到五项，超时就砍。材料提前一天发，会上只决不定。」"
+      },
+      "doneLine": "「会开下来了。好的行政让会短、事清、人不怨。」",
+      "reward": {
+        "skill": 6,
+        "performance": 7,
+        "san": 2
+      },
+      "progressGain": 24
+    },
+    {
+      "id": "off_c5",
+      "title": "迎检前夜",
+      "giver": "senior",
+      "requires": [
+        "off_c4"
+      ],
+      "ordered": true,
+      "desc": "检查组明天到。台账、档案、现场，刘姐见过太多回。",
+      "acceptLine": "「明天迎检。去听刘姐讲检查组爱翻哪几本账，再自己把台账过一遍。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "听刘姐讲迎检要点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成台账自查与归档"
+        }
+      ],
+      "talkLines": {
+        "vet": "「他们专盯『写了但没做』和『做了但没写』。两边对齐，心里才不慌。」"
+      },
+      "doneLine": "「过了。行政的至暗时刻往往不在会上，在检查组翻本子的那几秒。」",
+      "reward": {
+        "skill": 5,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 24
+    }
+  ]
+}

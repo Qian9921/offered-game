@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "designer",
+    "title": "设计员工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "do_moodboard",
+      "title": "补一页情绪板",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 2
+      }
+    },
+    {
+      "id": "do_icon",
+      "title": "统一图标风格",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "do_type",
+      "title": "梳理字号层级",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "do_empty",
+      "title": "补齐空态插画",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 7
+      }
+    },
+    {
+      "id": "do_review",
+      "title": "内部设计评审改稿",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -20,
+        "stress": 8
+      }
+    },
+    {
+      "id": "do_export",
+      "title": "导出切图与标注",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "do_color",
+      "title": "校准品牌色对比度",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 11,
+      "cost": {
+        "energy": -13,
+        "stress": 4
+      }
+    },
+    {
+      "id": "do_proto",
+      "title": "主路径可点原型",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 6
+      }
+    },
+    {
+      "id": "do_cover",
+      "title": "活动封面三版比稿",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -15,
+        "stress": 5
+      }
+    },
+    {
+      "id": "do_fix",
+      "title": "修像素级对齐",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "operation",
+    "title": "运营工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "oo_title",
+      "title": "改 5 条标题 A/B",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 2
+      }
+    },
+    {
+      "id": "oo_push",
+      "title": "写 push 文案三版",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "oo_calendar",
+      "title": "更新内容排期表",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 9,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "oo_kol",
+      "title": "整理达人合作清单",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "oo_event",
+      "title": "活动规则页校对",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 7
+      }
+    },
+    {
+      "id": "oo_report",
+      "title": "周报数据填充",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 11,
+      "cost": {
+        "energy": -13,
+        "stress": 4
+      }
+    },
+    {
+      "id": "oo_community",
+      "title": "社群话术与答疑",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 3
+      }
+    },
+    {
+      "id": "oo_landing",
+      "title": "优化落地页转化点",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -20,
+        "stress": 8
+      }
+    },
+    {
+      "id": "oo_budget",
+      "title": "投放预算拆分",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 15,
+      "cost": {
+        "energy": -17,
+        "stress": 6
+      }
+    },
+    {
+      "id": "oo_asset",
+      "title": "归档本周素材",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 7,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    }
+  ]
+}

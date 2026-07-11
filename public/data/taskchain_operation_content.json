@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "运营·内容运营 迷你任务链",
+    "desc": "3 环：选题→成稿投放→复盘。giver=雅姐。"
+  },
+  "quests": [
+    {
+      "id": "cnt_c1",
+      "title": "定选题",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "别先写。先找数据和小鹿对齐：用户在搜什么、我们能讲什么。",
+      "acceptLine": "「第一课：选题。去找小析看搜索热词，再跟小鹿对一版选题池。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "data",
+          "text": "找小析看热词与内容缺口"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位产出选题池与优先级(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "data": "「『新手怎么选』搜索量高，但我们转化差。别只追热点，追能接转化的。」"
+      },
+      "doneLine": "「选题立住了。内容的一半，是敢不写。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "cnt_c2",
+      "title": "成稿与封面",
+      "giver": "senior",
+      "requires": [
+        "cnt_c1"
+      ],
+      "ordered": true,
+      "desc": "正文过小鹿，封面找阿棠，别自嗨发布。",
+      "acceptLine": "「写出来。正文过小鹿，封面找阿棠——两关过了再排期。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "让小鹿审内容结构"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成成稿与排期单"
+        }
+      ],
+      "talkLines": {
+        "peer": "「开头太慢，第三段才有干货。用户三秒划走，你懂的。」"
+      },
+      "doneLine": "「能发了。好内容是改出来的，不是灵感砸出来的。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "cnt_c3",
+      "title": "投放复盘",
+      "giver": "senior",
+      "requires": [
+        "cnt_c2"
+      ],
+      "ordered": true,
+      "desc": "发出去不是结束。看数据，写复盘，决定下一刀。",
+      "acceptLine": "「数据出来了。去听强哥怎么读留存，再写一版复盘。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "听强哥讲怎么读内容数据"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成投放复盘"
+        }
+      ],
+      "talkLines": {
+        "vet": "「点击高、完读低=标题骗人。完读高、转化低=钩子不对。对症下药。」"
+      },
+      "doneLine": "「复盘交了。你会慢慢发现：运营是和数据长期相处。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

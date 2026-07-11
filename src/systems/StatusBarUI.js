@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Juice } from './JuiceKit.js';
 
 // StatusBarUI：状态 HUD——参考星露谷"平时极简、按需展开"理念。
 // 迷你态（默认）：左上角一条紧凑横条，8 状态浓缩为色块小条，不挡视野。
@@ -14,8 +15,8 @@ const ORDER = GROUPS.flatMap(g => g.stats); // 迷你条顺序 = 面板顺序
 
 // —— 迷你条布局（1920 屏尺度：整体放大 ~1.9×，清晰可读）——
 const MINI_X = 14, MINI_Y = 14;
-const MINI_BAR_W = 54, MINI_BAR_H = 9, MINI_GAP = 8;
-const MINI_PAD = 14;
+const MINI_BAR_W = 30, MINI_BAR_H = 8, MINI_GAP = 6;
+const MINI_PAD = 12;
 
 // —— 展开面板布局（1920 尺度）——
 const PANEL_X = 14, PANEL_Y = 14, PANEL_W = 340, PAD = 18;
@@ -38,6 +39,7 @@ export class StatusBarUI {
     this.rows = {};       // 展开面板行
     this.miniFills = {};  // 迷你条填充
     this.expanded = false;
+    this._prevValues = stateSystem.getAll(); // 飘字用：记录上次值，算 delta
 
     this._buildMini();
     this._buildPanel();
@@ -50,7 +52,17 @@ export class StatusBarUI {
       this._setExpanded(!this.expanded);
     });
 
-    stateSystem.on('change', (key, value) => this._updateRow(key, value));
+    stateSystem.on('change', (key, value) => {
+      // key=null 表示 restore 批量恢复（StateSystem），刷新所有行
+      if (key === null) { ORDER.forEach(s => this._updateRow(s.key, this.state.get(s.key))); return; }
+      // 飘字反馈：数值变化时显示 +5/-3 浮起（数值驱动 RPG 的核心手感）
+      const prev = this._prevValues[key];
+      this._prevValues[key] = value;
+      if (prev != null && typeof prev === 'number' && value !== prev) {
+        this._floatStat(key, value - prev);
+      }
+      this._updateRow(key, value);
+    });
   }
 
   // ---------- 迷你态：一块小横条 ----------
@@ -72,7 +84,8 @@ export class StatusBarUI {
       const y = MINI_Y + MINI_PAD + 18;
       // 单字标签（健/精/心/压/技/绩/金/热）
       this.mini.add(this.scene.add.text(x + MINI_BAR_W / 2, MINI_Y + MINI_PAD + 1, s.label[0], {
-        fontSize: '15px', color: s.key === 'passion' ? '#ffb080' : '#9a9ab0',
+        fontSize: '16px', color: s.key === 'passion' ? '#ffb080' : '#c0c0d0',
+        stroke: '#0a0a14', strokeThickness: 3,
       }).setOrigin(0.5, 0).setResolution(TEXT_RES));
       this.mini.add(this.scene.add.rectangle(x, y, MINI_BAR_W, MINI_BAR_H, BG_COLOR).setOrigin(0, 0));
       const fill = this.scene.add.rectangle(x, y, this._ratio(s.key) * MINI_BAR_W, MINI_BAR_H,
@@ -177,5 +190,19 @@ export class StatusBarUI {
       mf.setSize(this._ratio(key) * MINI_BAR_W, MINI_BAR_H);
       mf.setFillStyle(this._miniColor(key));
     }
+  }
+
+  // 飘字：状态变化时在迷你条上方浮起 +5/-3。delta 正绿负红。
+  // 钉屏 + UI 相机坐标（屏幕左上角迷你条位置）。money delta 可能很大，截断显示。
+  _floatStat(key, delta) {
+    if (delta === 0 || !this.scene?.add?.text) return;
+    const idx = ORDER.findIndex(s => s.key === key);
+    if (idx < 0) return;
+    const x = MINI_X + MINI_PAD + idx * (MINI_BAR_W + MINI_GAP) + MINI_BAR_W / 2;
+    const y = MINI_Y - 4;
+    const sign = delta > 0 ? '+' : '';
+    const txt = Math.abs(delta) > 999 ? `${sign}${delta > 0 ? '↑' : '↓'}` : `${sign}${delta}`;
+    const color = delta > 0 ? '#6aaa6a' : '#e8735a';
+    Juice.floatText(this.scene, x, y, txt, color);
   }
 }

@@ -1,0 +1,439 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（产品经理）",
+    "desc": "产品视角的突发事件：老板加需求、研发顶回、数据打脸、资源争夺。"
+  },
+  "events": [
+    {
+      "id": "pev_boss_feature",
+      "icon": "👔",
+      "title": "老板突然加需求",
+      "urgent": true,
+      "text": "老板在群里丢了一句：「登录页再加个会员开通入口，不难吧？」研发群已读不回。\n（产品的日常：优先级永远比时间多。）",
+      "choices": [
+        {
+          "label": "先应下，回头再拆进迭代",
+          "result": "你接住了。排期被撕开一道口，压力上了肩。",
+          "effects": {
+            "stress": 8,
+            "performance": 4,
+            "passion": -2
+          },
+          "projectDelta": -4,
+          "addOrder": true
+        },
+        {
+          "label": "拉齐目标：要解决什么问题？",
+          "result": "你把讨论拉回问题本身。老板愣了一下，说『那先看数据』。",
+          "effects": {
+            "stress": 3,
+            "skill": 3,
+            "san": 2
+          }
+        },
+        {
+          "label": "让林姐出面挡一挡",
+          "result": "林姐帮你挡了。安全，但你在老板视野里淡了一点。",
+          "effects": {
+            "stress": -2,
+            "performance": -2,
+            "san": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_dev_pushback",
+      "icon": "🧱",
+      "title": "研发顶回排期",
+      "urgent": true,
+      "text": "阿码在评审上直接说：「这期做不完。要么砍范围，要么延期。」全场看你。",
+      "choices": [
+        {
+          "label": "当场砍掉低优，守住主路径",
+          "result": "你砍得很干脆。主路径保住了，边缘需求的人有点不爽。",
+          "effects": {
+            "stress": 5,
+            "performance": 5,
+            "skill": 2
+          }
+        },
+        {
+          "label": "硬顶：『必须这期』",
+          "result": "空气凝固。会后阿码加班，你也欠了人情。",
+          "effects": {
+            "stress": 9,
+            "performance": 3,
+            "passion": -3
+          }
+        },
+        {
+          "label": "会后单独对齐人天再上会",
+          "result": "你把冲突移出会场。慢半拍，但关系还在。",
+          "effects": {
+            "san": 3,
+            "stress": 2,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_data_slap",
+      "icon": "📉",
+      "title": "数据打脸",
+      "urgent": false,
+      "text": "小析甩来一张图：你上周拍板的入口，点击有了，转化几乎没动。",
+      "choices": [
+        {
+          "label": "公开复盘，承认假设错了",
+          "result": "有点丢脸，但团队信你更一点。",
+          "effects": {
+            "san": -2,
+            "skill": 4,
+            "passion": 2
+          }
+        },
+        {
+          "label": "先找外部原因，再内部改",
+          "result": "你争取了缓冲，也埋下了自欺的风险。",
+          "effects": {
+            "stress": 3,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_ops_slot",
+      "icon": "📣",
+      "title": "运营抢入口",
+      "urgent": false,
+      "text": "小鹿跑过来说：「大促要占登录后首页，你的引导位得让。」",
+      "choices": [
+        {
+          "label": "谈交换：大促后还我位+数据复盘",
+          "result": "你守住了长期位。谈判比硬刚有用。",
+          "effects": {
+            "skill": 3,
+            "performance": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "算了，先让大促",
+          "result": "省心一周，主路径教育被打断。",
+          "effects": {
+            "stress": -2,
+            "performance": -3,
+            "passion": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_user_complaint",
+      "icon": "😤",
+      "title": "用户投诉冲上热搜边缘",
+      "urgent": true,
+      "text": "客服同步：验证码收不到的投诉量翻倍，舆论位在升温。",
+      "choices": [
+        {
+          "label": "立刻立临时公告+降级方案",
+          "result": "你推进了止血。今晚别想准点。",
+          "effects": {
+            "stress": 8,
+            "performance": 6,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先让研发查通道，产品盯文案",
+          "result": "分工清楚，节奏还在。",
+          "effects": {
+            "stress": 4,
+            "skill": 2,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_coffee_pm",
+      "icon": "☕",
+      "title": "茶水间吐槽会",
+      "urgent": false,
+      "text": "茶水间里，小杜和大鹏在吐槽『又改需求』。他们看见你，话题顿了一下。",
+      "choices": [
+        {
+          "label": "自嘲接住，顺便收集真问题",
+          "result": "气氛松了。你听到了两个真实痛点。",
+          "effects": {
+            "san": 4,
+            "skill": 2
+          }
+        },
+        {
+          "label": "笑笑离开，回工位继续赶",
+          "result": "你保住了进度，也错过了一次信任。",
+          "effects": {
+            "performance": 2,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "pev_scope_creep",
+      "icon": "📦",
+      "title": "范围悄悄膨胀",
+      "urgent": false,
+      "text": "飞书文档里多了三行『顺便做一下』。没人开会，但所有人都当默认要做。",
+      "choices": [
+        {
+          "label": "公开标红：不在范围=下期评估",
+          "result": "你当了坏人，范围守住了。",
+          "effects": {
+            "stress": 4,
+            "performance": 4,
+            "san": 1
+          }
+        },
+        {
+          "label": "先做着，别阻塞气氛",
+          "result": "文档更胖了，人更累了。",
+          "effects": {
+            "stress": 6,
+            "passion": -3
+          },
+          "projectDelta": -5
+        }
+      ]
+    },
+    {
+      "id": "pev_late_meeting",
+      "icon": "🌙",
+      "title": "晚饭点的『同步会』",
+      "urgent": true,
+      "text": "18:20，林姐拉了个会：『就半小时，把明天评审过一下。』窗外天已经暗了。",
+      "choices": [
+        {
+          "label": "留下，把争议今晚拍掉",
+          "result": "会开了 70 分钟。明天顺一点，今天没了。",
+          "effects": {
+            "stress": 7,
+            "performance": 5,
+            "energy": -10,
+            "health": -3
+          }
+        },
+        {
+          "label": "提出异步：纪要+明日早会 15 分钟",
+          "result": "你守住了边界。有人觉得你不够拼。",
+          "effects": {
+            "san": 4,
+            "performance": -2,
+            "stress": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_pd_datafight",
+      "icon": "📊",
+      "title": "数据打架",
+      "minAct": 2,
+      "text": "你的方案数据说 A 好,老板的直觉说 B 好。评审会上,所有人都在看你。",
+      "choices": [
+        {
+          "label": "「数据在这,我坚持 A」",
+          "result": "会议室安静三秒。老板:「……那就小流量试。」你赢了一半。",
+          "effects": {
+            "skill": 4,
+            "stress": 4,
+            "performance": 3
+          }
+        },
+        {
+          "label": "「可以 AB 实验,让用户投票」",
+          "result": "各退一步,科学背锅。这招你越用越熟了。",
+          "effects": {
+            "san": 3,
+            "skill": 3
+          }
+        },
+        {
+          "label": "顺着老板改成 B",
+          "result": "会好开了,方案却不再像你的了。",
+          "effects": {
+            "performance": 2,
+            "passion": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_pd_userletter",
+      "icon": "💌",
+      "title": "用户来信",
+      "minAct": 2,
+      "text": "客服转来一封长信:一位老用户手写了三页纸,说你们的产品陪他度过了住院的三个月。",
+      "choices": [
+        {
+          "label": "打印出来贴在工位上",
+          "result": "往后每次想砍需求,你都会先看它一眼。",
+          "effects": {
+            "passion": 5,
+            "san": 3
+          }
+        },
+        {
+          "label": "回了一封同样认真的信",
+          "result": "你写了四十分钟。这四十分钟,比一天的会都值。",
+          "effects": {
+            "san": 4,
+            "energy": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_pd_nightprd",
+      "icon": "🌙",
+      "title": "深夜的PRD",
+      "minAct": 3,
+      "text": "凌晨一点,你还在改明早评审的 PRD。文档右上角显示:还有两个人也在线——都是研发。",
+      "choices": [
+        {
+          "label": "在评论区打了句「辛苦了」",
+          "result": "两秒后收到回复:「彼此彼此」。深夜的文档里,有种奇怪的战友情。",
+          "effects": {
+            "san": 3,
+            "energy": -4
+          }
+        },
+        {
+          "label": "改完就睡,明天再说",
+          "result": "你合上电脑。有些完美主义,得学会明天再犯。",
+          "effects": {
+            "energy": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_pd_cut",
+      "icon": "✂️",
+      "title": "砍自己的需求",
+      "minAct": 3,
+      "text": "排期爆了,必须砍一个需求。列表里有一个,是你磨了两个月、最有感情的那个。",
+      "choices": [
+        {
+          "label": "砍它。对用户价值最小",
+          "result": "你亲手划掉了它。产品经理的成人礼,是杀死自己的孩子。",
+          "effects": {
+            "performance": 4,
+            "passion": -3,
+            "skill": 3
+          }
+        },
+        {
+          "label": "砍别的,保它",
+          "result": "你保住了它,代价是跟两个组各欠一个人情。",
+          "effects": {
+            "stress": 4,
+            "passion": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_pd_dapeng_coffee",
+      "icon": "☕",
+      "title": "大鹏约复盘",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "大鹏敲敲你桌：「主路径那版，我觉得你扛得住一次深聊。下去喝杯？」\n（跟资深产品聊得够多，他才会把真问题摊开。）",
+      "choices": [
+        {
+          "label": "跟去，把假设摊开",
+          "result": "他指出你忽略的一个流失节点。回来后你改了 PRD 优先级。",
+          "effects": {
+            "skill": 4,
+            "stress": 2,
+            "san": 2
+          }
+        },
+        {
+          "label": "改日：评审材料还没齐",
+          "result": "「行，材料齐了喊我。」他把一张便利贴留给你：先画漏斗。",
+          "effects": {
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_pd_du_prototype",
+      "icon": "🎨",
+      "title": "小杜拉你过原型",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小杜探头：「新流程原型我画完了，就差你这双产品眼。来？」\n（你们聊过之后，她才会把半成品给你挑刺。）",
+      "choices": [
+        {
+          "label": "认真走一遍主路径",
+          "result": "你标了三处断点。她回：「这才叫协作。」",
+          "effects": {
+            "skill": 3,
+            "san": 2,
+            "performance": 2
+          }
+        },
+        {
+          "label": "先回消息，五分钟后到",
+          "result": "她丢来链接：「批注打在 Figma。」人情还在，节奏也在。",
+          "effects": {
+            "performance": 1,
+            "stress": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_pd_alone_desk",
+      "icon": "🧊",
+      "title": "产品群很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。需求群里 @所有人，没人 @你。",
+      "choices": [
+        {
+          "label": "主动找小杜对齐入口",
+          "result": "有点尬，但动线对齐了。关系从一句「你有空吗」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "埋头改自己的 PRD",
+          "result": "文档更整齐了。办公室里，你也更像一座岛。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

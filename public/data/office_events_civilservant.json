@@ -1,0 +1,365 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（公务员）",
+    "desc": "窗口高峰、材料争议、迎检、舆情、同事协作。"
+  },
+  "events": [
+    {
+      "id": "cev_queue",
+      "icon": "🎫",
+      "title": "窗口排长队",
+      "urgent": true,
+      "text": "大厅屏幕上等候数跳到 40+。有人拍玻璃：「能不能快点？」",
+      "choices": [
+        {
+          "label": "加开导办，先分流材料齐全的",
+          "result": "队伍动了，你嗓子哑了。",
+          "effects": {
+            "stress": 6,
+            "performance": 5,
+            "skill": 2
+          }
+        },
+        {
+          "label": "按号来，不插队不加速",
+          "result": "公平在，抱怨也在。",
+          "effects": {
+            "stress": 4,
+            "performance": 2,
+            "san": 1
+          }
+        },
+        {
+          "label": "请科长协调临时窗口",
+          "result": "支援来了，你也欠了人情。",
+          "effects": {
+            "stress": 3,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_dispute",
+      "icon": "📄",
+      "title": "材料认定争议",
+      "urgent": true,
+      "text": "群众坚持『别的窗口收过』。你按目录应退件。",
+      "choices": [
+        {
+          "label": "出示目录与依据，书面告知补正",
+          "result": "有理有据，场面稳住。",
+          "effects": {
+            "skill": 3,
+            "performance": 4,
+            "stress": 3
+          }
+        },
+        {
+          "label": "先收下，内部再协调",
+          "result": "对方走了，你埋了雷。",
+          "effects": {
+            "stress": 5,
+            "performance": -2,
+            "san": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_inspect",
+      "icon": "🔍",
+      "title": "突然迎检",
+      "urgent": true,
+      "text": "通知：半小时后检查组到窗口。台账有两本还乱。",
+      "choices": [
+        {
+          "label": "立刻自查补齐关键页",
+          "result": "险过，人透支。",
+          "effects": {
+            "stress": 7,
+            "performance": 4,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "分工：你对群众线，小闵对台账",
+          "result": "协作过关。",
+          "effects": {
+            "stress": 4,
+            "performance": 3,
+            "san": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_complaint",
+      "icon": "📣",
+      "title": "网上投诉",
+      "urgent": false,
+      "text": "平台转来一条：指责『态度差、推诿』。监控显示你只是按规退件。",
+      "choices": [
+        {
+          "label": "据实回复流程与依据，语气克制",
+          "result": "说明白了，也学会了留痕。",
+          "effects": {
+            "skill": 3,
+            "stress": 4,
+            "performance": 3
+          }
+        },
+        {
+          "label": "先道歉安抚，细节内部再核",
+          "result": "火压下了，真相悬着。",
+          "effects": {
+            "san": 1,
+            "performance": 1,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_help",
+      "icon": "🤝",
+      "title": "小闵卡在系统",
+      "urgent": false,
+      "text": "小闵盯着报错红字：「这号办不下去了，你帮我看一眼？」",
+      "choices": [
+        {
+          "label": "一起排查，顺手教他留痕",
+          "result": "问题解决，团队更顺。",
+          "effects": {
+            "san": 3,
+            "passion": 2,
+            "energy": -3
+          }
+        },
+        {
+          "label": "丢一句工单号让他自己找信息中心",
+          "result": "你省时间，他更慌。",
+          "effects": {
+            "performance": 1,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cev_tea",
+      "icon": "🍵",
+      "title": "老周的茶",
+      "urgent": false,
+      "text": "老周给你续了杯茶：「窗口站久了，膝盖和脾气都要养。」",
+      "choices": [
+        {
+          "label": "喝完回岗，把微笑挂好",
+          "result": "稳了一点。",
+          "effects": {
+            "san": 4,
+            "stress": -2
+          }
+        },
+        {
+          "label": "多聊两句再走",
+          "result": "心宽了，号又积了。",
+          "effects": {
+            "san": 5,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_cs_grandpa",
+      "icon": "👴",
+      "title": "不会用手机的大爷",
+      "minAct": 1,
+      "text": "一位大爷在自助机前站了二十分钟,不敢碰屏幕:「同志,这个……俺不会。」后面排着长队。",
+      "choices": [
+        {
+          "label": "手把手教他操作一遍",
+          "result": "办完后大爷从布袋里掏出个本子,认真记下步骤。你的心软了一下。",
+          "effects": {
+            "san": 4,
+            "passion": 3,
+            "energy": -2
+          }
+        },
+        {
+          "label": "直接帮他在窗口办掉",
+          "result": "三分钟办结。效率和温度,今天你都给了。",
+          "effects": {
+            "performance": 3,
+            "san": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_cs_hotline",
+      "icon": "📞",
+      "title": "12345转办单",
+      "minAct": 3,
+      "text": "一张热线转办单在三个部门之间转了两圈,又回到了你桌上。诉求人已经打了四次电话。",
+      "choices": [
+        {
+          "label": "牵头把三个部门约到一起",
+          "result": "一小时的会,解决了转了两周的事。有人得先说「我来」。",
+          "effects": {
+            "skill": 4,
+            "performance": 4,
+            "stress": 3
+          }
+        },
+        {
+          "label": "按程序再转出去",
+          "result": "程序没错。但你在备注栏多写了一行联系人电话——给下一个人留个抓手。",
+          "effects": {
+            "performance": 1,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_cs_exam",
+      "icon": "📚",
+      "title": "遴选的机会",
+      "minAct": 3,
+      "text": "上级机关遴选公告出来了,条件你都符合。老周瞟了一眼:「想清楚,上面是平台,也是漩涡。」",
+      "choices": [
+        {
+          "label": "报名,试一试",
+          "result": "复习资料摊开在深夜的桌上。人生的考试,一场接一场。",
+          "effects": {
+            "skill": 3,
+            "energy": -4,
+            "passion": 3
+          }
+        },
+        {
+          "label": "这届先不报",
+          "result": "你想先把手头的事做扎实。机会会再来,根基不会。",
+          "effects": {
+            "san": 3,
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_cs_flag",
+      "icon": "🚩",
+      "title": "锦旗",
+      "minAct": 2,
+      "text": "上个月你帮着跑了三趟的低保户,今天举着一面锦旗出现在大厅,非要给你挂上。",
+      "choices": [
+        {
+          "label": "红着脸收下",
+          "result": "锦旗挂在科室墙上。老周说:「这玩意比考核表实在。」",
+          "effects": {
+            "san": 5,
+            "passion": 4
+          }
+        },
+        {
+          "label": "「挂科室,不挂我个人」",
+          "result": "锦旗还是挂了,照片里你站在最边上,笑得最真。",
+          "effects": {
+            "san": 4,
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_cs_zhou_case",
+      "icon": "🗂️",
+      "title": "老周约谈疑难件",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "老周把一沓材料搁你桌上：「这个，我想听你怎么判。」\n（跟他磨合够了，他才会把真难度摊开。）",
+      "choices": [
+        {
+          "label": "按规范拆步骤讲清",
+          "result": "他点头：「能讲清，就能办稳。」你技能涨了。",
+          "effects": {
+            "skill": 4,
+            "san": 2
+          }
+        },
+        {
+          "label": "先回去查依据再答",
+          "result": "「可以。明天一上班放到我桌上。」",
+          "effects": {
+            "performance": 2,
+            "skill": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_cs_min_window",
+      "icon": "🪟",
+      "title": "小闵约对窗口",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小闵小声：「明天窗口我怕措辞硬。帮我过一遍话术？」\n（聊过之后，她才敢把慌张给你看。）",
+      "choices": [
+        {
+          "label": "认真当「刁钻群众」",
+          "result": "她被问倒两次，笑了：「再来。」你们都更稳。",
+          "effects": {
+            "skill": 3,
+            "san": 2
+          }
+        },
+        {
+          "label": "换你练，她来挑",
+          "result": "你也被问住了。原来窗口永远在临场——但你们更像搭档。",
+          "effects": {
+            "skill": 3,
+            "stress": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_cs_quiet_desk",
+      "icon": "🧊",
+      "title": "内勤位很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。印章盒盖着，没人喊你。",
+      "choices": [
+        {
+          "label": "主动找小闵对清单",
+          "result": "有点尬，但对齐了。关系从「一起看看？」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "埋头写自己的办件",
+          "result": "办件更规范了。人与人的办件，还没开始。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

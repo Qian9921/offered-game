@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "销售·大客户/野外 迷你任务链",
+    "desc": "3 环：线索清洗→拜访方案→逼单复盘。giver=Vincent。"
+  },
+  "quests": [
+    {
+      "id": "fd_c1",
+      "title": "线索清洗",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先分清谁是真需求。彪哥最烦『瞎打一百个电话』。",
+      "acceptLine": "「第一课：线索。找彪哥学筛选标准，再把本周池子洗干净。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "向彪哥学习线索分级"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成线索清洗与跟进计划(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「有预算、有决策人、有时间表，三缺一就降级。别自我感动。」"
+      },
+      "doneLine": "「池子干净了。销售的一半，是敢放弃。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "fd_c2",
+      "title": "拜访与方案",
+      "giver": "senior",
+      "requires": [
+        "fd_c1"
+      ],
+      "ordered": true,
+      "desc": "见面聊痛点，方案找售前，别现场开空头支票。",
+      "acceptLine": "「约到关键人了。先找阿哲对齐方案边界，再去拜访。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "sol",
+          "text": "与售前阿哲对齐方案与演示范围"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成拜访纪要与方案页"
+        }
+      ],
+      "talkLines": {
+        "sol": "「演示只做三条主路径。客户一问定制，你说『评估后书面回复』。」"
+      },
+      "doneLine": "「拜访闭环了。信任来自准备，不来自临场发挥。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "fd_c3",
+      "title": "推进与复盘",
+      "giver": "senior",
+      "requires": [
+        "fd_c2"
+      ],
+      "ordered": true,
+      "desc": "报价、异议、下一步。赢要复盘，输更要复盘。",
+      "acceptLine": "「阶段推进。和小柯对异议话术，再写一版输/赢复盘。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小柯对常见异议与话术"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成商机推进与复盘"
+        }
+      ],
+      "talkLines": {
+        "peer": "「价格异议先问价值，别先打折。打折是最后一公里，不是开场白。」"
+      },
+      "doneLine": "「复盘交了。你会慢慢懂：单子教会你的，比提成久。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

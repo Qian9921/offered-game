@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "律师·诉讼 迷你任务链",
+    "desc": "3 环：阅卷争点→证据组织→开庭准备。giver=沈律师。"
+  },
+  "quests": [
+    {
+      "id": "lt_c1",
+      "title": "阅卷找争点",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先把事实时间线理清，再谈策略。诉讼里「感觉我们有理」最危险——对方最强的三点，才是你要先答的。",
+      "acceptLine": "「第一课：阅卷。去听何律怎么拆争点，再自己出一版事实时间线。先写对方最强的三点。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "向何律请教争点拆解方法"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成事实时间线与争点表(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「先写对方最强的三点。你若答不上，庭上就会死在那儿。有利事实人人会说，不利事实才见功力。」"
+      },
+      "doneLine": "「争点清楚了。诉讼的一半，是敢直面不利事实——另一半，是按时把原件带到。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "lt_c2",
+      "title": "证据与目录",
+      "giver": "senior",
+      "requires": [
+        "lt_c1"
+      ],
+      "ordered": true,
+      "desc": "证据要能指向争点。编号、原件、证明目的一项不能糊——法庭只认程序与目录。",
+      "acceptLine": "「证据找阿宁对目录规范，再补证明目的一栏。复印件与原件的关系，写不清楚就别开庭。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "clerk",
+          "text": "与书记员阿宁对齐证据目录规范"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成证据目录与证明目的"
+        }
+      ],
+      "talkLines": {
+        "clerk": "「复印件标『与原件核对无异』。原件谁保管写清楚。证明目的别写『证明对方无理』——写具体事实。」"
+      },
+      "doneLine": "「目录立住了。证据说话，比情绪有力。下次庭前检查，先查原件在不在你包里。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "lt_c3",
+      "title": "开庭预案",
+      "giver": "senior",
+      "requires": [
+        "lt_c2"
+      ],
+      "ordered": true,
+      "desc": "提纲、发问、可能被问的坑。开庭不是演讲，是可控的对抗。",
+      "acceptLine": "「预案。找小袁互诘一次——你答不上的，法官也会问。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小袁进行庭前互诘演练"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成庭审提纲与应急问答"
+        }
+      ],
+      "talkLines": {
+        "peer": "「别背稿。法官一打断你就懵的段落，改成三句以内。」"
+      },
+      "doneLine": "「预案齐了。法庭上站得住的人，都在会议室先输过。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（医护）",
+    "desc": "危急值、家属情绪、加班、物资、同事支援。"
+  },
+  "events": [
+    {
+      "id": "mev_critical",
+      "icon": "🚨",
+      "title": "危急值来电",
+      "urgent": true,
+      "text": "电话里：小周报危急值。你手头还在写另一份病历。",
+      "choices": [
+        {
+          "label": "立刻停笔，到床旁处理",
+          "result": "你接住了急。病历堆更高了。",
+          "effects": {
+            "stress": 7,
+            "performance": 6,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先让同期顶上，你两分钟收尾",
+          "result": "分工清楚，风险可控。",
+          "effects": {
+            "stress": 4,
+            "skill": 2,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_family",
+      "icon": "🗣️",
+      "title": "家属情绪爆发",
+      "urgent": true,
+      "text": "走廊里家属提高了音量：「到底行不行？」护士长看你一眼。",
+      "choices": [
+        {
+          "label": "拉到谈话间，讲清现状与计划",
+          "result": "火压下去了，你出了一身汗。",
+          "effects": {
+            "stress": 6,
+            "san": 2,
+            "performance": 4,
+            "skill": 2
+          }
+        },
+        {
+          "label": "请上级出面，你补材料",
+          "result": "场面稳了，你也少练了一次沟通。",
+          "effects": {
+            "stress": 3,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_overtime",
+      "icon": "🌙",
+      "title": "加班写病历",
+      "urgent": false,
+      "text": "时钟指向 21:10。系统还弹着未完成的病程。",
+      "choices": [
+        {
+          "label": "留下写完关键三项",
+          "result": "合规了，黑眼圈也深了。",
+          "effects": {
+            "performance": 4,
+            "energy": -10,
+            "health": -3,
+            "stress": 4
+          }
+        },
+        {
+          "label": "记待办，明早第一件事补",
+          "result": "你保住了命，也担了点风险。",
+          "effects": {
+            "san": 2,
+            "performance": -2,
+            "stress": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_supply",
+      "icon": "📦",
+      "title": "耗材告急",
+      "urgent": false,
+      "text": "护士站：某规格导管只剩两根。下周有台操作。",
+      "choices": [
+        {
+          "label": "立刻报备并走紧急申领",
+          "result": "你挡下了潜在断档。",
+          "effects": {
+            "skill": 2,
+            "performance": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "先顶着用，明天再说",
+          "result": "省事一天，隐患多一天。",
+          "effects": {
+            "stress": -1,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_peer",
+      "icon": "🤝",
+      "title": "小蒋求支援",
+      "urgent": false,
+      "text": "小蒋压低声音：「我这台穿刺不稳，你能不能来看着？」",
+      "choices": [
+        {
+          "label": "去，当第二双眼睛",
+          "result": "他稳了，你也更累。",
+          "effects": {
+            "passion": 3,
+            "san": 2,
+            "energy": -4
+          }
+        },
+        {
+          "label": "远程嘱咐要点，自己赶病历",
+          "result": "进度保住了，人情淡了点。",
+          "effects": {
+            "performance": 2,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "mev_coffee_m",
+      "icon": "☕",
+      "title": "值班室的热水",
+      "urgent": false,
+      "text": "护士长塞给你一杯热水：「别把自己熬成病人。」",
+      "choices": [
+        {
+          "label": "喝完，继续把清单清掉",
+          "result": "暖了一下，又扎回节奏。",
+          "effects": {
+            "san": 3,
+            "energy": 2,
+            "stress": -2
+          }
+        },
+        {
+          "label": "坐五分钟再走",
+          "result": "人回了点血，单子还在。",
+          "effects": {
+            "san": 5,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_dr_thanks",
+      "icon": "🌸",
+      "title": "出院的老太太",
+      "minAct": 2,
+      "text": "住了一个月的老太太今天出院,拉着你的手往你兜里塞了两个橘子:「小大夫,好人。」",
+      "choices": [
+        {
+          "label": "收下橘子,送她到电梯",
+          "result": "橘子很甜。这个职业最贵的报酬,从来不开发票。",
+          "effects": {
+            "san": 5,
+            "passion": 4
+          }
+        },
+        {
+          "label": "「这是我们应该做的」",
+          "result": "她还是把橘子留下了。规矩是规矩,心意是心意。",
+          "effects": {
+            "san": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_dr_dispute",
+      "icon": "⚡",
+      "title": "情绪激动的家属",
+      "minAct": 3,
+      "text": "急诊来了位情绪失控的家属,冲着分诊台大吼。保安在赶来的路上,患者还在等待处置。",
+      "choices": [
+        {
+          "label": "先安抚:「我在,一个个来」",
+          "result": "你的镇定像镇静剂。家属慢慢冷静下来。这也是医术。",
+          "effects": {
+            "skill": 4,
+            "stress": 4,
+            "san": 2
+          }
+        },
+        {
+          "label": "专注处置患者,交给保安",
+          "result": "病人优先,永远没错。但你后背的汗湿了一片。",
+          "effects": {
+            "performance": 3,
+            "stress": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_dr_nightshift",
+      "icon": "🌙",
+      "title": "凌晨四点的走廊",
+      "minAct": 3,
+      "text": "夜班第十六个小时,你在走廊尽头站了一会儿。窗外天快亮了,住院部安安静静,监护仪的声音像潮汐。",
+      "choices": [
+        {
+          "label": "给自己冲杯咖啡,继续",
+          "result": "还有两小时交班。你把白大褂领子理了理。",
+          "effects": {
+            "energy": -3,
+            "performance": 3
+          }
+        },
+        {
+          "label": "闭眼靠墙眯十分钟",
+          "result": "护士长路过,给你肩上搭了件外套,没叫醒你。",
+          "effects": {
+            "energy": 4,
+            "san": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_dr_mistake_near",
+      "icon": "🩺",
+      "title": "差一点",
+      "minAct": 3,
+      "text": "开医嘱时你写错了一位剂量小数点——药房老金电话追过来了。没造成后果,但你后背发凉。",
+      "choices": [
+        {
+          "label": "记进个人差错本,复盘",
+          "result": "你给自己立了新规矩:开完医嘱,闭眼三秒再核一遍。",
+          "effects": {
+            "skill": 5,
+            "stress": 3
+          }
+        },
+        {
+          "label": "当面去谢老金",
+          "result": "老金摆手:「我就是干这个的。」但你知道,他救了你们两个人。",
+          "effects": {
+            "san": 4,
+            "skill": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_md_nurse_handoff",
+      "icon": "🩺",
+      "title": "护士长约交接",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "护士长把你拉到一边：「今晚这台，我想跟你对一下。」\n（跟她磨合够了，她才会把真风险摊开。）",
+      "choices": [
+        {
+          "label": "认真对重点与危急值",
+          "result": "她指出你漏记的一项过敏史。你更稳了。",
+          "effects": {
+            "skill": 4,
+            "stress": 2
+          }
+        },
+        {
+          "label": "先把病程补完再来",
+          "result": "「行，补完喊我。」她把清单留给你。",
+          "effects": {
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_md_jiang_case",
+      "icon": "📋",
+      "title": "小蒋约对病例",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小蒋探头：「查房前互对一轮？我怕讲成小说。」\n（聊过之后，他才敢把慌张给你看。）",
+      "choices": [
+        {
+          "label": "认真互诘三句话版",
+          "result": "你们都更短、更准。查房时没被问倒。",
+          "effects": {
+            "skill": 3,
+            "san": 2
+          }
+        },
+        {
+          "label": "稍后，先回检验科",
+          "result": "他把要点丢你：「批注打上面。」",
+          "effects": {
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_md_quiet_station",
+      "icon": "🧊",
+      "title": "护士站很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。走廊灯白得刺眼，没人喊你。",
+      "choices": [
+        {
+          "label": "主动找小蒋对交接",
+          "result": "有点尬，但对齐了。关系从一句「一起看看？」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "埋头写自己的病历",
+          "result": "病历更清楚了。人与人的交接，还没开始。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

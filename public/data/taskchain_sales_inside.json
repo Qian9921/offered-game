@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "销售·电销/内勤 迷你任务链",
+    "desc": "3 环：名单触达→商机转化→签约交接。"
+  },
+  "quests": [
+    {
+      "id": "in_c1",
+      "title": "名单触达",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "电话/企微有节奏，CRM 同步，不靠感觉。",
+      "acceptLine": "「内勤第一课：触达。找小柯对今日名单节奏，再完成首轮拨打记录。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小柯对齐触达节奏与话术"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成触达记录与预约"
+        }
+      ],
+      "talkLines": {
+        "peer": "「开场 15 秒说清你是谁、能帮什么。超时就是噪音。」"
+      },
+      "doneLine": "「触达达标。量不够谈技巧，技巧不够先看量。」",
+      "reward": {
+        "skill": 4,
+        "passion": 2
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "in_c2",
+      "title": "商机转化",
+      "giver": "senior",
+      "requires": [
+        "in_c1"
+      ],
+      "ordered": true,
+      "desc": "有意向的上方案，找售前，别自己画大饼。",
+      "acceptLine": "「有热线索。拉阿哲出一页方案，你负责跟决策链。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "sol",
+          "text": "请阿哲出一页方案要点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成商机卡与下次动作"
+        }
+      ],
+      "talkLines": {
+        "sol": "「ROI 算保守版。你卖希望可以，别卖幻觉。」"
+      },
+      "doneLine": "「商机立住了。转化靠下一步，不靠『再联系』。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "in_c3",
+      "title": "签约交接",
+      "giver": "senior",
+      "requires": [
+        "in_c2"
+      ],
+      "ordered": true,
+      "desc": "合同条款清楚，交客户成功，别签完就消失。",
+      "acceptLine": "「快签了。找小满做交接清单，别留坑给售后。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "cs",
+          "text": "与客户成功小满对齐交接"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成合同核对与交接单"
+        }
+      ],
+      "talkLines": {
+        "cs": "「承诺功能、上线时间、培训次数写死。你含糊，我背锅。」"
+      },
+      "doneLine": "「交接完了。好销售的后半程，是让客户留下来。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

@@ -1,21 +1,20 @@
 import Phaser from 'phaser';
 import { AIClient } from '../systems/AIClient.js';
 import { AudioSystem } from '../systems/AudioSystem.js';
+import { buildTryFirstAdvice } from '../systems/CareerFit.js';
 
 // OpeningScene：开场"认识你" — 捏人 + 7 道情境测评(RIASEC+大五双通道) + AI 专属小传。
 // 测评题库来自 data/assessment.json（专业规格：霍兰德 RIASEC + 大五人格，玩家全程不见术语）。
 export class OpeningScene extends Phaser.Scene {
   constructor() { super('OpeningScene'); }
 
+  init(data) {
+    this._newGameSlot = (data && data.newGameSlot) || null;
+  }
+
   preload() {
     this.load.json('assessment', './data/assessment.json');
-    // LimeZu 四款 16×32
-    for (const n of ['Adam', 'Alex', 'Amelia', 'Bob']) {
-      this.load.spritesheet(n.toLowerCase(), `./assets/limezu/characters/${n}.png`, {
-        frameWidth: 16, frameHeight: 32,
-      });
-    }
-    // SkyOffice 四款 atlas（更精细，捏人可选）
+    // 主角与 NPC 统一用 SkyOffice（同一 32×48 体系,尺寸/画风一致,不再混用 LimeZu）
     for (const c of ['adam', 'ash', 'lucy', 'nancy']) {
       this.load.atlas(`so_${c}`, `./assets/skyoffice/character/${c}.png`, `./assets/skyoffice/character/${c}.json`);
     }
@@ -32,14 +31,10 @@ export class OpeningScene extends Phaser.Scene {
     // 每条带 type/pv(预览缩放)/th(缩略图缩放)/idle(静止帧)，捏人 UI 只调工厂、不碰底层格式。
     // pv/th 让两套素材缩放后等高：LimeZu 32px×3.6≈115，SkyOffice 48px×2.4≈115（视觉齐平不遮标题）。
     this.charSkins = [
-      { key: 'alex',   name: '利落短发 · 男',  gender: 'male',    type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'bob',    name: '沉稳黑发 · 男',  gender: 'male',    type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'amelia', name: '栗色长发 · 女',  gender: 'female',  type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'adam',   name: '慵懒绿发 · 中性', gender: 'neutral', type: 'limezu', pv: 3.6, th: 2.0, idle: 3 },
-      { key: 'so_adam',  cap: 'Adam',  name: '干练寸头 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Adam_idle_anim_19.png' },
-      { key: 'so_ash',   cap: 'Ash',   name: '金棕短发 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Ash_idle_anim_19.png' },
-      { key: 'so_lucy',  cap: 'Lucy',  name: '棕发利落 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Lucy_idle_anim_19.png' },
-      { key: 'so_nancy', cap: 'Nancy', name: '黑发知性 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.3, idle: 'Nancy_idle_anim_19.png' },
+      { key: 'so_adam',  cap: 'Adam',  name: '干练寸头 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Adam_idle_anim_19.png' },
+      { key: 'so_ash',   cap: 'Ash',   name: '金棕短发 · 男', gender: 'male',   type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Ash_idle_anim_19.png' },
+      { key: 'so_lucy',  cap: 'Lucy',  name: '棕发利落 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Lucy_idle_anim_19.png' },
+      { key: 'so_nancy', cap: 'Nancy', name: '黑发知性 · 女', gender: 'female', type: 'skyoffice', pv: 2.4, th: 1.6, idle: 'Nancy_idle_anim_19.png' },
     ];
     // 色调滤镜：给立绘加一层轻染色,四款皮肤 × 五种色调 = 20 种组合
     this.tints = [
@@ -186,7 +181,7 @@ export class OpeningScene extends Phaser.Scene {
     this.ui.add(this.add.text(480, 132, q.text, {
       fontSize: '17px', color: '#e6e6f0', wordWrap: { width: 720, useAdvancedWrap: true }, align: 'center',
     }).setOrigin(0.5));
-    this.ui.add(this.add.text(480, 165, '（没有标准答案，选最像你的）', { fontSize: '12px', color: '#5a5a6e' }).setOrigin(0.5));
+    this.ui.add(this.add.text(480, 165, '（没有标准答案 · 可随意选 · 约 1 分钟，仅影响推荐方向）', { fontSize: '12px', color: '#5a5a6e' }).setOrigin(0.5));
 
     q.options.forEach((op, i) => {
       this._button(480, 215 + i * 62, 640, 52, op.label, () => {
@@ -250,25 +245,55 @@ export class OpeningScene extends Phaser.Scene {
     this._clearUI();
     this.ui = this.add.container(0, 0);
 
-    this.ui.add(this.add.rectangle(480, 270, 640, 400, 0x1e1e30).setStrokeStyle(2, 0xd4a353));
-    this.ui.add(this.add.text(480, 110, '· 初见画像 ·', { fontSize: '24px', color: '#d4a353' }).setOrigin(0.5));
-    this.ui.add(this.add.text(480, 148, `${profile.mbti} · ${profile.holland}`, {
-      fontSize: '30px', color: '#ffffff', fontStyle: 'bold', letterSpacing: 4,
+    // 可行动推荐：先试哪两条（初衷：帮迷茫毕业生选路，不是贴标签）
+    const advice = buildTryFirstAdvice(profile, 2);
+    profile.tryFirst = advice.detail.map(d => ({
+      key: d.key, name: d.name, score: d.score, reason: d.reason,
+    }));
+    profile.tryHeadline = advice.headline;
+    try { localStorage.setItem('wdwtb_profile', JSON.stringify(profile)); } catch (e) {}
+
+    this.ui.add(this.add.rectangle(480, 270, 680, 460, 0x1e1e30).setStrokeStyle(2, 0xd4a353));
+    this.ui.add(this.add.text(480, 88, '· 初见画像 ·', { fontSize: '22px', color: '#d4a353' }).setOrigin(0.5));
+    this.ui.add(this.add.text(480, 120, `${profile.mbti} · ${profile.holland}`, {
+      fontSize: '26px', color: '#ffffff', fontStyle: 'bold', letterSpacing: 4,
     }).setOrigin(0.5));
 
-    this.ui.add(this.add.text(480, 235, bio, {
-      fontSize: '15px', color: '#c8c8d8', wordWrap: { width: 540, useAdvancedWrap: true }, align: 'center', lineSpacing: 8,
+    this.ui.add(this.add.text(480, 175, bio, {
+      fontSize: '14px', color: '#c8c8d8', wordWrap: { width: 580, useAdvancedWrap: true }, align: 'center', lineSpacing: 6,
     }).setOrigin(0.5));
 
-    this.ui.add(this.add.text(480, 330, source === 'ai' ? '· 由腾讯混元为你撰写 ·' : '· 来自你的选择 ·', {
+    // 先试哪两条（测评柱 → 体验柱的桥）
+    this.ui.add(this.add.text(480, 248, advice.headline, {
+      fontSize: '15px', color: '#ffd24d', fontStyle: 'bold',
+    }).setOrigin(0.5));
+    const d0 = advice.detail[0];
+    const d1 = advice.detail[1];
+    if (d0) {
+      this.ui.add(this.add.text(480, 278,
+        `① ${d0.name}（契合约 ${d0.score}）· ${d0.reason}`, {
+          fontSize: '12px', color: '#b8c0d0', wordWrap: { width: 600, useAdvancedWrap: true }, align: 'center',
+        }).setOrigin(0.5));
+    }
+    if (d1) {
+      this.ui.add(this.add.text(480, 318,
+        `② ${d1.name}（契合约 ${d1.score}）· ${d1.reason}`, {
+          fontSize: '12px', color: '#b8c0d0', wordWrap: { width: 600, useAdvancedWrap: true }, align: 'center',
+        }).setOrigin(0.5));
+    }
+    this.ui.add(this.add.text(480, 358, '推荐可改——大厅里点任意职业试用；星标=测评优先建议', {
+      fontSize: '11px', color: '#7a7a92',
+    }).setOrigin(0.5));
+
+    this.ui.add(this.add.text(480, 388, source === 'ai' ? '· 由腾讯混元为你撰写 ·' : '· 来自你的选择 ·', {
       fontSize: '11px', color: '#5a6a8a',
     }).setOrigin(0.5));
-    this.ui.add(this.add.text(480, 360, '灵感来源：霍兰德职业兴趣理论 · 大五人格模型', {
+    this.ui.add(this.add.text(480, 410, '灵感来源：霍兰德职业兴趣理论 · 大五人格模型（玩家不见术语）', {
       fontSize: '10px', color: '#4a4a5e',
     }).setOrigin(0.5));
 
-    this._button(480, 420, 260, 46, '带着这幅画像，出发 →', () => {
-      this.scene.start('HubScene');
+    this._button(480, 448, 280, 44, '带着画像去试职业 →', () => {
+      this.scene.start('HubScene', { newGameSlot: this._newGameSlot });
     }, 0x2a4a3e, '16px');
   }
 }

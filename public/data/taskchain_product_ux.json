@@ -1,0 +1,178 @@
+{
+  "_meta": {
+    "title": "产品经理·体验产品 任务链",
+    "desc": "体验/交互向：走查、原型、可用性、验收。结构同 biz 链。"
+  },
+  "quests": [
+    {
+      "id": "ux_c1",
+      "title": "盘点现有交互",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "走查主流程，标出摩擦点。体验产品的尊严，是看见用户真正在哪摔跤。",
+      "acceptLine": "「体验岗第一课：现状走查。小杜比谁都清楚哪些交互已经烂了。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "找小杜盘点现有交互与组件"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成交互债务清单"
+        }
+      ],
+      "talkLines": {
+        "peer": "「登录页按钮高度不统一、错误提示两套文案……我标红了，你挑优先级。」"
+      },
+      "doneLine": "「债务看见了。体验产品的一半工作，是阻止世界变得更乱。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 12
+    },
+    {
+      "id": "ux_c2",
+      "title": "竞品走查",
+      "giver": "senior",
+      "requires": [
+        "ux_c1"
+      ],
+      "ordered": true,
+      "desc": "对照 2–3 个竞品登录体验，提炼可抄与不可抄。",
+      "acceptLine": "「去走查竞品。别只截图好看，要写清：他们解决了什么问题、我们能不能学。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "和大鹏对齐走查维度"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成竞品走查报告"
+        }
+      ],
+      "talkLines": {
+        "vet": "「看三件事：步骤数、容错、情感反馈。抄结构可以，抄皮肤没意义。」"
+      },
+      "doneLine": "「走查有结论。好的体验产品会偷师，但不会迷路。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "ux_c3",
+      "title": "原型与研发对齐",
+      "giver": "senior",
+      "requires": [
+        "ux_c2"
+      ],
+      "ordered": true,
+      "desc": "原型不是艺术作品，是给研发落地的说明书。",
+      "acceptLine": "「原型出来了找阿码过一遍。他皱眉的地方，往往是上线后的坑。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "dev",
+          "text": "和阿码过原型可实现性"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位改一版可落地的原型说明"
+        }
+      ],
+      "talkLines": {
+        "dev": "「这个动效两天，那个手势安卓不一致。你定优先级，我按人天排。」"
+      },
+      "doneLine": "「对齐了。漂亮但做不出来的原型，是 PPT 产品。」",
+      "reward": {
+        "skill": 4,
+        "san": 2,
+        "performance": 5
+      },
+      "progressGain": 20
+    },
+    {
+      "id": "ux_c4",
+      "title": "可用性测试",
+      "giver": "senior",
+      "requires": [
+        "ux_c3"
+      ],
+      "ordered": true,
+      "desc": "找 5 个真用户点一点，比会议室里吵半天有用。",
+      "acceptLine": "「可用性测试别自己脑补用户。拉小析一起看行为数据，再补定性访谈。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "data",
+          "text": "找小析一起看行为与卡点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理可用性结论与改版点"
+        }
+      ],
+      "talkLines": {
+        "data": "「热力图显示验证码输入框被点了又退出。文案或等待态有问题。」"
+      },
+      "doneLine": "「测完了。用户不会按你的故事走，他们按自己的慌张走。」",
+      "reward": {
+        "skill": 6,
+        "stress": 2,
+        "performance": 7
+      },
+      "progressGain": 24
+    },
+    {
+      "id": "ux_c5",
+      "title": "上线体验验收",
+      "giver": "senior",
+      "requires": [
+        "ux_c4"
+      ],
+      "ordered": true,
+      "desc": "上线前按体验清单走完主路径，签字才放行。",
+      "acceptLine": "「验收你来盯。去听听小杜的验收习惯，再自己把主路径点穿。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "向小杜确认体验验收清单"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成上线体验验收"
+        }
+      ],
+      "talkLines": {
+        "peer": "「清单我置顶了：空态、错态、弱网、返回栈。漏一项都别点头。」"
+      },
+      "doneLine": "「验收过了。你开始对『好不好用』负责，而不只是『有没有做』。」",
+      "reward": {
+        "skill": 5,
+        "passion": 4,
+        "performance": 8
+      },
+      "progressGain": 24
+    }
+  ]
+}

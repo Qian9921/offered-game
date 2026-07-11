@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "title": "教师·班主任 迷你任务链",
+    "desc": "3 环：建班→家校→公开课收尾。giver=陈校长。"
+  },
+  "quests": [
+    {
+      "id": "hr_c1",
+      "title": "接班建档",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先摸清班级：名单、座位、重点关注学生。",
+      "acceptLine": "「第一课：接班。去找吴老师拿上届班务本，再自己建本学期档案。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "vet",
+          "text": "向吴老师了解班级底细"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成班级档案与座位表(E坐下→开始工作)"
+        }
+      ],
+      "talkLines": {
+        "vet": "「前排那几个爱插嘴但聪明。后排有个孩子最近沉默，先观察别贴标签。」"
+      },
+      "doneLine": "「档案立住了。班主任的第一份作业，是把每个名字变成一张脸。」",
+      "reward": {
+        "skill": 4,
+        "passion": 4
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "hr_c2",
+      "title": "第一次家校沟通",
+      "giver": "senior",
+      "requires": [
+        "hr_c1"
+      ],
+      "ordered": true,
+      "desc": "家长群与家委对齐规则：报喜也报忧，边界要清。",
+      "acceptLine": "「家校别躲。找李姐对齐群规，再写一封开学说明。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "parent",
+          "text": "和家委李姐对齐沟通节奏"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成家长信与群规"
+        }
+      ],
+      "talkLines": {
+        "parent": "「群里别深夜答疑。有事私聊，公共区只发通知——不然你会被掏空。」"
+      },
+      "doneLine": "「说明发出去了。信任是慢慢攒的，不是一次喊话。」",
+      "reward": {
+        "skill": 5,
+        "performance": 5,
+        "san": 2
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "hr_c3",
+      "title": "班会与公开课",
+      "giver": "senior",
+      "requires": [
+        "hr_c2"
+      ],
+      "ordered": true,
+      "desc": "班会立规矩，公开课见真章。找小许互听一节再上阵。",
+      "acceptLine": "「公开课周。先跟小许互听互评，再把班会和公开课材料收口。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "与小许互听互评一节课"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成班会+公开课教案"
+        }
+      ],
+      "talkLines": {
+        "peer": "「你提问太密，学生没思考空档。留三秒，比多讲一句有用。」"
+      },
+      "doneLine": "「挺过来了。讲台站稳的人，都是先被自己教案逼过一次。」",
+      "reward": {
+        "skill": 6,
+        "passion": 4,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "_meta": {
+    "career": "product",
+    "title": "产品经理工单池",
+    "desc": "每天抽 3 张今日工单。坐工位选一张 → 小游戏 → 成绩决定项目进度与绩效。"
+  },
+  "orders": [
+    {
+      "id": "po_prd_login",
+      "title": "补齐登录改版 PRD 细节",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 8,
+      "cost": {
+        "energy": -10,
+        "stress": 3
+      }
+    },
+    {
+      "id": "po_user_story",
+      "title": "拆用户故事与验收标准",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 9,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "po_metrics",
+      "title": "定义改版成功指标",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 6
+      }
+    },
+    {
+      "id": "po_stakeholder",
+      "title": "对齐老板的口头需求",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 8
+      }
+    },
+    {
+      "id": "po_roadmap",
+      "title": "更新季度路线图",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 18,
+      "cost": {
+        "energy": -20,
+        "stress": 9
+      }
+    },
+    {
+      "id": "po_review_notes",
+      "title": "整理评审会决议纪要",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 9,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "po_ab_plan",
+      "title": "设计 A/B 实验方案",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 13,
+      "cost": {
+        "energy": -15,
+        "stress": 5
+      }
+    },
+    {
+      "id": "po_edge_cases",
+      "title": "补齐边界与异常流程",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 8
+      }
+    },
+    {
+      "id": "po_copy",
+      "title": "打磨关键路径文案",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "po_debt",
+      "title": "梳理体验债务优先级",
+      "difficulty": "hard",
+      "est": 5,
+      "progress": 15,
+      "performance": 18,
+      "cost": {
+        "energy": -22,
+        "stress": 10
+      }
+    },
+    {
+      "id": "po_sync_dev",
+      "title": "和研发同步变更影响",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -15,
+        "stress": 6
+      }
+    },
+    {
+      "id": "po_competitor",
+      "title": "补一页竞品对比",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 7,
+      "cost": {
+        "energy": -8,
+        "stress": 3
+      }
+    }
+  ]
+}

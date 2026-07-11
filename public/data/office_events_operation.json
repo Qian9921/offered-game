@@ -1,0 +1,360 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（运营）",
+    "desc": "投放异常、内容翻车、资源争夺、数据打脸。"
+  },
+  "events": [
+    {
+      "id": "oev_budget_cut",
+      "icon": "💸",
+      "title": "预算砍半",
+      "urgent": true,
+      "text": "财务同步：本周投放预算砍 50%。雅姐看你：「方案重做，半小时内。」",
+      "choices": [
+        {
+          "label": "砍低效渠道，保核心转化",
+          "result": "你忍痛做了取舍。",
+          "effects": {
+            "stress": 6,
+            "skill": 3,
+            "performance": 4
+          }
+        },
+        {
+          "label": "全面缩量，先求别停",
+          "result": "安全，但增长停摆。",
+          "effects": {
+            "stress": 3,
+            "performance": -2
+          },
+          "projectDelta": -5
+        },
+        {
+          "label": "拉强哥一起重排优先级",
+          "result": "方案更稳，会开得更长。",
+          "effects": {
+            "stress": 4,
+            "san": 2,
+            "energy": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "oev_content_fail",
+      "icon": "📉",
+      "title": "爆款预期落空",
+      "urgent": false,
+      "text": "你压的那篇数据平平。小鹿安慰：「算法这周抽风。」群里已有人@复盘。",
+      "choices": [
+        {
+          "label": "公开复盘假设错在哪",
+          "result": "有点丢脸，团队信你更一点。",
+          "effects": {
+            "san": -1,
+            "skill": 3,
+            "passion": 2
+          }
+        },
+        {
+          "label": "先归因外部，再内部改",
+          "result": "争到缓冲，也埋下自欺。",
+          "effects": {
+            "stress": 3,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "oev_channel",
+      "icon": "📢",
+      "title": "渠道位被挤占",
+      "urgent": true,
+      "text": "产品要占开屏做版本公告，你的活动位没了。",
+      "choices": [
+        {
+          "label": "谈交换：公告后补位+数据共享",
+          "result": "你守住了长期位。",
+          "effects": {
+            "skill": 3,
+            "performance": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "算了，改推送补量",
+          "result": "省心，转化弱一截。",
+          "effects": {
+            "stress": -1,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "oev_viral",
+      "icon": "🔥",
+      "title": "意外出圈",
+      "urgent": false,
+      "text": "一条二创突然爆了。评论区有夸有骂，客服群在报警。",
+      "choices": [
+        {
+          "label": "立刻建舆情话术+加码正反馈",
+          "result": "你接住了热度也接住了风险。",
+          "effects": {
+            "stress": 5,
+            "performance": 5,
+            "energy": -6
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先观察两小时再动",
+          "result": "错过了最佳回应窗口。",
+          "effects": {
+            "stress": 2,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "oev_meeting",
+      "icon": "📋",
+      "title": "周会灵魂拷问",
+      "urgent": false,
+      "text": "雅姐投屏：「这周 ROI 解释一下。」全场安静。",
+      "choices": [
+        {
+          "label": "用漏斗三段讲清楚",
+          "result": "数字站得住，人也站得住。",
+          "effects": {
+            "skill": 3,
+            "performance": 4,
+            "stress": 3
+          }
+        },
+        {
+          "label": "承认实验失败，给下一刀",
+          "result": "诚实换信任。",
+          "effects": {
+            "san": 2,
+            "passion": 2,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "oev_coffee_ops",
+      "icon": "☕",
+      "title": "茶水间投放玄学",
+      "urgent": false,
+      "text": "有人在传『周五别放量』。强哥路过：「玄学不如对照实验。」",
+      "choices": [
+        {
+          "label": "回去开一个小对照",
+          "result": "你把八卦炼成了方法。",
+          "effects": {
+            "skill": 2,
+            "passion": 2
+          }
+        },
+        {
+          "label": "跟着大家缩量",
+          "result": "少挨骂，也少学到。",
+          "effects": {
+            "stress": -1,
+            "performance": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_op_viral",
+      "icon": "🔥",
+      "title": "突然爆了",
+      "minAct": 2,
+      "text": "三天前随手发的一条内容,突然冲上热榜。评论区以每分钟几十条的速度增长——有夸的,也有骂的。",
+      "choices": [
+        {
+          "label": "盯住评论区,及时引导",
+          "result": "你回了两小时评论,把节奏稳住了。运营的手感,是这么磨出来的。",
+          "effects": {
+            "skill": 4,
+            "energy": -5,
+            "performance": 4
+          }
+        },
+        {
+          "label": "先复盘为什么爆",
+          "result": "你拆了三小时:选题、标题、发布时间。爆款可以复制一半。",
+          "effects": {
+            "skill": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_op_troll",
+      "icon": "💢",
+      "title": "恶意差评",
+      "minAct": 3,
+      "text": "一条明显失实的差评被顶到最前面,@了公司官号。老板在群里问:「怎么回事?」",
+      "choices": [
+        {
+          "label": "摆事实,礼貌回应",
+          "result": "你逐条澄清,围观群众开始倒向你。公关的胜利是不吵架的胜利。",
+          "effects": {
+            "skill": 4,
+            "stress": 3,
+            "performance": 3
+          }
+        },
+        {
+          "label": "私信沟通,线下解决",
+          "result": "对方删了差评。你多了一条深夜谈判的技能点。",
+          "effects": {
+            "san": 2,
+            "stress": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_op_burnout",
+      "icon": "🫠",
+      "title": "选题枯竭",
+      "minAct": 3,
+      "text": "周会要报下周选题,你盯着空白文档半小时——脑子里一个字都没有。这是从没有过的。",
+      "choices": [
+        {
+          "label": "出去走一圈再回来",
+          "result": "楼下奶茶店排队的对话,给了你两个选题。生活才是素材库。",
+          "effects": {
+            "san": 3,
+            "passion": 3
+          }
+        },
+        {
+          "label": "翻旧爆款硬凑三个",
+          "result": "凑出来了,自己都不想点开。透支的不是选题,是热情。",
+          "effects": {
+            "performance": 2,
+            "passion": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_op_fans",
+      "icon": "💬",
+      "title": "老粉的私信",
+      "minAct": 2,
+      "text": "一位关注三年的老粉丝私信:「最近的内容越来越像广告了,以前那种真诚呢?」",
+      "choices": [
+        {
+          "label": "认真回复,聊了半小时",
+          "result": "聊完你在选题表里加了一栏:「这条,用户真的需要吗?」",
+          "effects": {
+            "san": 3,
+            "passion": 4
+          }
+        },
+        {
+          "label": "礼貌感谢,心里咯噔",
+          "result": "KPI 和真诚的天平,每个运营都在走钢丝。",
+          "effects": {
+            "stress": 3,
+            "san": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_op_qiang_data",
+      "icon": "📈",
+      "title": "强哥约看数据",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "强哥丢来一张图：「你上周那篇，我想跟你对一下。」\n（跟他磨合够了，他才会把真数据摊开。）",
+      "choices": [
+        {
+          "label": "坐下，把假设拆开",
+          "result": "他指出你忽略的渠道偏差。你技能涨了。",
+          "effects": {
+            "skill": 4,
+            "stress": 2
+          }
+        },
+        {
+          "label": "先把今晚推文发出去",
+          "result": "「行，发了再聊。」他把图注留给你。",
+          "effects": {
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_op_lu_topic",
+      "icon": "📝",
+      "title": "小鹿拉你定选题",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小鹿探头：「选题池砍到三篇，就差你一票。」\n（聊过之后，她才敢把半成品给你砍。）",
+      "choices": [
+        {
+          "label": "按数据勇气砍两篇",
+          "result": "池子干净了。内容的一半，是敢不写。",
+          "effects": {
+            "skill": 3,
+            "san": 2
+          }
+        },
+        {
+          "label": "稍后，先回广告主",
+          "result": "她把表丢你：「批注打上面。」",
+          "effects": {
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_op_quiet_corner",
+      "icon": "🧊",
+      "title": "运营角很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。群里刷屏，没人 @你。",
+      "choices": [
+        {
+          "label": "主动找小鹿对热词",
+          "result": "有点尬，但对齐了。关系从一句「打扰了」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "埋头写自己的复盘",
+          "result": "复盘更清楚了。人与人的复盘，还没开始。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

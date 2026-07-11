@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "程序员·测试工程师 任务链",
+    "desc": "测试视角的同一个项目：和开发小赵对接、给产品小林对用例、被周哥点拨。结构同 dev 链。"
+  },
+  "quests": [
+    {
+      "id": "test_c1", "title": "搭好测试环境", "giver": "senior", "ordered": true,
+      "desc": "把测试环境和账号权限配好，跑一遍冒烟用例。",
+      "acceptLine": "「测试第一课：环境。账号权限找前端小赵开，环境挂了别硬测。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "zhao", "text": "找小赵开测试账号权限" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回自己工位跑冒烟用例(E坐下→开始工作)" }
+      ],
+      "talkLines": { "zhao": "「测试账号给你开了三个。别问为什么第二个登不上，它就是玄学。」" },
+      "doneLine": "「冒烟过了。记住：开发说'我这儿是好的'，你就当没听见。」",
+      "reward": { "skill": 4, "passion": 3 }, "progressGain": 12
+    },
+    {
+      "id": "test_c2", "title": "登录功能用例设计", "giver": "senior", "requires": ["test_c1"], "ordered": true,
+      "desc": "登录功能要提测了，先找产品小林把需求边界问清，再写用例。",
+      "acceptLine": "「登录要提测了。用例别闭门造车，找小林把边界问死：什么算成功？什么必须拦？」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "lin", "text": "找产品小林确认需求边界" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位设计测试用例" }
+      ],
+      "talkLines": { "lin": "「验证码5分钟过期、错3次锁定、空号要提示……你不问我都没想到这么细！」" },
+      "doneLine": "「用例覆盖得挺全。好测试是在需求阶段就把 bug 掐死。」",
+      "reward": { "skill": 5, "performance": 6 }, "progressGain": 20
+    },
+    {
+      "id": "test_c3", "title": "第一轮提测", "giver": "senior", "requires": ["test_c2"], "ordered": true,
+      "desc": "开发提测了，按用例执行第一轮测试，找出缺陷。",
+      "acceptLine": "「小赵他们提测了。按你的用例过一遍——手别软，现在放过的每个 bug，上线都会加倍还回来。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "zhao", "text": "找小赵确认提测范围" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位执行测试、揪出缺陷" }
+      ],
+      "talkLines": { "zhao": "「这次就改了登录模块，其他没动……大概，应该，没动。」" },
+      "doneLine": "「一轮测出这么多？很好。测试的价值就是让问题死在上线前。」",
+      "reward": { "skill": 4, "san": 2, "performance": 5 }, "progressGain": 20
+    },
+    {
+      "id": "test_c4", "title": "回归验证", "giver": "senior", "requires": ["test_c3"], "ordered": true,
+      "desc": "开发修完 bug 了，回归验证，顺便确认没改出新问题。",
+      "acceptLine": "「小赵说都修好了。回归一遍，重点盯他'顺手改'的地方——顺手改最容易顺手改坏。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "zhao", "text": "找小赵要修复清单" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位做回归验证" }
+      ],
+      "talkLines": { "zhao": "「三个都修了！顺手把按钮颜色也改了……啊这个不用测吧？」" },
+      "doneLine": "「回归通过，新问题也拦住了。开发和测试不是对手，是队友——但队友也得盯着。」",
+      "reward": { "skill": 6, "stress": 2, "performance": 7 }, "progressGain": 24
+    },
+    {
+      "id": "test_c5", "title": "上线前验收", "giver": "senior", "requires": ["test_c4"], "ordered": true,
+      "desc": "明天上线。做最后的验收测试，签下你的名字。",
+      "acceptLine": "「明天上线，验收报告要你签字。去听听周哥的经验——他拦下过的事故能写本书。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "vet", "text": "听周哥讲验收的门道" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位做上线前验收" }
+      ],
+      "talkLines": { "vet": "「验收签字前问自己一句：这功能敢让你爸妈用吗？敢，就签。」" },
+      "doneLine": "「签了字就是你的担当。明天，是你第一次为一个产品的质量背书。」",
+      "reward": { "skill": 5, "passion": 4, "performance": 8 }, "progressGain": 24
+    }
+  ]
+}

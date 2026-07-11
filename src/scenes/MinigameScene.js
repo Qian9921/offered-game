@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import { pickMinigameQuestions } from '../systems/MinigameFlavor.js';
+import { Juice } from '../systems/JuiceKit.js';
+import { AudioSystem } from '../systems/AudioSystem.js';
 
 // MinigameScene：通用小游戏框架，先实现"写代码闯关"选择题。深色 IDE 风格。
 const DEFAULT_QUESTIONS = [
@@ -89,7 +92,7 @@ export class MinigameScene extends Phaser.Scene {
         return res.json();
       })
       .then(data => {
-        this.questions = (data.questions && data.questions.length) ? data.questions : DEFAULT_QUESTIONS;
+        this.questions = pickMinigameQuestions(data, this.career, this.type) || DEFAULT_QUESTIONS;
         this.title = (data._meta && data._meta.title) || null;
         if (this.loadingText) { this.loadingText.destroy(); this.loadingText = null; }
         this._showQuestion();
@@ -223,9 +226,20 @@ export class MinigameScene extends Phaser.Scene {
     this.ui = this.add.container(0, 0);
     const c = this.ui;
 
+    // Juice 反馈：答对粒子+音效，答错屏震+顿帧（让对错有"重量"）
+    if (isCorrect) {
+      Juice.burst(this, 480, 130, 0x3fb950, 14);
+      AudioSystem.success();
+    } else {
+      Juice.shake(this, 0.012, 200);
+      AudioSystem.error();
+    }
+
     const icon = isCorrect ? '✓' : '✗';
     const clr = isCorrect ? '#3fb950' : '#f85149';
-    c.add(this.add.text(480, 130, icon, { fontSize: '56px', color: clr }).setOrigin(0.5));
+    const iconTxt = this.add.text(480, 130, icon, { fontSize: '56px', color: clr }).setOrigin(0.5);
+    c.add(iconTxt);
+    Juice.pop(this, iconTxt, 1); // 弹性入场
     c.add(this.add.text(480, 200, isCorrect ? '回答正确！' : '回答错误', {
       fontSize: '24px', color: clr,
     }).setOrigin(0.5));
@@ -242,21 +256,19 @@ export class MinigameScene extends Phaser.Scene {
       fontSize: '13px', color: '#484f58',
     }).setOrigin(0.5));
 
-    // 2 秒自动推进，或点击跳过
+    // 2 秒自动推进，或点击跳过。
+    // 关键：先移除监听再置空，否则监听泄漏到下一题、玩家点第一个选项就被残留监听吞掉一题
+    // （这是"3题只显示2题"的根因）
     const advance = () => {
-      this._advanceTimer = null;
-      this._advanceHandler = null;
+      if (this._advanceTimer) { this._advanceTimer.remove(); this._advanceTimer = null; }
+      if (this._advanceHandler) { this.input.off('pointerdown', this._advanceHandler); this._advanceHandler = null; }
       this.idx++;
       if (this.idx < this.questions.length) this._showQuestion();
       else this._showResult();
     };
     this._advanceTimer = this.time.delayedCall(2000, advance);
-    const onClick = () => {
-      if (this._advanceTimer) { this._advanceTimer.remove(); this._advanceTimer = null; }
-      advance();
-    };
-    this._advanceHandler = onClick;
-    this.input.on('pointerdown', onClick);
+    this._advanceHandler = advance;
+    this.input.on('pointerdown', advance);
   }
 
   // ---------- 结果页 ----------

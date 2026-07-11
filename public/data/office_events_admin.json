@@ -1,0 +1,418 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（高校行政）",
+    "desc": "行政视角：盖章高峰、领导临时会、学生突发、迎检、财务打回。"
+  },
+  "events": [
+    {
+      "id": "aev_stamp_rush",
+      "icon": "🔏",
+      "title": "盖章高峰",
+      "urgent": true,
+      "text": "下午三点，门口排起盖章的人。王主任看你一眼：「顶一下窗口。」",
+      "choices": [
+        {
+          "label": "按清单核材料，慢但稳",
+          "result": "你核得细，队伍怨，但没出错章。",
+          "effects": {
+            "stress": 6,
+            "performance": 5,
+            "skill": 2
+          }
+        },
+        {
+          "label": "熟脸先过，生脸后核",
+          "result": "效率上去了，也埋了人情债。",
+          "effects": {
+            "stress": 3,
+            "performance": 3,
+            "san": -2
+          }
+        },
+        {
+          "label": "请刘姐一起盯",
+          "result": "双人复核，稳，也更累。",
+          "effects": {
+            "stress": 4,
+            "san": 2,
+            "energy": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_leader_meet",
+      "icon": "📋",
+      "title": "领导临时会",
+      "urgent": true,
+      "text": "半小时后院长要材料。群里 @你：「上次那个表再出一版。」",
+      "choices": [
+        {
+          "label": "立刻改，先交再打磨",
+          "result": "你交上了。数字对，版式有点皱。",
+          "effects": {
+            "stress": 8,
+            "performance": 6,
+            "energy": -8
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先确认要哪些字段再动手",
+          "result": "慢五分钟，少返工一次。",
+          "effects": {
+            "stress": 4,
+            "skill": 3,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_student_cry",
+      "icon": "🎓",
+      "title": "学生在窗口急了",
+      "urgent": false,
+      "text": "一名学生材料不全，急得眼圈红：「再晚点助学金就断了。」",
+      "choices": [
+        {
+          "label": "讲清缺什么，给绿色补交通道",
+          "result": "你守了规则，也留了路。",
+          "effects": {
+            "san": 4,
+            "passion": 3,
+            "stress": 2
+          }
+        },
+        {
+          "label": "破例先收，事后补",
+          "result": "学生走了，你担了风险。",
+          "effects": {
+            "stress": 6,
+            "performance": -2,
+            "passion": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_finance_reject",
+      "icon": "🧾",
+      "title": "财务打回",
+      "urgent": false,
+      "text": "孙姐把报销单甩回来：「粘贴顺序不对，重做。」",
+      "choices": [
+        {
+          "label": "当下改完再送",
+          "result": "你吞下火气，单子过了。",
+          "effects": {
+            "stress": 5,
+            "skill": 2,
+            "performance": 2
+          }
+        },
+        {
+          "label": "先放着，明天再说",
+          "result": "轻松一晚，明天更堵。",
+          "effects": {
+            "stress": -2,
+            "performance": -3
+          },
+          "projectDelta": -4
+        }
+      ]
+    },
+    {
+      "id": "aev_inspect_rumor",
+      "icon": "🔍",
+      "title": "迎检风声",
+      "urgent": true,
+      "text": "小方压低声音：「听说下周可能有检查组。」办公室空气紧了一度。",
+      "choices": [
+        {
+          "label": "带头自查台账",
+          "result": "你掀起一轮整理，累，但安心。",
+          "effects": {
+            "stress": 7,
+            "performance": 5,
+            "skill": 2
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先观望，别自己吓自己",
+          "result": "省了力气，也少了准备。",
+          "effects": {
+            "san": 2,
+            "performance": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_printer",
+      "icon": "🖨️",
+      "title": "打印机罢工",
+      "urgent": false,
+      "text": "重要材料要印，打印机吐纸一半卡住。会议还有二十分钟。",
+      "choices": [
+        {
+          "label": "换楼打印，跑步送",
+          "result": "你赶上了。鞋里进了沙子。",
+          "effects": {
+            "energy": -8,
+            "performance": 4,
+            "stress": 3
+          }
+        },
+        {
+          "label": "先发电子版，纸质会后补",
+          "result": "会开起来了，有人皱眉。",
+          "effects": {
+            "stress": 2,
+            "performance": 1,
+            "san": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_gossip_admin",
+      "icon": "☕",
+      "title": "茶水间人事八卦",
+      "urgent": false,
+      "text": "茶水间在传谁要调岗、哪个科室要合并。刘姐看了你一眼。",
+      "choices": [
+        {
+          "label": "听两句就走，不传",
+          "result": "你少了谈资，多了清净。",
+          "effects": {
+            "san": 3,
+            "stress": -1
+          }
+        },
+        {
+          "label": "认真听完再判断",
+          "result": "信息多了，焦虑也多了。",
+          "effects": {
+            "stress": 3,
+            "skill": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aev_overtime_form",
+      "icon": "🌙",
+      "title": "下班前的『顺便』",
+      "urgent": true,
+      "text": "17:50，有人塞来一摞表：「顺手帮我录进系统呗。」窗外已经暗了。",
+      "choices": [
+        {
+          "label": "留下录完",
+          "result": "你准点梦碎，系统是满的。",
+          "effects": {
+            "stress": 6,
+            "performance": 4,
+            "energy": -10,
+            "health": -2
+          }
+        },
+        {
+          "label": "约明天上午，留痕交接",
+          "result": "你守了边界。对方有点讪。",
+          "effects": {
+            "san": 4,
+            "performance": -1,
+            "stress": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_ad_seal",
+      "icon": "🖨️",
+      "title": "打印机罢工",
+      "minAct": 1,
+      "text": "迎检材料还差三十份,打印机偏偏这时卡纸+缺粉+报错三连。全科的目光投向你。",
+      "choices": [
+        {
+          "label": "卷袖子拆机修理",
+          "result": "十分钟后它复活了。你在行政界的江湖地位+1。",
+          "effects": {
+            "skill": 3,
+            "performance": 3
+          }
+        },
+        {
+          "label": "抱着U盘跑楼下打印店",
+          "result": "自费三十八块,材料准时。有些仗,花钱消灾。",
+          "effects": {
+            "money": -38,
+            "san": 2,
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_ad_thanks",
+      "icon": "🍎",
+      "title": "学生的苹果",
+      "minAct": 2,
+      "text": "上月你帮忙加急办助学金的那个学生,在你桌上悄悄放了个苹果和一张字条:「谢谢老师。」",
+      "choices": [
+        {
+          "label": "收下,把字条夹进笔记本",
+          "result": "行政的活琐碎,但此刻你觉得,琐碎得有意义。",
+          "effects": {
+            "san": 5,
+            "passion": 3
+          }
+        },
+        {
+          "label": "追出去让他别破费",
+          "result": "孩子跑得比你快。你笑着回来,苹果很甜。",
+          "effects": {
+            "san": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_ad_deadline",
+      "icon": "⏰",
+      "title": "五点半的通知",
+      "minAct": 3,
+      "text": "五点半,上级发文:「明早九点前报送全年数据汇总。」你看了看表,又看了看电脑。",
+      "choices": [
+        {
+          "label": "留下来连夜整理",
+          "result": "十一点交了。你在走廊撞见同样加班的小方,相视苦笑。",
+          "effects": {
+            "performance": 4,
+            "energy": -8,
+            "stress": 4
+          }
+        },
+        {
+          "label": "打电话争取延到中午",
+          "result": "对方沉默两秒:「……行吧。」原来死线也是可以谈的。",
+          "effects": {
+            "skill": 3,
+            "san": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_ad_veteran",
+      "icon": "🫖",
+      "title": "刘姐的茶",
+      "minAct": 3,
+      "text": "你连续加班一周,刘姐把一罐自己炒的茶叶放你桌上:「悠着点,材料是干不完的,人是会干完的。」",
+      "choices": [
+        {
+          "label": "泡上一杯,歇十分钟",
+          "result": "茶有点苦,回甘很长。像这份工作。",
+          "effects": {
+            "san": 4,
+            "energy": 3
+          }
+        },
+        {
+          "label": "道谢后继续赶工",
+          "result": "茶放凉了。刘姐摇摇头没说话。",
+          "effects": {
+            "performance": 2,
+            "san": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_ad_liu_tea",
+      "icon": "🍵",
+      "title": "刘姐请喝茶",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "刘姐把一杯茶搁在你桌上：「收文那套你上手了。走走，我讲讲迎检那年。」\n（跟她磨合够了，她才会把真教训摊开。）",
+      "choices": [
+        {
+          "label": "跟去，把坑记下来",
+          "result": "她点出三本最容易翻车的台账。你回来改了自己的检查表。",
+          "effects": {
+            "skill": 4,
+            "san": 2
+          }
+        },
+        {
+          "label": "先把手头通知发出去",
+          "result": "「行，发出去再来。」她把要点写在便签上留给你。",
+          "effects": {
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_ad_fang_proof",
+      "icon": "📄",
+      "title": "小方拉你对通知",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小方探头：「这份开会通知我写完了，就差你这双眼。来？」\n（你们聊过之后，她才会把半成品给你挑刺。）",
+      "choices": [
+        {
+          "label": "逐句对格式和抬头",
+          "result": "你标了两处不规范。她回：「这才叫行政。」",
+          "effects": {
+            "skill": 3,
+            "performance": 2
+          }
+        },
+        {
+          "label": "五分钟后，先回个电话",
+          "result": "她把文档丢到共享盘：「批注打上面。」人情还在。",
+          "effects": {
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_ad_quiet_office",
+      "icon": "🧊",
+      "title": "综合办很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。打印机嗡嗡响，没人喊你的名字。",
+      "choices": [
+        {
+          "label": "起身问小方模板在哪",
+          "result": "有点尬，但模板到手了。关系从一句「打扰一下」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "自己摸索收文系统",
+          "result": "系统摸清了。人与人的系统，还没登录。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

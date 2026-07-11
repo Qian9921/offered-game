@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "程序员·开发工程师 任务链",
+    "desc": "主线=任务链：老陈派活→找具名同事对接(短对话)→回工位做小游戏→回老陈交付。requires 一环扣一环；ordered=目标按顺序亮；progressGain=交付后推动项目进度%(5环共100)。talkLines=找对接人时对方说的话。"
+  },
+  "quests": [
+    {
+      "id": "dev_c1", "title": "跑通开发环境", "giver": "senior", "ordered": true,
+      "desc": "把老项目在你机器上跑起来，首页打出 Hello World。",
+      "acceptLine": "「第一课：把环境跑起来。权限先找前端小赵开，坑他都替你踩过。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "zhao", "text": "找前端小赵开仓库权限" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回自己工位把项目跑通(E坐下→开始工作)" }
+      ],
+      "talkLines": { "zhao": "「权限开好了。文档在 wiki，写得一言难尽，凑合看。」" },
+      "doneLine": "「能跑。记住：能跑不代表对。去吧，真正的活儿这才开始。」",
+      "reward": { "skill": 4, "passion": 3 }, "progressGain": 12
+    },
+    {
+      "id": "dev_c2", "title": "登录接口", "giver": "senior", "requires": ["dev_c1"], "ordered": true,
+      "desc": "第一个真正的需求：做登录接口。需求细节找产品小林对齐。",
+      "acceptLine": "「登录接口交给你。需求别猜，去找小林对齐——猜需求是这行最大的坑。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "lin", "text": "找产品小林对齐需求" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位实现登录接口" }
+      ],
+      "talkLines": { "lin": "「要支持手机号+验证码，对了老板还想要扫码登录……先做前两个吧。」" },
+      "doneLine": "「接口看过了，边界处理得不错。有点样子了。」",
+      "reward": { "skill": 5, "performance": 6 }, "progressGain": 20
+    },
+    {
+      "id": "dev_c3", "title": "前后端联调", "giver": "senior", "requires": ["dev_c2"], "ordered": true,
+      "desc": "小赵的前端页面接不上你的接口，去联调。",
+      "acceptLine": "「小赵说接口对不上，你俩联调一下。别隔空甩锅，坐一起看。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "zhao", "text": "和小赵对字段格式" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位修联调问题" }
+      ],
+      "talkLines": { "zhao": "「你返回的是 userId，我这边收的是 user_id……又是命名风格的锅。」" },
+      "doneLine": "「联调通了？嗯。跟人协作比跟机器打交道难，你开始懂了。」",
+      "reward": { "skill": 4, "san": 2, "performance": 5 }, "progressGain": 20
+    },
+    {
+      "id": "dev_c4", "title": "修测试提的 bug", "giver": "senior", "requires": ["dev_c3"], "ordered": true,
+      "desc": "婷婷测出了几个 bug，去领回来修。",
+      "acceptLine": "「提测了。婷婷手上有几个你的 bug——别嘴硬说'我这儿是好的'。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "ting", "text": "找测试婷婷领 bug 单" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位修掉这些 bug" }
+      ],
+      "talkLines": { "ting": "「三个bug：空手机号会崩、验证码过期没提示、连点两次重复提交。自己看着办~」" },
+      "doneLine": "「bug 清零。被测试折磨过，代码才算真正长大。」",
+      "reward": { "skill": 6, "stress": 2, "performance": 7 }, "progressGain": 24
+    },
+    {
+      "id": "dev_c5", "title": "上线前夜", "giver": "senior", "requires": ["dev_c4"], "ordered": true,
+      "desc": "明天上线。做最后的上线检查，紧张是正常的。",
+      "acceptLine": "「明天上线。去听听周哥怎么说——他见过的事故比你写过的代码都多。」",
+      "objectives": [
+        { "id": "o1", "kind": "talk", "target": "vet", "text": "听周哥讲上线的门道" },
+        { "id": "o2", "kind": "minigame", "target": "work", "text": "回工位做上线前检查" }
+      ],
+      "talkLines": { "vet": "「上线三件套：备好回滚、盯住监控、点外卖。慌没用，流程才救命。」" },
+      "doneLine": "「检查完了就早点休息。明天，是你的第一次上线。」",
+      "reward": { "skill": 5, "passion": 4, "performance": 8 }, "progressGain": 24
+    }
+  ]
+}

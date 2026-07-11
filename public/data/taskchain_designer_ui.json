@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "title": "设计师·体验/UI 迷你任务链",
+    "desc": "偏组件与走查。3 环。"
+  },
+  "quests": [
+    {
+      "id": "ui_c1",
+      "title": "盘组件库",
+      "giver": "senior",
+      "ordered": true,
+      "desc": "先摸清现有组件，别每个页面重造按钮。",
+      "acceptLine": "「UI 第一课：组件。阿棠那边有半套库，你去盘清楚缺什么。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "peer",
+          "text": "和阿棠盘现有组件"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位整理组件缺口清单"
+        }
+      ],
+      "talkLines": {
+        "peer": "「按钮三种高度、输入框两套。统一掉，不然像拼盘。」"
+      },
+      "doneLine": "「清单清楚。秩序感，是设计系统的呼吸。」",
+      "reward": {
+        "skill": 4,
+        "passion": 3
+      },
+      "progressGain": 30
+    },
+    {
+      "id": "ui_c2",
+      "title": "主路径走查",
+      "giver": "senior",
+      "requires": [
+        "ui_c1"
+      ],
+      "ordered": true,
+      "desc": "按真实用户点一遍，找出断点和脏细节。",
+      "acceptLine": "「走查主路径。找阿北确认关键节点，再自己点穿。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "pm",
+          "text": "和阿北确认走查节点"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成走查记录与改版点"
+        }
+      ],
+      "talkLines": {
+        "pm": "「注册第三步跳出率高。看看是文案吓跑人，还是步骤太长。」"
+      },
+      "doneLine": "「走查有结论。UI 的诚实，是承认哪里不好用。」",
+      "reward": {
+        "skill": 5,
+        "performance": 6
+      },
+      "progressGain": 35
+    },
+    {
+      "id": "ui_c3",
+      "title": "标注交付",
+      "giver": "senior",
+      "requires": [
+        "ui_c2"
+      ],
+      "ordered": true,
+      "desc": "标注、切图、状态全给前端，少开一次『这什么意思』会。",
+      "acceptLine": "「交付前找阿码对标注习惯，再出最终包。」",
+      "objectives": [
+        {
+          "id": "o1",
+          "kind": "talk",
+          "target": "dev",
+          "text": "和阿码对齐标注规范"
+        },
+        {
+          "id": "o2",
+          "kind": "minigame",
+          "target": "work",
+          "text": "回工位完成标注与交付包"
+        }
+      ],
+      "talkLines": {
+        "dev": "「红线间距、空态、加载态都要。缺一个我就会私聊你半夜。」"
+      },
+      "doneLine": "「交了。好的交付让开发少骂人，也让设计少返工。」",
+      "reward": {
+        "skill": 6,
+        "passion": 3,
+        "performance": 8
+      },
+      "progressGain": 35
+    }
+  ]
+}

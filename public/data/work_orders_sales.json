@@ -1,0 +1,129 @@
+{
+  "_meta": {
+    "career": "sales",
+    "title": "销售工单池",
+    "desc": "迷你完整版每日工单。"
+  },
+  "orders": [
+    {
+      "id": "so_call",
+      "title": "完成 20 通有效触达",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 8,
+      "performance": 9,
+      "cost": {
+        "energy": -12,
+        "stress": 3
+      }
+    },
+    {
+      "id": "so_crm",
+      "title": "补全 CRM 跟进字段",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 7,
+      "performance": 8,
+      "cost": {
+        "energy": -9,
+        "stress": 2
+      }
+    },
+    {
+      "id": "so_demo",
+      "title": "准备产品演示脚本",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    },
+    {
+      "id": "so_quote",
+      "title": "出一版报价测算",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 13,
+      "cost": {
+        "energy": -14,
+        "stress": 5
+      }
+    },
+    {
+      "id": "so_visit",
+      "title": "整理拜访纪要",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 11,
+      "performance": 12,
+      "cost": {
+        "energy": -13,
+        "stress": 3
+      }
+    },
+    {
+      "id": "so_obj",
+      "title": "准备异议应对卡",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 14,
+      "performance": 16,
+      "cost": {
+        "energy": -18,
+        "stress": 6
+      }
+    },
+    {
+      "id": "so_forecast",
+      "title": "更新本周预测 pipeline",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 13,
+      "performance": 15,
+      "cost": {
+        "energy": -16,
+        "stress": 5
+      }
+    },
+    {
+      "id": "so_mail",
+      "title": "写跟进邮件三封",
+      "difficulty": "easy",
+      "est": 2,
+      "progress": 6,
+      "performance": 8,
+      "cost": {
+        "energy": -8,
+        "stress": 2
+      }
+    },
+    {
+      "id": "so_handoff",
+      "title": "准备签约交接包",
+      "difficulty": "hard",
+      "est": 4,
+      "progress": 15,
+      "performance": 17,
+      "cost": {
+        "energy": -19,
+        "stress": 7
+      }
+    },
+    {
+      "id": "so_compete",
+      "title": "竞品对比一页纸",
+      "difficulty": "mid",
+      "est": 3,
+      "progress": 10,
+      "performance": 12,
+      "cost": {
+        "energy": -14,
+        "stress": 4
+      }
+    }
+  ]
+}

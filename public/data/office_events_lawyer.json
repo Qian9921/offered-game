@@ -1,0 +1,362 @@
+{
+  "_meta": {
+    "title": "随机办公室事件池（律师）",
+    "desc": "期限、客户施压、对方律师、利益冲突、加班出文书。"
+  },
+  "events": [
+    {
+      "id": "lev_deadline",
+      "icon": "⏰",
+      "title": "诉讼时效卡点",
+      "urgent": true,
+      "text": "小袁冲进来：「这案时效还剩三天！」卷宗还缺两份关键材料。",
+      "choices": [
+        {
+          "label": "立刻列补证清单并同步客户",
+          "result": "节奏拉满，风险可控。",
+          "effects": {
+            "stress": 7,
+            "performance": 5,
+            "skill": 2
+          },
+          "addOrder": true
+        },
+        {
+          "label": "先报沈律决策是否先立案",
+          "result": "专业，但你少扛了一次。",
+          "effects": {
+            "stress": 3,
+            "performance": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_client",
+      "icon": "😤",
+      "title": "客户要『保证赢』",
+      "urgent": true,
+      "text": "电话那头：『你们律师不就是保证结果的吗？』",
+      "choices": [
+        {
+          "label": "讲清风险区间与策略，拒绝打包票",
+          "result": "诚实换专业信任。",
+          "effects": {
+            "skill": 3,
+            "stress": 4,
+            "performance": 3,
+            "san": 1
+          }
+        },
+        {
+          "label": "含糊安抚，先把委托稳住",
+          "result": "委托在，隐患也在。",
+          "effects": {
+            "stress": 3,
+            "performance": 2,
+            "passion": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_opp",
+      "icon": "⚖️",
+      "title": "对方律师发难",
+      "urgent": false,
+      "text": "函件措辞很冲，暗示你们证据造假。何律把函丢给你。",
+      "choices": [
+        {
+          "label": "逐条书面回应，留痕不抬杠",
+          "result": "专业回击。",
+          "effects": {
+            "skill": 4,
+            "stress": 5,
+            "performance": 4
+          }
+        },
+        {
+          "label": "先内部核查证据链再回",
+          "result": "稳，但显得慢。",
+          "effects": {
+            "stress": 3,
+            "skill": 2,
+            "performance": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_conflict",
+      "icon": "🚧",
+      "title": "利益冲突苗头",
+      "urgent": false,
+      "text": "新咨询客户与老客户同行业竞品。林律提醒：『先查冲突。』",
+      "choices": [
+        {
+          "label": "停接待，走利益冲突检索流程",
+          "result": "规矩保住了。",
+          "effects": {
+            "skill": 3,
+            "performance": 2,
+            "san": 2
+          }
+        },
+        {
+          "label": "先聊需求，回头再查",
+          "result": "可能踩线。",
+          "effects": {
+            "stress": 4,
+            "performance": -2,
+            "passion": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_allnighter",
+      "icon": "🌙",
+      "title": "文书通宵边缘",
+      "urgent": false,
+      "text": "明天上午交代理词。现在 22:40，引用法条还没核完。",
+      "choices": [
+        {
+          "label": "留下核完关键引用",
+          "result": "质量在，人垮一点。",
+          "effects": {
+            "performance": 5,
+            "energy": -12,
+            "health": -3,
+            "stress": 5
+          }
+        },
+        {
+          "label": "拆给小袁半段，你盯结构",
+          "result": "协作过关。",
+          "effects": {
+            "performance": 3,
+            "san": 1,
+            "energy": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "lev_tea",
+      "icon": "☕",
+      "title": "茶水间何律",
+      "urgent": false,
+      "text": "何律：「别把当事人的仇当成你的仇。你是律师，不是刺客。」",
+      "choices": [
+        {
+          "label": "点头，回工位继续改稿",
+          "result": "边界更清。",
+          "effects": {
+            "san": 4,
+            "stress": -2
+          }
+        },
+        {
+          "label": "多聊两句再走",
+          "result": "心宽了。",
+          "effects": {
+            "san": 5,
+            "passion": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_lw_probono",
+      "icon": "🤝",
+      "title": "法律援助",
+      "minAct": 2,
+      "text": "援助中心转来一个案子:农民工讨薪,标的不大,不收费,但材料一大摞。",
+      "choices": [
+        {
+          "label": "接。这种案子总得有人接",
+          "result": "三周后执行款到账,当事人在电话里哭了。你想起自己为什么学法。",
+          "effects": {
+            "passion": 5,
+            "energy": -5,
+            "san": 4
+          }
+        },
+        {
+          "label": "手头案子太多,转给同事",
+          "result": "案子有了着落。你捐了半天工时给援助中心,算个补偿。",
+          "effects": {
+            "san": 1,
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_lw_lose",
+      "icon": "⚖️",
+      "title": "败诉之后",
+      "minAct": 3,
+      "text": "尽了全力的案子,一审还是输了。当事人在电话里沉默很久:「沈律师说……可以试试二审?」",
+      "choices": [
+        {
+          "label": "重新梳理证据,准备上诉",
+          "result": "你把案卷又读了一遍,找到一个被忽略的时间点。仗还没打完。",
+          "effects": {
+            "skill": 5,
+            "stress": 4,
+            "energy": -4
+          }
+        },
+        {
+          "label": "如实分析二审的胜算",
+          "result": "你把风险讲透了。当事人选择和解。诚实,也是一种代理。",
+          "effects": {
+            "san": 3,
+            "skill": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_lw_ethics",
+      "icon": "🧭",
+      "title": "边界",
+      "minAct": 3,
+      "text": "大客户暗示:「有些证据,处理一下就没了。」合同金额,是你半年的创收。",
+      "choices": [
+        {
+          "label": "「这个做不了,换个思路」",
+          "result": "客户脸色变了又变,最终留下了。守住的不是案子,是执照和夜里的觉。",
+          "effects": {
+            "san": 5,
+            "performance": -2,
+            "skill": 3
+          }
+        },
+        {
+          "label": "直接解除委托",
+          "result": "钱没了,腰杆直了。沈律知道后只说了两个字:「像话。」",
+          "effects": {
+            "performance": -4,
+            "san": 6,
+            "passion": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_lw_moot",
+      "icon": "🎓",
+      "title": "母校的邀请",
+      "minAct": 2,
+      "text": "母校法学院来函,请你回去给模拟法庭当评委。学生们眼里的光,和当年的你一模一样。",
+      "choices": [
+        {
+          "label": "认真点评每一组",
+          "result": "散场后被学生围住加微信。传承这件事,比胜诉率动人。",
+          "effects": {
+            "san": 4,
+            "passion": 4,
+            "energy": -3
+          }
+        },
+        {
+          "label": "太忙,录了段视频寄语",
+          "result": "视频里你说:「先学会输,再学会赢。」这话也是说给自己的。",
+          "effects": {
+            "san": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_lw_he_brief",
+      "icon": "⚖️",
+      "title": "何律夜谈争点",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "何律把卷宗往你桌上一搁：「就差你一句：对方最强的三点是什么？」\n（只有你跟他磨合够了，他才会把硬仗提前交给你拆。）",
+      "choices": [
+        {
+          "label": "当场写三条，并排不利事实",
+          "result": "他点头：「敢写不利，才算入门。」你技能涨了，压力也涨了。",
+          "effects": {
+            "skill": 5,
+            "stress": 3,
+            "san": 1
+          }
+        },
+        {
+          "label": "先回去重读一遍再答",
+          "result": "「可以。明天早上九点前放到我桌上。」他把你的靠谱记了一笔。",
+          "effects": {
+            "performance": 2,
+            "skill": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_lw_yuan_moot",
+      "icon": "🎓",
+      "title": "小袁约互诘",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小袁小声：「会议室空着。帮我互诘一轮？我答不上的，法官也会问。」\n（你们说过话之后，她才敢把慌张给你看。）",
+      "choices": [
+        {
+          "label": "认真当对方律师刁难她",
+          "result": "她被问倒两次，笑了：「再来。」你们都更硬一点。",
+          "effects": {
+            "skill": 3,
+            "san": 2,
+            "energy": -2
+          }
+        },
+        {
+          "label": "换你被诘，她当对方",
+          "result": "你也被问住了。原来准备永远不够——但你们更像搭档了。",
+          "effects": {
+            "skill": 3,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_lw_quiet_floor",
+      "icon": "🧊",
+      "title": "律所楼层很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。复印机嗡嗡响，没人喊你的名字。",
+      "choices": [
+        {
+          "label": "去帮小袁装一袋卷宗",
+          "result": "她愣一下，道谢。关系常常从搬箱子开始，不是从辩论赛开始。",
+          "effects": {
+            "san": 2,
+            "performance": 1
+          }
+        },
+        {
+          "label": "埋头写自己的时间线",
+          "result": "时间线清楚了。人与人的时间线，还没开始画。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AudioSystem } from './AudioSystem.js';
 
 // PhoneMessage：仿微信手机消息弹窗 —— 展示剧情中家人发来的消息。
 // 纯 UI 渲染层（"怎么显示"）；显示什么由 FamilyMessages（数据层）决定。
@@ -91,6 +92,10 @@ export class PhoneMessage {
     // 适配双相机：main 相机忽略（不受 zoom 放大），uiCamera 默认渲染
     if (typeof scene.attachToUICamera === 'function') scene.attachToUICamera([backdrop, c]);
 
+    // ---- 反馈：通知音 + 轻微屏震（家人消息到达的"重量"）----
+    AudioSystem.notify();
+    if (scene.cameras.main) scene.cameras.main.shake(150, 0.004);
+
     // ---- 滑入动画（350ms）----
     scene.tweens.add({
       targets: c,
@@ -135,8 +140,20 @@ export class PhoneMessage {
     if (this.ui) this._cleanup();
   }
 
+  // 用与渲染完全相同的测量逻辑算总高——面板高度贴合实际内容，不再"框比内容小"
   _contentHeight(messages) {
-    const perMsg = 21 + 48 + 24; // sender 行 + 气泡(最小) + 间隔
-    return messages.length * perMsg + 16; // 底部留白
+    const scene = this.scene;
+    const panelW = 420;
+    let h = 20; // 顶部留白
+    for (const msg of messages) {
+      h += 21; // sender 行
+      const probe = scene.add.text(-9999, -9999, msg.text, {
+        fontSize: '18px', wordWrap: { width: panelW - 96, useAdvancedWrap: true },
+      }).setVisible(false);
+      const bubbleH = Math.max(48, probe.height + 24); // 与渲染处一致
+      probe.destroy();
+      h += bubbleH + 24;
+    }
+    return h + 16; // 底部留白
   }
 }
