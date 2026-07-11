@@ -146,7 +146,8 @@
             "san": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "tev_coffee_t",
@@ -171,7 +172,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_tc_sleeper",
@@ -300,7 +302,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_te_xu_class",
@@ -332,7 +335,8 @@
             "stress": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_te_quiet_office",

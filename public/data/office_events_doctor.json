@@ -30,7 +30,8 @@
             "performance": 3
           }
         }
-      ]
+      ],
+      "courierNpc": "lab"
     },
     {
       "id": "mev_family",
@@ -57,7 +58,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "mev_overtime",
@@ -137,7 +139,8 @@
             "san": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "mev_coffee_m",
@@ -163,7 +166,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_dr_thanks",
@@ -263,7 +267,8 @@
             "skill": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "pharm"
     },
     {
       "id": "ev_rel_md_nurse_handoff",
@@ -291,7 +296,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_md_jiang_case",
@@ -322,7 +328,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_md_quiet_station",

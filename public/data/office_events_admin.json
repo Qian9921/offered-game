@@ -120,7 +120,8 @@
           },
           "projectDelta": -4
         }
-      ]
+      ],
+      "courierNpc": "fin"
     },
     {
       "id": "aev_inspect_rumor",
@@ -147,7 +148,8 @@
             "performance": -2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "aev_printer",
@@ -199,7 +201,8 @@
             "skill": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "aev_overtime_form",
@@ -328,7 +331,8 @@
             "san": -2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_ad_liu_tea",
@@ -356,7 +360,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_ad_fang_proof",
@@ -387,7 +392,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_ad_quiet_office",

@@ -2796,11 +2796,43 @@ export class WorldScene extends Phaser.Scene {
    * @returns {boolean} 是否成功派出（false=没有可用 NPC/路径，调用方直接弹窗兜底）
    */
   _dispatchEventCourier(ev) {
+    // 优先用事件指定的 NPC（courierNpc 字段）做信使——保证名字和内容一致
+    let courierNpc = null;
+    if (ev.courierNpc) {
+      courierNpc = (this.npcs || []).find(n => n.id === ev.courierNpc && n.agent && !n.agent.busy)
+        || (this.npcs || []).find(n => n.id === ev.courierNpc);
+    }
+    // 有指定 NPC 且有 agent → 用 TA 走过来
+    if (courierNpc && courierNpc.agent) {
+      const seat = courierNpc._seat || { x: courierNpc.spr.x, y: courierNpc.spr.y };
+      const snap = this._pathfinder
+        ? this._pathfinder.snapToWalkable(this.player.x + 40, this.player.y)
+        : { x: this.player.x + 40, y: this.player.y };
+      if (snap) {
+        const pathTo = this._findPath(seat.x, seat.y, snap.x, snap.y);
+        if (pathTo && pathTo.length) {
+          this._eventCourier = courierNpc;
+          if (courierNpc._mood) { courierNpc._mood.setText('有事找你'); this._positionMood(courierNpc); }
+          courierNpc.agent.goVisit(pathTo, () => this._showOfficeEvent(ev, courierNpc));
+          this.time.delayedCall(20000, () => {
+            if (this._eventCourier === courierNpc && !this._eventUI) {
+              this._releaseCourier(); this._showOfficeEvent(ev, courierNpc);
+            }
+          });
+          return true;
+        }
+      }
+    }
+    // 有指定 NPC 但没 agent（如 senior 固定不动）→ 直接弹窗，用 TA 的名字
+    if (courierNpc) {
+      this._showOfficeEvent(ev, courierNpc);
+      return true;
+    }
+    // 无指定 NPC → 随机背景同事送（事件文本不应含具名角色台词）
     const idle = (this.workers || []).filter(w => w.spr?.visible && w.agent && !w.agent.busy);
     if (!idle.length || !this.player) return false;
     const w = Phaser.Utils.Array.GetRandom(idle);
     const seat = w.seat || { x: w.chair.x, y: w.chair.y };
-    // 目标点：玩家旁边（右侧 40px，snap 到可走格）
     const snap = this._pathfinder
       ? this._pathfinder.snapToWalkable(this.player.x + 40, this.player.y)
       : { x: this.player.x + 40, y: this.player.y };
@@ -2808,16 +2840,11 @@ export class WorldScene extends Phaser.Scene {
     const pathTo = this._findPath(seat.x, seat.y, snap.x, snap.y);
     if (!pathTo || !pathTo.length) return false;
     this._eventCourier = w;
-    if (w._mood) { w._mood.setText('有事找你 ❗'); this._positionMood(w); }
-    w.agent.goVisit(pathTo, () => {
-      // 到了玩家面前 → 弹事件（事件"由这个人带来"）
-      this._showOfficeEvent(ev, w);
-    });
-    // 超时保护：20 秒还没走到（路被堵等），直接弹窗并释放
+    if (w._mood) { w._mood.setText('有事找你'); this._positionMood(w); }
+    w.agent.goVisit(pathTo, () => this._showOfficeEvent(ev, w));
     this.time.delayedCall(20000, () => {
       if (this._eventCourier === w && !this._eventUI) {
-        this._releaseCourier();
-        this._showOfficeEvent(ev);
+        this._releaseCourier(); this._showOfficeEvent(ev);
       }
     });
     return true;
