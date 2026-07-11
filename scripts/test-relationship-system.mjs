@@ -140,32 +140,41 @@ ok('ctx.relationSummary', !!ctx.relationSummary);
 const extra = buildWorldSaveExtra({ relations: rs.serialize(), story: { act: 1 } });
 ok('save extra 有 relations', extra.relations && extra.relations.affinity);
 
-// 真实数据：programmer roster + events
-const roster = JSON.parse(readFileSync(join(DATA, 'roster_programmer.json'), 'utf8'));
-const defs = npcDefsFromRoster(roster, 'programmer');
-const peer = defs?.find((n) => n.id === 'peer');
-const vet = defs?.find((n) => n.id === 'vet');
-ok('roster peer 有 linesByAffinity', peer && peer.linesByAffinity);
-ok('roster vet 有 linesByAffinity', vet && vet.linesByAffinity);
-ok('warm 台词可选', pickRelationAwareLine({
-  npc: peer, act: 1, affinity: 80, rng: () => 0,
-})?.length > 4);
+// 真实数据：programmer / product / lawyer（E5 至少 3 职业）
+for (const career of ['programmer', 'product', 'lawyer']) {
+  const roster = JSON.parse(readFileSync(join(DATA, `roster_${career}.json`), 'utf8'));
+  const defs = npcDefsFromRoster(roster, career);
+  const peer = defs?.find((n) => n.id === 'peer');
+  const vet = defs?.find((n) => n.id === 'vet');
+  ok(`${career} peer 有 linesByAffinity`, peer && peer.linesByAffinity);
+  ok(`${career} vet 有 linesByAffinity`, vet && vet.linesByAffinity);
+  ok(`${career} warm 台词可选`, pickRelationAwareLine({
+    npc: peer, act: 1, affinity: 80, rng: () => 0,
+  })?.length > 4);
 
-const events = JSON.parse(readFileSync(join(DATA, 'office_events_programmer.json'), 'utf8')).events;
-const gated = events.filter((e) => e.minAffinity || e.requiresMemory);
-ok('programmer ≥2 关系门控事件', gated.length >= 2, `got ${gated.length}`);
-const zhou = events.find((e) => e.id === 'ev_rel_zhou_coffee');
-ok('周哥咖啡事件门槛', zhou && zhou.minAffinity?.npc === 'vet');
-const jiang = events.find((e) => e.id === 'ev_rel_jiang_lunch');
-ok('江野午饭 requiresMemory', jiang && jiang.requiresMemory?.tag === 'talked');
+  const events = JSON.parse(readFileSync(join(DATA, `office_events_${career}.json`), 'utf8')).events;
+  const gated = events.filter((e) => e.minAffinity || e.requiresMemory);
+  ok(`${career} ≥2 关系门控事件`, gated.length >= 2, `got ${gated.length}`);
+  // 每职业至少有一条 minAffinity + 一条 requiresMemory
+  ok(`${career} 有 minAffinity 事件`, gated.some((e) => e.minAffinity?.npc));
+  ok(`${career} 有 requiresMemory 事件`, gated.some((e) => e.requiresMemory?.tag));
+}
 
-// 静态：WorldScene 接线
+// 程序员具名事件 id 仍在
+const progEv = JSON.parse(readFileSync(join(DATA, 'office_events_programmer.json'), 'utf8')).events;
+ok('周哥咖啡事件门槛', progEv.some((e) => e.id === 'ev_rel_zhou_coffee'));
+ok('江野午饭 requiresMemory', progEv.some((e) => e.id === 'ev_rel_jiang_lunch'));
+
+// 静态：WorldScene / Pause 接线
 const ws = readFileSync(join(DATA, '../../src/scenes/WorldScene.js'), 'utf8');
 ok('WS 用 RelationshipSystem', ws.includes('RelationshipSystem'));
 ok('WS 用 pickRelationAwareLine', ws.includes('pickRelationAwareLine'));
 ok('WS 存 relations', ws.includes('relations:'));
 ok('WS eventMeetsRelations', ws.includes('eventMeetsRelations'));
 ok('WS _endingPayload 关系', ws.includes('relationSummary'));
+ok('WS _pausePayload', ws.includes('_pausePayload'));
+const ps = readFileSync(join(DATA, '../../src/scenes/PauseScene.js'), 'utf8');
+ok('Pause 接 relationSummary', ps.includes('relationSummary'));
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);

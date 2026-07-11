@@ -29,6 +29,7 @@ export class PauseScene extends Phaser.Scene {
     this.stats = this.stateSystem ? this.stateSystem.getAll() : null;
     this.questSystem = data?.questSystem || null;  // 真实任务数据源（替代硬编码 goalByAct）
     this.choiceLog = data?.choiceLog || null;
+    this.relationSummary = data?.relationSummary || null; // E5 办公室关系摘要
     this.openPanel = data?.openPanel || null;      // 直接打开某面板（如白板打开 'quests'）
   }
 
@@ -125,6 +126,7 @@ export class PauseScene extends Phaser.Scene {
     const cardX = this.W / 2;
     const insight = buildPauseInsight({
       profile, stats: this.stats, career: this.career, act: this.act,
+      relationSummary: this.relationSummary,
     });
     if (profile) {
       this.panel.add(this.add.text(cardX, 100, `${profile.mbti || ''}  ·  ${profile.holland || ''}`, {

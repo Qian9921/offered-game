@@ -269,6 +269,94 @@
           }
         }
       ]
+    },
+    {
+      "id": "ev_rel_lw_he_brief",
+      "icon": "⚖️",
+      "title": "何律夜谈争点",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "何律把卷宗往你桌上一搁：「就差你一句：对方最强的三点是什么？」\n（只有你跟他磨合够了，他才会把硬仗提前交给你拆。）",
+      "choices": [
+        {
+          "label": "当场写三条，并排不利事实",
+          "result": "他点头：「敢写不利，才算入门。」你技能涨了，压力也涨了。",
+          "effects": {
+            "skill": 5,
+            "stress": 3,
+            "san": 1
+          }
+        },
+        {
+          "label": "先回去重读一遍再答",
+          "result": "「可以。明天早上九点前放到我桌上。」他把你的靠谱记了一笔。",
+          "effects": {
+            "performance": 2,
+            "skill": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_lw_yuan_moot",
+      "icon": "🎓",
+      "title": "小袁约互诘",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小袁小声：「会议室空着。帮我互诘一轮？我答不上的，法官也会问。」\n（你们说过话之后，她才敢把慌张给你看。）",
+      "choices": [
+        {
+          "label": "认真当对方律师刁难她",
+          "result": "她被问倒两次，笑了：「再来。」你们都更硬一点。",
+          "effects": {
+            "skill": 3,
+            "san": 2,
+            "energy": -2
+          }
+        },
+        {
+          "label": "换你被诘，她当对方",
+          "result": "你也被问住了。原来准备永远不够——但你们更像搭档了。",
+          "effects": {
+            "skill": 3,
+            "stress": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_lw_quiet_floor",
+      "icon": "🧊",
+      "title": "律所楼层很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。复印机嗡嗡响，没人喊你的名字。",
+      "choices": [
+        {
+          "label": "去帮小袁装一袋卷宗",
+          "result": "她愣一下，道谢。关系常常从搬箱子开始，不是从辩论赛开始。",
+          "effects": {
+            "san": 2,
+            "performance": 1
+          }
+        },
+        {
+          "label": "埋头写自己的时间线",
+          "result": "时间线清楚了。人与人的时间线，还没开始画。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
     }
   ]
 }

@@ -155,5 +155,18 @@ const ctxRel = buildEndingReportContext({
 });
 ok('report 吃关系摘要', ctxRel.promptBlock.includes('江野') && ctxRel.relationSummary.includes('江野'));
 
+// Pause 洞察吃关系
+const pauseRel = buildPauseInsight({
+  profile: geek,
+  stats: { stress: 40, health: 70, passion: 60, energy: 50 },
+  career: 'product',
+  act: 2,
+  relationSummary: '办公室关系：小杜（更熟·70）',
+});
+ok('pause 含关系行', pauseRel.body.includes('小杜') || pauseRel.body.includes('办公室关系'));
+ok('pause.relationSummary', pauseRel.relationSummary && pauseRel.relationSummary.includes('小杜'));
+const pauseNoRel = buildPauseInsight({ career: 'lawyer', act: 1 });
+ok('pause 无关系不崩', pauseNoRel.body.length > 4 && pauseNoRel.relationSummary == null);
+
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);

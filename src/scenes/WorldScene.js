@@ -544,14 +544,7 @@ export class WorldScene extends Phaser.Scene {
     this.touchControls.onMenu(() => {
       if (!this.dialogueActive) {
         this.scene.pause();
-        this.scene.launch('PauseScene', {
-          origin: 'WorldScene',
-          stateSystem: this.stateSystem,
-          career: this.career,
-          act: this.act,
-          questSystem: this.questSystem,
-          choiceLog: this.choiceLog,
-        });
+        this.scene.launch('PauseScene', this._pausePayload());
       }
     });
 
@@ -1167,14 +1160,7 @@ export class WorldScene extends Phaser.Scene {
     // ESC 唤起暂停菜单（对话进行中不触发，交给对话自己的 ESC）
     if (!this.dialogueActive && Phaser.Input.Keyboard.JustDown(this.escKey)) {
       this.scene.pause();
-      this.scene.launch('PauseScene', {
-        origin: 'WorldScene',
-        stateSystem: this.stateSystem,
-        career: this.career,
-        act: this.act,
-        questSystem: this.questSystem,
-        choiceLog: this.choiceLog,
-      });
+      this.scene.launch('PauseScene', this._pausePayload());
       return;
     }
 
@@ -1361,12 +1347,7 @@ export class WorldScene extends Phaser.Scene {
     // quest_board：打开任务板（暂停+暂停菜单任务页）
     if (action === 'quest_board') {
       this.scene.pause();
-      this.scene.launch('PauseScene', {
-        origin: 'WorldScene', stateSystem: this.stateSystem,
-        career: this.career, act: this.act,
-        questSystem: this.questSystem, choiceLog: this.choiceLog,
-        openPanel: 'quests',
-      });
+      this.scene.launch('PauseScene', this._pausePayload({ openPanel: 'quests' }));
       return;
     }
     // monologue:*：触发内心独白（如 phone 打电话回家，附带状态回升）
@@ -1498,13 +1479,36 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  /** 进结局场景的公共载荷（含关系摘要，供报告柱） */
-  _endingPayload(ending) {
+  /** NPC id→名（暂停/结局摘要用） */
+  _npcNameMap() {
     const names = {};
     for (const n of (this.npcs || [])) {
       if (n?.id) names[n.id] = n.name || n.id;
     }
-    const relSum = summarizeRelations(this.relations, names);
+    return names;
+  }
+
+  /** 关系一句话摘要（E5） */
+  _relationSummaryText() {
+    return summarizeRelations(this.relations, this._npcNameMap()).text || null;
+  }
+
+  /** 进 PauseScene 的公共载荷 */
+  _pausePayload(extra = {}) {
+    return {
+      origin: 'WorldScene',
+      stateSystem: this.stateSystem,
+      career: this.career,
+      act: this.act,
+      questSystem: this.questSystem,
+      choiceLog: this.choiceLog,
+      relationSummary: this._relationSummaryText(),
+      ...extra,
+    };
+  }
+
+  /** 进结局场景的公共载荷（含关系摘要，供报告柱） */
+  _endingPayload(ending) {
     return {
       ending: ending || this.career,
       career: this.career,
@@ -1512,7 +1516,7 @@ export class WorldScene extends Phaser.Scene {
       stats: this.stateSystem.getAll(),
       choiceLog: this.choiceLog ? this.choiceLog.serialize() : null,
       projectProgress: this.projectSystem ? this.projectSystem.progress : null,
-      relationSummary: relSum.text || null,
+      relationSummary: this._relationSummaryText(),
     };
   }
 

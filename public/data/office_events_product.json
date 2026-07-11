@@ -347,6 +347,93 @@
           }
         }
       ]
+    },
+    {
+      "id": "ev_rel_pd_dapeng_coffee",
+      "icon": "☕",
+      "title": "大鹏约复盘",
+      "minAct": 2,
+      "minAffinity": {
+        "npc": "vet",
+        "min": 60
+      },
+      "text": "大鹏敲敲你桌：「主路径那版，我觉得你扛得住一次深聊。下去喝杯？」\n（跟资深产品聊得够多，他才会把真问题摊开。）",
+      "choices": [
+        {
+          "label": "跟去，把假设摊开",
+          "result": "他指出你忽略的一个流失节点。回来后你改了 PRD 优先级。",
+          "effects": {
+            "skill": 4,
+            "stress": 2,
+            "san": 2
+          }
+        },
+        {
+          "label": "改日：评审材料还没齐",
+          "result": "「行，材料齐了喊我。」他把一张便利贴留给你：先画漏斗。",
+          "effects": {
+            "performance": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_pd_du_prototype",
+      "icon": "🎨",
+      "title": "小杜拉你过原型",
+      "minAffinity": {
+        "npc": "peer",
+        "min": 55
+      },
+      "requiresMemory": {
+        "npc": "peer",
+        "tag": "talked"
+      },
+      "text": "小杜探头：「新流程原型我画完了，就差你这双产品眼。来？」\n（你们聊过之后，她才会把半成品给你挑刺。）",
+      "choices": [
+        {
+          "label": "认真走一遍主路径",
+          "result": "你标了三处断点。她回：「这才叫协作。」",
+          "effects": {
+            "skill": 3,
+            "san": 2,
+            "performance": 2
+          }
+        },
+        {
+          "label": "先回消息，五分钟后到",
+          "result": "她丢来链接：「批注打在 Figma。」人情还在，节奏也在。",
+          "effects": {
+            "performance": 1,
+            "stress": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_rel_pd_alone_desk",
+      "icon": "🧊",
+      "title": "产品群很安静",
+      "maxAct": 2,
+      "text": "你几乎还没跟同期说过话。需求群里 @所有人，没人 @你。",
+      "choices": [
+        {
+          "label": "主动找小杜对齐入口",
+          "result": "有点尬，但动线对齐了。关系从一句「你有空吗」开始。",
+          "effects": {
+            "san": 2,
+            "skill": 1
+          }
+        },
+        {
+          "label": "埋头改自己的 PRD",
+          "result": "文档更整齐了。办公室里，你也更像一座岛。",
+          "effects": {
+            "skill": 2,
+            "san": -1
+          }
+        }
+      ]
     }
   ]
 }
