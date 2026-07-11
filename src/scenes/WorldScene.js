@@ -989,7 +989,7 @@ export class WorldScene extends Phaser.Scene {
     this._refreshAllMoods();
     if (this._moodTimer) this._moodTimer.remove();
     this._moodTimer = this.time.addEvent({
-      delay: 5000, loop: true, callback: () => this._shuffleSomeMoods(),
+      delay: 18000, loop: true, callback: () => this._shuffleSomeMoods(),
     });
 
     this._startNpcLife();
@@ -1034,7 +1034,7 @@ export class WorldScene extends Phaser.Scene {
     const all = [...(this.npcs || []), ...(this.workers || [])]
       .filter(e => e.spr && e.spr.visible && !(e.agent && e.agent.busy));
     if (!all.length) return;
-    const n = Math.min(4, all.length);
+    const n = Math.min(2, all.length);
     for (let i = 0; i < n; i++) this._setMood(Phaser.Utils.Array.GetRandom(all));
   }
 
@@ -1101,8 +1101,10 @@ export class WorldScene extends Phaser.Scene {
       if (snap) this._pois.push({ ...poi, x: snap.x, y: snap.y });
     }
     if (this._npcLifeTimer) this._npcLifeTimer.remove();
+    // 真实职场：大部分人一直在工位工作，偶尔有人起身（茶水/打印/伸展）。
+    // tick 间隔 15 秒（不是 4 秒），且每次只有 ~30% 概率真的有人动，同时最多 1 人在走。
     this._npcLifeTimer = this.time.addEvent({
-      delay: 4000, loop: true, callback: () => this._tickNpcLife(),
+      delay: 15000, loop: true, callback: () => this._tickNpcLife(),
     });
   }
 
@@ -1111,11 +1113,16 @@ export class WorldScene extends Phaser.Scene {
     const seg = this.timeSystem?.current;
     // 深夜/午休在岗少,走动更少
     if (seg && seg.population < 0.3 && Phaser.Math.RND.frac() > 0.3) return;
+    // 同时最多 1 人在走（真实职场不会 3-4 人同时在办公室里窜）
+    const moving = this.workers.filter(w => w.agent && w.agent.busy).length;
+    if (moving >= 1) return;
+    // 每次只有 30% 概率真的有人起身（大部分时间所有人安静坐着）
+    if (Phaser.Math.RND.frac() > 0.3) return;
     const idle = this.workers.filter(w => w.spr?.visible && w.agent && !w.agent.busy);
     if (!idle.length) return;
     const w = Phaser.Utils.Array.GetRandom(idle);
     const seat = w.seat || { x: w.chair.x, y: w.chair.y };
-    // 随机挑一个目的地,用 A* 求去程/回程路径；求不到就换一个,都不行这次不走。
+    // 偏好近距离目的地（茶水/伸展/白板），减少穿越整个地图的长途行走
     const pois = Phaser.Utils.Array.Shuffle(this._pois.slice());
     for (const poi of pois) {
       const pathTo = this._findPath(seat.x, seat.y, poi.x, poi.y);
@@ -2367,14 +2374,16 @@ export class WorldScene extends Phaser.Scene {
     this._eventSeen = new Set();
     if (!this._officeEvents.length) return;
     if (this._eventTimer) this._eventTimer.remove();
-    // 每 ~32 秒掷一次,约 55% 概率触发一个随机事件(工作时段、非弹窗时)
+    // 低频但有仪式感：每 ~60 秒掷一次、35% 概率触发。
+    // 触发时不再凭空弹窗——先派一个 NPC 走到玩家面前"送"事件。
     this._eventTimer = this.time.addEvent({
-      delay: 32000, loop: true, callback: () => this._maybeTriggerEvent(),
+      delay: 60000, loop: true, callback: () => this._maybeTriggerEvent(),
     });
   }
 
   _maybeTriggerEvent() {
     if (this.dialogueActive || this._workBoardUI || this._eventUI || this._sitting) return;
+    if (this._eventCourier) return; // 已有 NPC 在路上送事件
     if (!this._officeEvents || !this._officeEvents.length) return;
     // 概率 + 幕次 + 关系 + 去重：整段决策在 tryPickOfficeEvent（可单测）
     const r = tryPickOfficeEvent({
@@ -2382,16 +2391,67 @@ export class WorldScene extends Phaser.Scene {
       seenIds: this._eventSeen,
       act: this.act,
       relations: this.relations,
-      fireChance: 0.55,
+      fireChance: 0.35,
       rng: () => Phaser.Math.RND.frac(),
       relationFilter: eventMeetsRelations,
     });
     this._eventSeen = r.seen;
     if (!r.fired || !r.event) return;
-    this._showOfficeEvent(r.event);
+    // 有空闲 worker → 派 TA 走到玩家面前送事件（有预兆、有来源）；没有则直接弹（兜底）
+    if (!this._dispatchEventCourier(r.event)) {
+      this._showOfficeEvent(r.event);
+    }
   }
 
-  _showOfficeEvent(ev) {
+  /**
+   * 派一个空闲背景同事走到玩家面前"送"事件——事件有了来源和预兆，不再凭空蹦。
+   * @returns {boolean} 是否成功派出（false=没有可用 NPC/路径，调用方直接弹窗兜底）
+   */
+  _dispatchEventCourier(ev) {
+    const idle = (this.workers || []).filter(w => w.spr?.visible && w.agent && !w.agent.busy);
+    if (!idle.length || !this.player) return false;
+    const w = Phaser.Utils.Array.GetRandom(idle);
+    const seat = w.seat || { x: w.chair.x, y: w.chair.y };
+    // 目标点：玩家旁边（右侧 40px，snap 到可走格）
+    const snap = this._pathfinder
+      ? this._pathfinder.snapToWalkable(this.player.x + 40, this.player.y)
+      : { x: this.player.x + 40, y: this.player.y };
+    if (!snap) return false;
+    const pathTo = this._findPath(seat.x, seat.y, snap.x, snap.y);
+    if (!pathTo || !pathTo.length) return false;
+    this._eventCourier = w;
+    if (w._mood) { w._mood.setText('有事找你 ❗'); this._positionMood(w); }
+    w.agent.goVisit(pathTo, () => {
+      // 到了玩家面前 → 弹事件（事件"由这个人带来"）
+      this._showOfficeEvent(ev, w);
+    });
+    // 超时保护：20 秒还没走到（路被堵等），直接弹窗并释放
+    this.time.delayedCall(20000, () => {
+      if (this._eventCourier === w && !this._eventUI) {
+        this._releaseCourier();
+        this._showOfficeEvent(ev);
+      }
+    });
+    return true;
+  }
+
+  /** 事件送达后：courier 回工位 */
+  _releaseCourier() {
+    const w = this._eventCourier;
+    this._eventCourier = null;
+    if (!w || !w.agent) return;
+    const seat = w.seat || { x: w.chair.x, y: w.chair.y };
+    const pathBack = this._findPath(w.spr.x, w.spr.y, seat.x, seat.y);
+    if (pathBack && pathBack.length) {
+      pathBack[pathBack.length - 1] = { x: seat.x, y: seat.y };
+      w.agent.returnHome(pathBack);
+    } else {
+      w.agent.reset();
+    }
+    if (w._mood) this._setMood(w);
+  }
+
+  _showOfficeEvent(ev, courier = null) {
     if (this._eventUI) return;
     this.dialogueActive = true;
     if (this.guideText) this.guideText.setVisible(false);
@@ -2411,9 +2471,16 @@ export class WorldScene extends Phaser.Scene {
     const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.78)
       .setScrollFactor(0).setInteractive();
     c.add(mask);
-    const pw = 780, ph = 420, px = width / 2, py = height / 2;
+    const pw = 780, ph = 440, px = width / 2, py = height / 2;
     const accent = ev.urgent ? 0xe8735a : 0xd4a353;
     c.add(this.add.rectangle(px, py, pw, ph, 0x14141f, 0.98).setStrokeStyle(3, accent));
+    // 送事件的同事名字（事件有来源，不再凭空蹦）
+    if (courier && courier.name) {
+      c.add(this.add.text(px - pw / 2 + 24, py - ph / 2 - 14, `💬 ${courier.name} 找你：`, {
+        fontSize: '18px', fill: '#8fc3ff', fontStyle: 'bold',
+        backgroundColor: '#14141fee', padding: { x: 10, y: 5 },
+      }).setOrigin(0, 0.5));
+    }
     c.add(this.add.text(px, py - ph / 2 + 34, `${ev.icon} ${ev.title}`, {
       fontSize: '30px', fill: ev.urgent ? '#ff9a7a' : '#ffd24d', fontStyle: 'bold',
     }).setOrigin(0.5));
@@ -2455,10 +2522,11 @@ export class WorldScene extends Phaser.Scene {
       this._updateProjectHud();
     }
     if (plan.addOrder && this.projectSystem) this.projectSystem.addUrgentOrder();
-    // 关闭事件框 → 显示结果小气泡
+    // 关闭事件框 → 送事件的同事回工位 → 显示结果小气泡
     if (c) c.destroy(true);
     this._eventUI = null;
     this.dialogueActive = false;
+    this._releaseCourier(); // 送事件的同事说完就回工位
     if (this.guideText) this.guideText.setVisible(true);
     if (plan.result) this._showThoughtBubble(plan.result, plan.resultColor);
     if (plan.addOrder) {
