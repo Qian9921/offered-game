@@ -119,13 +119,16 @@ export class HomeScene extends Phaser.Scene {
   _sleep() {
     if (this._sleeping) return;
     this._sleeping = true;
+    // slot 兜底：正常转场 init 会设好 this.slot；防御性再兜一次 1，避免 init 未跑时
+    // loadSlot(undefined) 读不到存档、story 退化成 ready 而漏掉 daysInAct 累加。
+    const slot = this.slot || 1;
     // 睡觉：把当日状态 + 经营期天数写回存档
     try {
-      const saved = SaveSystem.loadSlot(this.slot) || {};
+      const saved = SaveSystem.loadSlot(slot) || {};
       const story = saved.story || { phase: 'ready', act: this.act, daysInAct: 0 };
       if (story.phase === 'working') story.daysInAct = (story.daysInAct || 0) + 1; // 经营期才累加
       // 合并写：保留 project/subRole/quests（SaveSystem 合并，但 explicit extra 勿丢字段）
-      SaveSystem.saveSlot(this.slot, {
+      SaveSystem.saveSlot(slot, {
         career: this.career, act: this.act, stats: this.stats,
         subRole: saved.subRole,
         quests: saved.quests,
@@ -139,10 +142,10 @@ export class HomeScene extends Phaser.Scene {
     this.cameras.main.fadeOut(800, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       let subRole = null;
-      try { subRole = (SaveSystem.loadSlot(this.slot) || {}).subRole || null; } catch (e) {}
+      try { subRole = (SaveSystem.loadSlot(slot) || {}).subRole || null; } catch (e) {}
       this.scene.start('CommuteScene', {
         career: this.career, act: this.act, day: this.day + 1,
-        stats: this.stats, subRole, slot: this.slot,
+        stats: this.stats, subRole, slot,
       });
     });
   }
