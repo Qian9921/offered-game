@@ -9,7 +9,7 @@ const DEEP_CAREERS = new Set(['programmer', 'product', 'admin']);
 
 /**
  * @param {object|null} save SaveSystem.load() 结果
- * @returns {null|{career:string,act:number,subRole:string|null,deep:boolean}}
+ * @returns {null|{career:string,act:number,subRole:string|null,deep:boolean,slot:number}}
  */
 export function buildWorldResumeData(save) {
   if (!save || typeof save !== 'object') return null;
@@ -18,7 +18,8 @@ export function buildWorldResumeData(save) {
   const subRole = save.subRole || null;
   // deep：存档有字段用存档；否则按职业默认（旗舰三职 true，其余 false）
   const deep = save.deep != null ? !!save.deep : DEEP_CAREERS.has(career);
-  return { career, act, subRole, deep };
+  const slot = Number.isFinite(save.slot) && save.slot >= 1 ? save.slot : 1;
+  return { career, act, subRole, deep, slot };
 }
 
 export { DEEP_CAREERS };
