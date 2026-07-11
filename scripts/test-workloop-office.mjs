@@ -17,6 +17,8 @@ import {
   filterEventsByAct,
   pickOfficeEvent,
   tryPickOfficeEvent,
+  planEventChoiceEffects,
+  buildDailyReportRows,
 } from '../src/systems/WorkLoopOffice.js';
 import {
   RelationshipSystem,
@@ -268,12 +270,55 @@ console.log('\n-- applySeniorAction --');
   ok('apply none', applySeniorAction(qs2, { kind: 'none' }).ok === false);
 }
 
+// ---------- planEventChoiceEffects / buildDailyReportRows ----------
+console.log('\n-- event choice + daily report --');
+{
+  const plan = planEventChoiceEffects(
+    { effects: { stress: 5, skill: 2, energy: 0 }, projectDelta: -3, addOrder: true, result: '忙翻了' },
+    { urgent: true },
+  );
+  ok('effects 过滤 0', plan.effects.stress === 5 && plan.effects.skill === 2 && plan.effects.energy == null);
+  ok('projectDelta', plan.projectDelta === -3);
+  ok('addOrder', plan.addOrder === true);
+  ok('urgent 色', plan.resultColor === '#ff9a7a');
+  ok('result 文案', plan.result === '忙翻了');
+  const calm = planEventChoiceEffects({ effects: { san: 3 }, result: '还行' }, { urgent: false });
+  ok('非 urgent 色', calm.resultColor === '#ffd24d');
+  const empty = planEventChoiceEffects(null, null);
+  ok('空 choice 安全', empty.projectDelta === 0 && empty.addOrder === false && !empty.result);
+
+  const rep = buildDailyReportRows({
+    day: 2,
+    progressNow: 24,
+    dayStartProgress: 12,
+    todayPerformance: 8,
+    daysLeft: 5,
+    isBehind: false,
+    statsNow: { health: 70, stress: 40, energy: 90, san: 80, passion: 60, skill: 20 },
+    statsStart: { health: 80, stress: 30, energy: 90, san: 80, passion: 60, skill: 15 },
+  });
+  ok('日报 day', rep.day === 2);
+  ok('日报 progGain +12', rep.progGain === 12);
+  ok('日报含项目推进', rep.rows.some(r => r.key === 'progGain' && r.value.includes('+12')));
+  ok('日报含绩效', rep.rows.some(r => r.key === 'perf' && r.value.includes('+8')));
+  ok('日报含健康变化', rep.rows.some(r => r.key === 'stat_health' && r.value.includes('-10')));
+  ok('日报含压力变化', rep.rows.some(r => r.key === 'stat_stress'));
+  ok('无变化 energy 不出现', !rep.rows.some(r => r.key === 'stat_energy'));
+  const behind = buildDailyReportRows({
+    day: 1, progressNow: 10, dayStartProgress: 10, daysLeft: 1, isBehind: true,
+  });
+  ok('落后 daysLeft 红色', behind.rows.find(r => r.key === 'daysLeft')?.color === '#ff7a7a');
+}
+
 // WorldScene 静态接线
 {
   const ws = readFileSync(join(ROOT, 'src/scenes/WorldScene.js'), 'utf8');
   ok('WS 用 seniorInteractAction', ws.includes('seniorInteractAction'));
   ok('WS 用 applySeniorAction', ws.includes('applySeniorAction'));
   ok('WS 用 tryPickOfficeEvent', ws.includes('tryPickOfficeEvent'));
+  ok('WS 用 resolveCurrentGoal', ws.includes('resolveCurrentGoal'));
+  ok('WS 用 planEventChoiceEffects', ws.includes('planEventChoiceEffects'));
+  ok('WS 用 buildDailyReportRows', ws.includes('buildDailyReportRows'));
   // 不再内联 complete(q.id) 在 senior 交付循环（抽到 pure）
   ok('WS 不内联双层 senior for-of complete', !/for \(const q of this\.questSystem\.active\(\)\) \{\s*if \(q\.giver === 'senior' && this\.questSystem\.isReady/.test(ws));
 }

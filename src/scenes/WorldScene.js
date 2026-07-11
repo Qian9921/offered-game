@@ -39,14 +39,16 @@ import {
   bottomGuideFromGoal,
   buildWorldSaveExtra,
   seniorMarkVisual,
+  resolveCurrentGoal,
 } from '../systems/StoryProgress.js';
 import {
   npcLineForAct,
   seniorInteractAction,
   applySeniorAction,
   tryPickOfficeEvent,
+  planEventChoiceEffects,
+  buildDailyReportRows,
 } from '../systems/WorkLoopOffice.js';
-import { resolveInteractGoalPos } from '../systems/CareerFit.js';
 import {
   RelationshipSystem,
   pickRelationAwareLine,
@@ -1863,51 +1865,21 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ==================== 任务目标 HUD + 方向箭头 ====================
-  // 计算"现在该干什么"：{text, x, y} 或 null。优先级:交付>进行中的下一目标>可接任务>剧情。
+  // 计算"现在该干什么"：纯逻辑 resolveCurrentGoal（可单测）。
   _currentGoal() {
-    if (!this.questSystem) return null;
-    const npcPos = (id) => {
-      const n = (this.npcs || []).find(p => p.id === id);
-      return n ? { x: n.spr.x, y: n.spr.y } : null;
-    };
-    // 剧情待播/里程碑待推进 → 找老陈
-    if (this._story && (this._story.phase === 'ready'
-        || (this._story.pendingAct && this._story.pendingAct > this.act))) {
-      const p = npcPos('senior');
-      const seniorName = (this.npcs || []).find(n => n.id === 'senior')?.name || '导师';
-      return p && { text: `去找${seniorName}(剧情)`, ...p };
-    }
-    // 进行中的链任务：可交付→回导师；否则指向下一目标
-    for (const q of this.questSystem.active()) {
-      if (this.questSystem.isReady(q.id)) {
-        const p = npcPos(q.giver);
-        return p && { text: `交付「${q.title}」`, ...p };
-      }
-      const next = this.questSystem.nextObjective(q.id);
-      if (!next) continue;
-      if (next.kind === 'talk') {
-        const p = npcPos(next.target);
-        return p && { text: next.text, ...p };
-      }
-      if (next.kind === 'minigame' && this.playerDesk) {
-        return { text: next.text, x: this.playerDesk.chair.x, y: this.playerDesk.chair.y };
-      }
-      if (next.kind === 'interact') {
-        // 地图交互物 / 工位电脑 / 手机 → 有坐标才画箭头
-        const pos = resolveInteractGoalPos(next.target, {
-          interactables: this._interactables || [],
-          playerDesk: this.playerDesk,
-        });
-        return pos ? { text: next.text, ...pos } : { text: next.text, x: null, y: null };
-      }
-      return { text: next.text, x: null, y: null }; // 无坐标目标只显示文字
-    }
-    // 有可接任务 → 找 giver
-    for (const q of this.questSystem.available({ act: this.act })) {
-      const p = npcPos(q.giver);
-      if (p) return { text: `领任务:「${q.title}」`, ...p };
-    }
-    return null;
+    const seniorName = (this.npcs || []).find(n => n.id === 'senior')?.name || '导师';
+    return resolveCurrentGoal({
+      questSystem: this.questSystem,
+      story: this._story,
+      act: this.act,
+      seniorName,
+      playerDesk: this.playerDesk,
+      interactables: this._interactables || [],
+      npcPos: (id) => {
+        const n = (this.npcs || []).find(p => p.id === id);
+        return n?.spr ? { x: n.spr.x, y: n.spr.y } : null;
+      },
+    });
   }
 
   // 每帧轻量更新（HUD 文本变化才 setText;箭头按目标方向环绕玩家）
@@ -2396,20 +2368,21 @@ export class WorldScene extends Phaser.Scene {
   }
 
   _resolveEvent(ev, choice, c) {
-    // 应用数值 + 项目回退 + 可能插入紧急工单
-    if (choice.effects) for (const [k, v] of Object.entries(choice.effects)) this.stateSystem.change(k, v);
-    if (choice.projectDelta && this.projectSystem) {
-      this.projectSystem.adjustProgress(choice.projectDelta);
+    // 副作用计划纯逻辑 planEventChoiceEffects；场景只负责 apply + UI
+    const plan = planEventChoiceEffects(choice, ev);
+    for (const [k, v] of Object.entries(plan.effects)) this.stateSystem.change(k, v);
+    if (plan.projectDelta && this.projectSystem) {
+      this.projectSystem.adjustProgress(plan.projectDelta);
       this._updateProjectHud();
     }
-    if (choice.addOrder && this.projectSystem) this.projectSystem.addUrgentOrder();
+    if (plan.addOrder && this.projectSystem) this.projectSystem.addUrgentOrder();
     // 关闭事件框 → 显示结果小气泡
     if (c) c.destroy(true);
     this._eventUI = null;
     this.dialogueActive = false;
     if (this.guideText) this.guideText.setVisible(true);
-    if (choice.result) this._showThoughtBubble(choice.result, ev.urgent ? '#ff9a7a' : '#ffd24d');
-    if (choice.addOrder) {
+    if (plan.result) this._showThoughtBubble(plan.result, plan.resultColor);
+    if (plan.addOrder) {
       this.time.delayedCall(1600, () => {
         if (!this.dialogueActive) this._showThoughtBubble('（今日工单里多了一张紧急插单,去工位电脑处理。）', '#e8735a');
       });
@@ -2446,29 +2419,22 @@ export class WorldScene extends Phaser.Scene {
     c.add(this.add.text(px, py - ph / 2 + 72, `第 ${day} 天`, { fontSize: '16px', fill: '#9aa0b0' }).setOrigin(0.5));
 
     const progNow = this.projectSystem.progress;
-    const progGain = Math.max(0, Math.round((progNow - (this._dayStartProgress || 0)) * 10) / 10);
-    const perfToday = this.projectSystem.todayPerformance;
     const nowStats = this.stateSystem.getAll();
     const start = this._dayStartStats || nowStats;
-    const rows = [
-      ['📈 项目推进', `+${progGain}%`, '#5fbf7f'],
-      ['⭐ 今日绩效', `+${perfToday}`, '#ffd24d'],
-      ['📊 项目总进度', `${Math.round(progNow)}%`, '#8fd0ff'],
-      ['⏳ 距交付', `${this.projectSystem.daysLeft(day)} 天`, this.projectSystem.isBehind(day) ? '#ff7a7a' : '#bfb0d0'],
-    ];
-    // 身心变化（有变动的键）
-    const LABELS = { health: '健康', energy: '精力', san: '理智', stress: '压力', passion: '热情', skill: '技能' };
-    for (const [k, lbl] of Object.entries(LABELS)) {
-      const d = Math.round((nowStats[k] ?? 0) - (start[k] ?? 0));
-      if (d !== 0) {
-        const good = (k === 'stress') ? d < 0 : d > 0;
-        rows.push([`　${lbl}`, `${d > 0 ? '+' : ''}${d}`, good ? '#8fd08f' : '#e08a8a']);
-      }
-    }
+    const report = buildDailyReportRows({
+      day,
+      progressNow: progNow,
+      dayStartProgress: this._dayStartProgress || 0,
+      todayPerformance: this.projectSystem.todayPerformance,
+      daysLeft: this.projectSystem.daysLeft(day),
+      isBehind: this.projectSystem.isBehind(day),
+      statsNow: nowStats,
+      statsStart: start,
+    });
     let ry = py - 150;
-    for (const [label, val, color] of rows) {
-      c.add(this.add.text(px - pw / 2 + 56, ry, label, { fontSize: '19px', fill: '#dfe3ea' }).setOrigin(0, 0.5));
-      c.add(this.add.text(px + pw / 2 - 56, ry, val, { fontSize: '20px', fill: color, fontStyle: 'bold' }).setOrigin(1, 0.5));
+    for (const row of report.rows) {
+      c.add(this.add.text(px - pw / 2 + 56, ry, row.label, { fontSize: '19px', fill: '#dfe3ea' }).setOrigin(0, 0.5));
+      c.add(this.add.text(px + pw / 2 - 56, ry, row.value, { fontSize: '20px', fill: row.color, fontStyle: 'bold' }).setOrigin(1, 0.5));
       ry += 40;
     }
 

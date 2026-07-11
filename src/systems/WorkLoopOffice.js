@@ -345,3 +345,82 @@ export function applySeniorAction(questSystem, action) {
   }
   return { ok: false, kind: action.kind || 'none' };
 }
+
+/**
+ * 办公室事件选项 → 待应用的纯副作用计划（无 Phaser / 无 StateSystem）。
+ * WorldScene 只负责 change/adjust/UI。
+ *
+ * @param {object} choice
+ * @param {object} [ev]
+ * @returns {{
+ *   effects: Record<string, number>,
+ *   projectDelta: number,
+ *   addOrder: boolean,
+ *   result: string|null,
+ *   resultColor: string,
+ * }}
+ */
+export function planEventChoiceEffects(choice = {}, ev = {}) {
+  const effects = {};
+  if (choice && choice.effects && typeof choice.effects === 'object') {
+    for (const [k, v] of Object.entries(choice.effects)) {
+      const n = Number(v);
+      if (Number.isFinite(n) && n !== 0) effects[k] = n;
+    }
+  }
+  const projectDelta = Number(choice?.projectDelta);
+  return {
+    effects,
+    projectDelta: Number.isFinite(projectDelta) ? projectDelta : 0,
+    addOrder: !!(choice && choice.addOrder),
+    result: (choice && choice.result) ? String(choice.result) : null,
+    resultColor: ev && ev.urgent ? '#ff9a7a' : '#ffd24d',
+  };
+}
+
+/**
+ * 今日工作日报的数据行（纯展示结构，无 Phaser）。
+ *
+ * @param {object} opts
+ * @returns {{ day: number, progGain: number, rows: Array<{label:string,value:string,color:string,key?:string}> }}
+ */
+export function buildDailyReportRows({
+  day = 1,
+  progressNow = 0,
+  dayStartProgress = 0,
+  todayPerformance = 0,
+  daysLeft = null,
+  isBehind = false,
+  statsNow = {},
+  statsStart = {},
+} = {}) {
+  const progGain = Math.max(0, Math.round((Number(progressNow) - Number(dayStartProgress || 0)) * 10) / 10);
+  const rows = [
+    { key: 'progGain', label: '📈 项目推进', value: `+${progGain}%`, color: '#5fbf7f' },
+    { key: 'perf', label: '⭐ 今日绩效', value: `+${Number(todayPerformance) || 0}`, color: '#ffd24d' },
+    { key: 'progTotal', label: '📊 项目总进度', value: `${Math.round(Number(progressNow) || 0)}%`, color: '#8fd0ff' },
+  ];
+  if (daysLeft != null) {
+    rows.push({
+      key: 'daysLeft',
+      label: '⏳ 距交付',
+      value: `${daysLeft} 天`,
+      color: isBehind ? '#ff7a7a' : '#bfb0d0',
+    });
+  }
+  const LABELS = {
+    health: '健康', energy: '精力', san: '理智', stress: '压力', passion: '热情', skill: '技能',
+  };
+  for (const [k, lbl] of Object.entries(LABELS)) {
+    const d = Math.round((Number(statsNow[k]) || 0) - (Number(statsStart[k]) || 0));
+    if (d === 0) continue;
+    const good = (k === 'stress') ? d < 0 : d > 0;
+    rows.push({
+      key: `stat_${k}`,
+      label: `　${lbl}`,
+      value: `${d > 0 ? '+' : ''}${d}`,
+      color: good ? '#8fd08f' : '#e08a8a',
+    });
+  }
+  return { day: Number(day) || 1, progGain, rows };
+}

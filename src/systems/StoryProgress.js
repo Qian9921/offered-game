@@ -1,6 +1,8 @@
 // StoryProgress：WorldScene 剧情/经营期纯逻辑（无 Phaser）。
 // 拆出目的：可单测、与 UI/场景解耦；行为与原 WorldScene 硬编码一致。
 
+import { resolveInteractGoalPos } from './CareerFit.js';
+
 /** 深度职业每幕经营天数（非 workLoop 时用） */
 export const ACT_DAYS = { 1: 1, 2: 2, 3: 2, 4: 2, 5: 1 };
 
@@ -325,10 +327,88 @@ export function chainHudStep(questSystem, act) {
 
 /**
  * 底部引导条文案：与 objectiveHud 同源，避免静态「新人报到」与真实下一步打架。
- * @param {{ text?: string }|null} goal  _currentGoal() 结果
+ * @param {{ text?: string }|null} goal  resolveCurrentGoal() 结果
  * @param {string} [seniorName] 导师显示名
  */
 export function bottomGuideFromGoal(goal, seniorName = '导师') {
   if (goal && goal.text) return `📋 ${goal.text}`;
   return `▸ 找头顶 ❗ 的人，或按 ESC 打开任务日志（导师：${seniorName}）`;
+}
+
+/**
+ * 计算「现在该干什么」：{ text, x?, y? } 或 null。
+ * 优先级：剧情待播/里程碑 → 可交付 → 进行中下一目标 → 可接任务。
+ * 无 Phaser；npc 坐标经 npcPos(id) 注入。
+ *
+ * @param {object} opts
+ * @param {object|null} opts.questSystem
+ * @param {object|null} opts.story
+ * @param {number} [opts.act]
+ * @param {(id: string) => ({x:number,y:number}|null)} opts.npcPos
+ * @param {string} [opts.seniorName]
+ * @param {{ chair?: {x:number,y:number}, computer?: {x:number,y:number} }|null} [opts.playerDesk]
+ * @param {Array} [opts.interactables]
+ * @param {typeof resolveInteractGoalPos} [opts.resolveInteract]
+ * @returns {{ text: string, x?: number|null, y?: number|null }|null}
+ */
+export function resolveCurrentGoal({
+  questSystem = null,
+  story = null,
+  act = 1,
+  npcPos = null,
+  seniorName = '导师',
+  playerDesk = null,
+  interactables = [],
+  resolveInteract = resolveInteractGoalPos,
+} = {}) {
+  if (!questSystem || typeof npcPos !== 'function') return null;
+
+  // 剧情待播 / 里程碑待推进 → 找导师
+  if (story && (story.phase === 'ready'
+      || (story.pendingAct != null && story.pendingAct > act))) {
+    const p = npcPos('senior');
+    return p ? { text: `去找${seniorName}(剧情)`, x: p.x, y: p.y } : null;
+  }
+
+  const active = typeof questSystem.active === 'function' ? questSystem.active() : [];
+  for (const q of active) {
+    if (typeof questSystem.isReady === 'function' && questSystem.isReady(q.id)) {
+      const p = npcPos(q.giver);
+      return p ? { text: `交付「${q.title}」`, x: p.x, y: p.y } : null;
+    }
+    const next = typeof questSystem.nextObjective === 'function'
+      ? questSystem.nextObjective(q.id)
+      : null;
+    if (!next) continue;
+    if (next.kind === 'talk') {
+      const p = npcPos(next.target);
+      return p ? { text: next.text, x: p.x, y: p.y } : null;
+    }
+    if (next.kind === 'minigame' && playerDesk?.chair) {
+      return {
+        text: next.text,
+        x: playerDesk.chair.x,
+        y: playerDesk.chair.y,
+      };
+    }
+    if (next.kind === 'interact') {
+      const pos = resolveInteract(next.target, {
+        interactables: interactables || [],
+        playerDesk,
+      });
+      return pos
+        ? { text: next.text, x: pos.x, y: pos.y }
+        : { text: next.text, x: null, y: null };
+    }
+    return { text: next.text, x: null, y: null };
+  }
+
+  const available = typeof questSystem.available === 'function'
+    ? questSystem.available({ act })
+    : [];
+  for (const q of available) {
+    const p = npcPos(q.giver);
+    if (p) return { text: `领任务:「${q.title}」`, x: p.x, y: p.y };
+  }
+  return null;
 }

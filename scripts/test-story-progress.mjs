@@ -5,7 +5,7 @@ import {
   tryAdvanceByMilestone, tryAdvanceByDays,
   shouldDeferLightEnding, enterWorkingFromLightEnding, canFinishLightWorkLoop,
   seniorMarkKind, seniorMarkVisual, seniorUsesStoryMarks, bumpDaysInAct, buildWorldSaveExtra, chainHudStep,
-  bottomGuideFromGoal,
+  bottomGuideFromGoal, resolveCurrentGoal,
   isWorkLoopCareer, isLightCareer, defaultSubRole, actDaysNeeded,
   ACT_DAYS, MILESTONE_ACT,
 } from '../src/systems/StoryProgress.js';
@@ -118,6 +118,121 @@ ok('bottomGuide 有目标', bottomGuideFromGoal({ text: '领任务:「登录」'
 ok('bottomGuide 无目标 fallback 含 ESC', bottomGuideFromGoal(null, '老陈').includes('ESC'));
 ok('bottomGuide 无目标含导师名', bottomGuideFromGoal(null, '老陈').includes('老陈'));
 ok('bottomGuide null goal 不抛', typeof bottomGuideFromGoal(undefined) === 'string');
+
+// ---------- resolveCurrentGoal（从 WorldScene 抽出） ----------
+console.log('\n-- resolveCurrentGoal --');
+const posMap = {
+  senior: { x: 100, y: 200 },
+  zhao: { x: 300, y: 400 },
+};
+const npcPos = (id) => posMap[id] || null;
+
+ok('无 questSystem → null', resolveCurrentGoal({ questSystem: null, npcPos }) === null);
+
+// 剧情 ready → 找导师
+const gReady = resolveCurrentGoal({
+  questSystem: { active: () => [], available: () => [], isReady: () => false },
+  story: { phase: 'ready', act: 1 },
+  act: 1,
+  npcPos,
+  seniorName: '老陈',
+});
+ok('ready → 剧情目标', gReady && gReady.text.includes('老陈') && gReady.text.includes('剧情'));
+ok('ready → senior 坐标', gReady.x === 100 && gReady.y === 200);
+
+// pendingAct 里程碑
+const gPend = resolveCurrentGoal({
+  questSystem: { active: () => [], available: () => [] },
+  story: { phase: 'working', act: 1, pendingAct: 2 },
+  act: 1,
+  npcPos,
+  seniorName: '林姐',
+});
+ok('pendingAct → 剧情目标', gPend && gPend.text.includes('林姐'));
+
+// 可交付优先
+const gDel = resolveCurrentGoal({
+  questSystem: {
+    active: () => [{ id: 'c1', giver: 'senior', title: '登录接口' }],
+    available: () => [],
+    isReady: (id) => id === 'c1',
+    nextObjective: () => null,
+  },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+});
+ok('isReady → 交付文案', gDel && gDel.text.includes('交付') && gDel.text.includes('登录'));
+ok('交付指 senior', gDel.x === 100);
+
+// talk 目标
+const gTalk = resolveCurrentGoal({
+  questSystem: {
+    active: () => [{ id: 'c1', giver: 'senior', title: '链' }],
+    available: () => [],
+    isReady: () => false,
+    nextObjective: () => ({ kind: 'talk', target: 'zhao', text: '找小赵对接' }),
+  },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+});
+ok('talk → 文案+坐标', gTalk && gTalk.text === '找小赵对接' && gTalk.x === 300);
+
+// minigame → 工位椅
+const gMg = resolveCurrentGoal({
+  questSystem: {
+    active: () => [{ id: 'c1', giver: 'senior', title: '链' }],
+    available: () => [],
+    isReady: () => false,
+    nextObjective: () => ({ kind: 'minigame', target: 'work', text: '坐工位干活' }),
+  },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+  playerDesk: { chair: { x: 50, y: 60 } },
+});
+ok('minigame → 工位', gMg && gMg.x === 50 && gMg.y === 60 && gMg.text.includes('工位'));
+
+// interact 经 resolveInteract（注入假实现验证调用）
+const gInt = resolveCurrentGoal({
+  questSystem: {
+    active: () => [{ id: 'c1', giver: 'senior', title: '链' }],
+    available: () => [],
+    isReady: () => false,
+    nextObjective: () => ({ kind: 'interact', target: 'vending', text: '去贩卖机' }),
+  },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+  resolveInteract: (id) => (id === 'vending' ? { x: 9, y: 8 } : null),
+});
+ok('interact → 注入坐标', gInt && gInt.x === 9 && gInt.y === 8);
+
+// 可接任务
+const gAvail = resolveCurrentGoal({
+  questSystem: {
+    active: () => [],
+    available: () => [{ id: 'c2', giver: 'senior', title: '第二环' }],
+    isReady: () => false,
+  },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+});
+ok('available → 领任务', gAvail && gAvail.text.includes('领任务') && gAvail.text.includes('第二环'));
+
+// 无目标
+const gNone = resolveCurrentGoal({
+  questSystem: { active: () => [], available: () => [] },
+  story: { phase: 'working', act: 1 },
+  act: 1,
+  npcPos,
+});
+ok('无目标 null', gNone === null);
+
+// 与 bottomGuide 同源
+ok('goal→bottomGuide', bottomGuideFromGoal(gTalk).includes('找小赵'));
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);
