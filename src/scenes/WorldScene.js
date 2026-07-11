@@ -509,13 +509,13 @@ export class WorldScene extends Phaser.Scene {
     if (this.workLoopEnabled) this._startOfficeEvents(); // 随机办公室事件
 
     // "下班回家"按钮（屏幕右上角，天数下方）——可爱圆角
-    this.offWorkBtn = cuteBtn(SW - 92, 84, '🏠 下班回家', () => this._goHome(), 0x3a3a5a);
+    this.offWorkBtn = cuteBtn(SW - 92, 84, '下班回家', () => this._goHome(), 0x3a3a5a);
 
     // 项目进度 HUD（右上角，下班按钮下方）——工作日循环的核心可见产出
     if (this.workLoopEnabled) {
       const px = SW - 20, py = 128, pw = 236, ph = 22;
       this._projW = pw;
-      trackUI(this.add.text(px, py - 4, '📊 项目进度', { fontSize: '17px', fill: '#bfeecf' })
+      trackUI(this.add.text(px, py - 4, '项目进度', { fontSize: '17px', fill: '#bfeecf' })
         .setOrigin(1, 1).setScrollFactor(0).setDepth(9999));
       trackUI(this.add.rectangle(px, py, pw, ph, 0x1c1c2c, 0.92)
         .setOrigin(1, 0).setStrokeStyle(1, 0x4a6a52).setScrollFactor(0).setDepth(9999));
@@ -531,13 +531,13 @@ export class WorldScene extends Phaser.Scene {
     }
 
     // 功能栏 HUD（左下角一排可爱圆角按钮）：手机 + 心象世界,常驻功能排整齐、风格统一
-    this._phoneBtn = cuteBtn(92, SH - 46, '📱 手机', () => this._usePhone());
-    this._mindBtn = cuteBtn(232, SH - 46, '🌌 心象世界', () => this._enterMindscapeFree());
+    this._phoneBtn = cuteBtn(92, SH - 46, '手机', () => this._usePhone());
+    this._mindBtn = cuteBtn(232, SH - 46, '心象世界', () => this._enterMindscapeFree());
 
     // 引导语（屏幕底部）——按职业主题生成"找谁报到"
     const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
     const [gName, gTitle] = gTheme.npcs.senior;
-    this.guideText = trackUI(this.add.text(SW / 2, SH - 90, `📋 新人报到:去找${gTitle}「${gName}」(头顶有 ❗),走近按 E`, {
+    this.guideText = trackUI(this.add.text(SW / 2, SH - 90, `新人报到:去找${gTitle}「${gName}」(头顶有感叹号标记),走近按 E`, {
       fontSize: '22px',
       fill: '#ffe08a',
       backgroundColor: '#00000099',
@@ -643,10 +643,10 @@ export class WorldScene extends Phaser.Scene {
     const steps = [
       { icon: '🎮', title: '欢迎来到你的第一天', text: '这是一次「职业试穿」——你会真实过几天程序员的班，看看适不适合、喜不喜欢。\n移动 WASD　·　交互 E　·　冲刺 Shift　·　菜单 ESC' },
       { icon: '🧭', title: '第一步：找导师报到', text: '头顶有 ❗ 的是你的导师「老陈」。走近他、按 E，他会给你派第一份活。\n左上角「▸ 下一步」和地上的金色箭头随时指路，不会迷路。' },
-      { icon: '🤝', title: '第二步：找同事对接', text: '接到任务后，常要先找具名同事（头顶 💬）对接需求——走近按 E 聊两句。\n对接完，任务会提示你回工位干活。' },
+      { icon: '🤝', title: '第二步：找同事对接', text: '接到任务后，常要先找具名同事（头顶有对话标记）对接需求——走近按 E 聊两句。\n对接完，任务会提示你回工位干活。' },
       { icon: '💻', title: '第三步：回工位开工', text: '走到你自己的工位椅子，按 E 坐下 → 再按 E「开始工作」。\n会进入真实的写代码 / 代码评审 / 测试小游戏，做得越好，项目进度涨得越快。' },
       { icon: '📊', title: '第四步：看状态、推进项目', text: '按 Tab 展开状态面板，每项都有说明（健康/精力/压力/热情…）。\n右上角是项目进度——推到 25 / 50 / 75 / 100% 会解锁新的剧情章节。' },
-      { icon: '🌙', title: '第五步：下班，探索自己', text: '右上「🏠 下班回家」进下一天；左下「📱 手机」联系家人、「🌌 心象世界」调整心态。\n通关会生成一份【职业人格报告】，指引你的方向。试完这条线，还可以换个职业对照。' },
+      { icon: '🌙', title: '第五步：下班，探索自己', text: '右上「下班回家」进下一天；左下「手机」联系家人、「心象世界」调整心态。\n通关会生成一份【职业人格报告】，指引你的方向。试完这条线，还可以换个职业对照。' },
     ];
     let idx = 0;
     const iconT = this.add.text(W / 2, H / 2 - 150, '', { fontSize: '60px' }).setOrigin(0.5);
@@ -995,7 +995,9 @@ export class WorldScene extends Phaser.Scene {
       if (chair) spr.setDepth(d._seat.depth); // 正确陷进椅子
 
       // NPC 名牌（脚下小字：名字 + 角色，让"谁是谁"一目了然）
-      const tagText = d.role ? `${d.name}·${d.role}` : d.name;
+      // role 超过 6 字截断加省略号，避免长角色名（如"老油条前辈"）撑宽名牌、被左上 HUD 盖住。
+      const roleText = d.role && d.role.length > 6 ? `${d.role.slice(0, 6)}…` : d.role;
+      const tagText = roleText ? `${d.name}·${roleText}` : d.name;
       const nameTag = this.add.text(d.x, d.y + 8, tagText, {
         fontSize: '15px', color: '#ffffff',
         backgroundColor: '#00000099', padding: { x: 5, y: 2 },
@@ -1073,9 +1075,12 @@ export class WorldScene extends Phaser.Scene {
   // ==================== NPC 头顶状态泡泡（一句话状态）====================
   // 小气泡=深色圆角底 + 白字,显示同事当下在干嘛("写代码💻""要上厕所🚽""赶deadline😱")。
   _makeMoodBubble(spr) {
+    // C6 务实改善：右侧工位区人物密集，气泡容易重叠——缩小字号/内边距降低占地面积，
+    // 背景不透明度调高（e0→f2）让重叠时上层气泡仍清晰可读。结构性改动（限制同屏气泡
+    // 数量/按距离淡出）风险较大、影响 NpcAgent 状态展示逻辑，本轮保守跳过。
     const t = this.add.text(spr.x, spr.y - 52, '', {
-      fontSize: '14px', color: '#f4f4ff', backgroundColor: '#242436e0',
-      padding: { x: 7, y: 4 }, align: 'center',
+      fontSize: '12px', color: '#f4f4ff', backgroundColor: '#242436f2',
+      padding: { x: 5, y: 3 }, align: 'center',
     }).setOrigin(0.5, 1).setDepth(9000);
     if (this.uiCamera) this.uiCamera.ignore(t);
     return t;
@@ -1468,26 +1473,29 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // 聚焦虚化：选中 NPC/同事时，其他人物+物件半透明让路；取消选中时恢复。
+  // _hiddenByPopulation 是唯一的"下班隐藏"数据源（见 _setPopulation）——本函数对
+  // 被标记的人一律 continue 跳过，绝不碰它们的 alpha，避免和 _setPopulation 的
+  // tween(alpha:0 + setVisible(false)) 打架，造成 visible=false 但 alpha=1 的闪烁矛盾态。
   _updateFocus(target, targetType) {
-    const DIM = 0.28;
+    const DIM = 0.55; // 从 0.28 调温和：半透明但仍清晰可见，避免"走近1人其余全隐形"
     const all = [...(this.npcs || []), ...(this.workers || [])];
     if (!target || (targetType !== 'npc' && targetType !== 'worker')) {
-      // 无选中：全部恢复
+      // 无选中：全部恢复（跳过被时段隐藏的人，交给 _setPopulation 全权管理）
       for (const e of all) {
-        if (!e.spr) continue;
+        if (!e.spr || e._hiddenByPopulation) continue;
         if (e.spr.alpha < 1) e.spr.setAlpha(1);
         if (e.nameTag && e.nameTag.alpha < 1) e.nameTag.setAlpha(1);
       }
       return;
     }
-    // 有选中：目标=1，其余=DIM
+    // 有选中：目标=1，其余=DIM（同样跳过被时段隐藏的人）
     for (const e of all) {
-      if (!e.spr) continue;
+      if (!e.spr || e._hiddenByPopulation) continue;
       const isTarget = e === target;
       const a = isTarget ? 1 : DIM;
       if (Math.abs(e.spr.alpha - a) > 0.01) e.spr.setAlpha(a);
       if (e.nameTag) {
-        const ta = isTarget ? 1 : DIM * 1.5;
+        const ta = isTarget ? 1 : Math.min(1, DIM * 1.5);
         if (Math.abs(e.nameTag.alpha - ta) > 0.01) e.nameTag.setAlpha(ta);
       }
     }
@@ -2346,7 +2354,7 @@ export class WorldScene extends Phaser.Scene {
     const hud = chainHudStep(this.questSystem, this.act);
     let label;
     if (hud.title) {
-      label = `⛓ ${hud.title}\n${hud.step}`;
+      label = `${hud.title}\n${hud.step}`;
     } else if (goal) {
       label = `${goal.text}`;
     } else {
@@ -2361,7 +2369,7 @@ export class WorldScene extends Phaser.Scene {
       if (this.guideText && !this.dialogueActive) {
         const gTheme = CAREER_THEMES[this.career] || CAREER_THEMES.programmer;
         const [gName] = gTheme.npcs.senior;
-        const bottom = goal ? `📋 ${goal.text}` : `▸ 找头顶 ❗ 的人，或按 ESC 打开任务日志（导师：${gName}）`;
+        const bottom = goal ? `${goal.text}` : `▸ 找头顶有感叹号标记的人，或按 ESC 打开任务日志（导师：${gName}）`;
         if (this._lastGuideLabel !== bottom) {
           this._lastGuideLabel = bottom;
           this.guideText.setText(bottom);
@@ -2530,6 +2538,9 @@ export class WorldScene extends Phaser.Scene {
     const keep = Math.round(Phaser.Math.Clamp(ratio, 0, 1) * this.workers.length);
     this.workers.forEach((w, i) => {
       const show = i < keep;
+      // 单一可见性数据源：_hiddenByPopulation 标记"当前时段是否被下班隐藏"。
+      // _updateFocus 会读这个标记并全程避让被隐藏的人，不会把它们的 alpha 拉回。
+      w._hiddenByPopulation = !show;
       if (!w.spr) return;
       if (w._body && w._body.body) w._body.body.enable = show; // 隐藏的人不挡路
       if (w._mood) w._mood.setVisible(show); // 隐藏的人不显示状态泡泡
@@ -3244,7 +3255,7 @@ export class WorldScene extends Phaser.Scene {
     btn.on('pointerout', () => btn.setFillStyle(0x2a4a3e));
     btn.on('pointerdown', () => { c.destroy(true); this._reportUI = null; this.dialogueActive = false; this._doGoHome(); });
     c.add(btn);
-    c.add(this.add.text(px, py + ph / 2 - 44, '下班回家 🏠', { fontSize: '20px', fill: '#eafff0', fontStyle: 'bold' }).setOrigin(0.5));
+    c.add(this.add.text(px, py + ph / 2 - 44, '下班回家', { fontSize: '20px', fill: '#eafff0', fontStyle: 'bold' }).setOrigin(0.5));
     this._reportUI = c;
   }
 

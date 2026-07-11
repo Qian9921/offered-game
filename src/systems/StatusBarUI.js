@@ -89,8 +89,8 @@ export class StatusBarUI {
       .setOrigin(0, 0).setStrokeStyle(2, 0x3a3a4e, 0.9)
       .setInteractive({ useHandCursor: true });
     this.mini.add(bg);
-    // 悬停展开，移出收起（星露谷式按需查看）
-    bg.on('pointerover', () => this._setExpanded(true));
+    // 点击展开，移出面板收起（原悬停即弹的巨面板会挡住办公室左上区，改为主动点击才展开）
+    bg.on('pointerdown', () => this._setExpanded(!this.expanded));
 
     ORDER.forEach((s, i) => {
       const x = MINI_X + MINI_PAD + i * (MINI_BAR_W + MINI_GAP);
@@ -116,7 +116,9 @@ export class StatusBarUI {
   _buildPanel() {
     this.panel = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(9998);
     const panelH = this._measureHeight();
-    const bg = this.scene.add.rectangle(PANEL_X, PANEL_Y, PANEL_W, panelH, 0x14141f, 0.97)
+    // 背景改为 0.9 半透明（原 0.97 近乎不透明）：展开时底下的 NPC/名牌仍能隐约看到，
+    // 不会像之前那样把左上区完全"糊死"。
+    const bg = this.scene.add.rectangle(PANEL_X, PANEL_Y, PANEL_W, panelH, 0x14141f, 0.9)
       .setOrigin(0, 0).setStrokeStyle(2, 0xd4a353, 0.6)
       .setInteractive();
     this.panel.add(bg);
