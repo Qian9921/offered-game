@@ -96,7 +96,7 @@ export class StatusBarUI {
     });
     // 展开提示
     this.mini.add(this.scene.add.text(MINI_X + w + 10, MINI_Y + 14, 'Tab', {
-      fontSize: '15px', color: '#55556a',
+      fontSize: '16px', color: '#6a6a7e',
     }).setResolution(TEXT_RES));
   }
 
@@ -144,7 +144,7 @@ export class StatusBarUI {
       y += GROUP_GAP;
     }
     this.panel.add(this.scene.add.text(PANEL_X + PANEL_W - 12, PANEL_Y + 10, 'Tab 收起', {
-      fontSize: '15px', color: '#55556a',
+      fontSize: '16px', color: '#6a6a7e',
     }).setOrigin(1, 0).setResolution(TEXT_RES));
     this.panel.add(this.scene.add.text(LABEL_X, y - GROUP_GAP + 2, '这些数值会影响你的工作产出与结局走向', {
       fontSize: '13px', color: '#6a6a82',

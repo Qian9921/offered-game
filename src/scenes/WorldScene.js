@@ -478,17 +478,17 @@ export class WorldScene extends Phaser.Scene {
     if (this.workLoopEnabled) {
       const px = SW - 20, py = 128, pw = 236, ph = 22;
       this._projW = pw;
-      trackUI(this.add.text(px, py - 4, '📊 项目进度', { fontSize: '15px', fill: '#bfeecf' })
+      trackUI(this.add.text(px, py - 4, '📊 项目进度', { fontSize: '17px', fill: '#bfeecf' })
         .setOrigin(1, 1).setScrollFactor(0).setDepth(9999));
       trackUI(this.add.rectangle(px, py, pw, ph, 0x1c1c2c, 0.92)
         .setOrigin(1, 0).setStrokeStyle(1, 0x4a6a52).setScrollFactor(0).setDepth(9999));
       this._projBarFill = trackUI(this.add.rectangle(px - pw, py, 0, ph, 0x5fbf7f, 1)
         .setOrigin(0, 0).setScrollFactor(0).setDepth(9999));
       this._projText = trackUI(this.add.text(px - pw / 2, py + ph / 2, '', {
-        fontSize: '14px', fill: '#ffffff', fontStyle: 'bold',
+        fontSize: '16px', fill: '#ffffff', fontStyle: 'bold',
       }).setOrigin(0.5).setScrollFactor(0).setDepth(10000));
       this._projDeadline = trackUI(this.add.text(px, py + ph + 4, '', {
-        fontSize: '14px', fill: '#bfb0d0',
+        fontSize: '16px', fill: '#bfb0d0',
       }).setOrigin(1, 0).setScrollFactor(0).setDepth(9999));
       this._updateProjectHud();
     }
@@ -521,7 +521,7 @@ export class WorldScene extends Phaser.Scene {
 
     // 素材署名（屏幕右下角小字）
     trackUI(this.add.text(SW - 10, SH - 6, 'Art: LimeZu · Kenney', {
-      fontSize: '14px', fill: '#7a7a8a',
+      fontSize: '13px', fill: '#7a7a8a',
     }).setOrigin(1, 1).setScrollFactor(0).setDepth(9999));
 
     // 常驻任务目标 HUD（左上·状态条下方）：双行显示任务标题+步骤
@@ -942,7 +942,7 @@ export class WorldScene extends Phaser.Scene {
       // NPC 名牌（脚下小字：名字 + 角色，让"谁是谁"一目了然）
       const tagText = d.role ? `${d.name}·${d.role}` : d.name;
       const nameTag = this.add.text(d.x, d.y + 8, tagText, {
-        fontSize: '12px', color: '#ffffff',
+        fontSize: '15px', color: '#ffffff',
         backgroundColor: '#00000099', padding: { x: 5, y: 2 },
       }).setOrigin(0.5, 0).setDepth(d.y + 1);
 
@@ -1019,7 +1019,7 @@ export class WorldScene extends Phaser.Scene {
   // 小气泡=深色圆角底 + 白字,显示同事当下在干嘛("写代码💻""要上厕所🚽""赶deadline😱")。
   _makeMoodBubble(spr) {
     const t = this.add.text(spr.x, spr.y - 52, '', {
-      fontSize: '12px', color: '#f4f4ff', backgroundColor: '#242436e0',
+      fontSize: '14px', color: '#f4f4ff', backgroundColor: '#242436e0',
       padding: { x: 7, y: 4 }, align: 'center',
     }).setOrigin(0.5, 1).setDepth(9000);
     if (this.uiCamera) this.uiCamera.ignore(t);
@@ -1533,7 +1533,7 @@ export class WorldScene extends Phaser.Scene {
         fontSize: '19px', fill: '#ffffff', fontStyle: 'bold',
       }).setOrigin(0, 0.5));
       c.add(this.add.text(px - pw / 2 + 52, gy + 16, g.desc || '', {
-        fontSize: '13px', fill: '#8a8a9e',
+        fontSize: '16px', fill: '#9a9aae',
       }).setOrigin(0, 0.5));
       c.add(this.add.text(px + pw / 2 - 160, gy, `💰${g.price}`, {
         fontSize: '17px', fill: '#f0c060',
@@ -1819,7 +1819,7 @@ export class WorldScene extends Phaser.Scene {
     c.add(this.add.rectangle(W / 2, 0, 520, 120, 0x141422, 0.96).setStrokeStyle(2, 0xffd24d, 0.7).setOrigin(0.5));
     c.add(this.add.text(W / 2, -36, '📋 新任务接取', { fontSize: '16px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
     c.add(this.add.text(W / 2, -8, q.title || fallbackTitle || '新任务', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold', stroke: '#0a0a14', strokeThickness: 3 }).setOrigin(0.5));
-    if (q.desc) c.add(this.add.text(W / 2, 18, q.desc, { fontSize: '14px', color: '#9a9ab0', wordWrap: { width: 460, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5));
+    if (q.desc) c.add(this.add.text(W / 2, 18, q.desc, { fontSize: '16px', color: '#9a9ab0', wordWrap: { width: 480, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5));
     if (stepHint) c.add(this.add.text(W / 2, 40, stepHint, { fontSize: '15px', color: '#7eff9a', stroke: '#0a0a14', strokeThickness: 2 }).setOrigin(0.5));
     this._questCard = c;
     this.tweens.add({
@@ -2559,7 +2559,7 @@ export class WorldScene extends Phaser.Scene {
     const hud = chainHudStep(this.questSystem, this.act);
     const quest = hud.quest;
     const mainY = py - ph / 2 + 92;
-    c.add(this.add.text(px - pw / 2 + 48, mainY - 8, '⛓ 当前任务', { fontSize: '14px', fill: '#8fc3ff', fontStyle: 'bold' }).setOrigin(0, 0.5));
+    c.add(this.add.text(px - pw / 2 + 48, mainY - 8, '⛓ 当前任务', { fontSize: '17px', fill: '#8fc3ff', fontStyle: 'bold' }).setOrigin(0, 0.5));
     // 主任务卡
     c.add(this.add.rectangle(px, mainY + 42, pw - 80, 90, 0x1e2a3e, 0.98).setStrokeStyle(3, 0x4a7ab5));
     if (hud.title) {
@@ -2622,18 +2622,18 @@ export class WorldScene extends Phaser.Scene {
 
     // ════════ 次要区域：额外工单（降级、明确标注"额外"）════════
     const secY = py - ph / 2 + 250;
-    c.add(this.add.text(px - pw / 2 + 48, secY, '📋 今日额外工单（推进项目进度）', { fontSize: '14px', fill: '#6a6a7e' }).setOrigin(0, 0.5));
+    c.add(this.add.text(px - pw / 2 + 48, secY, '📋 今日额外工单（推进项目进度）', { fontSize: '17px', fill: '#7a7a8e' }).setOrigin(0, 0.5));
     // 精力门槛：energy < 15 全部工单锁定（喝东西恢复或下班）
     const eGate = energyGate(this.stateSystem.get('energy'));
     if (!eGate.canWork) {
-      c.add(this.add.text(px, secY + 24, '（精力不足 15，喝点东西恢复，或下班休息）', { fontSize: '13px', fill: '#e8a05a' }).setOrigin(0.5));
+      c.add(this.add.text(px, secY + 24, '（精力不足 15，喝点东西恢复，或下班休息）', { fontSize: '16px', fill: '#e8a05a' }).setOrigin(0.5));
     } else if (!canWork && nextObj && nextObj.kind === 'talk') {
-      c.add(this.add.text(px, secY + 24, '（完成对接后解锁）', { fontSize: '13px', fill: '#4a4a5e' }).setOrigin(0.5));
+      c.add(this.add.text(px, secY + 24, '（完成对接后解锁）', { fontSize: '16px', fill: '#5a5a6e' }).setOrigin(0.5));
     }
     // 压力过高：产出打折警示（引导去心象世界/用物品减压）
     if (stressOutputMultiplier(this.stateSystem.get('stress')).stressed) {
       c.add(this.add.text(px, mainY + 138, '⚠ 压力过高，工单产出 ×0.8 —— 按 T 去心象世界调整，或用背包里的东西放松', {
-        fontSize: '13px', fill: '#ffd24d', wordWrap: { width: pw - 120, useAdvancedWrap: true }, align: 'center',
+        fontSize: '16px', fill: '#ffd24d', wordWrap: { width: pw - 120, useAdvancedWrap: true }, align: 'center',
       }).setOrigin(0.5));
     }
 
@@ -2657,7 +2657,7 @@ export class WorldScene extends Phaser.Scene {
         fontSize: '17px', fill: done ? '#7a9a7a' : (disabled ? '#5a5a6a' : '#ffffff'), fontStyle: 'bold',
       }).setOrigin(0, 0.5));
       c.add(this.add.text(px - pw / 2 + 60, oy + 14, `${d.t} · +${o.progress}% · 绩效+${o.performance}`, {
-        fontSize: '12px', fill: '#6a6a7e',
+        fontSize: '15px', fill: '#7a7a8e',
       }).setOrigin(0, 0.5));
       c.add(this.add.text(px + pw / 2 - 56, oy, done ? '已完成' : (disabled ? '🔒' : '▶ 开工'), {
         fontSize: '16px', fill: done ? '#6a8a6a' : (disabled ? '#4a4a5e' : d.c), fontStyle: 'bold',
