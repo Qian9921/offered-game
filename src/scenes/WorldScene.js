@@ -41,7 +41,12 @@ import {
   buildWorldSaveExtra,
   seniorMarkVisual,
 } from '../systems/StoryProgress.js';
-import { npcLineForAct, pickOfficeEvent } from '../systems/WorkLoopOffice.js';
+import {
+  npcLineForAct,
+  seniorInteractAction,
+  applySeniorAction,
+  tryPickOfficeEvent,
+} from '../systems/WorkLoopOffice.js';
 import { resolveInteractGoalPos } from '../systems/CareerFit.js';
 import {
   RelationshipSystem,
@@ -1525,54 +1530,52 @@ export class WorldScene extends Phaser.Scene {
   // 轻量职业：走近一次播完整单文件到 ending（无经营期）。
   // 深度职业：ready→播本幕剧情→working(经营期，做任务过日子)→天数攒够→播下一幕。
   _interactSenior(npc) {
-    // 导师身上有可交付任务 → 优先交付（senior 是多数任务 giver）
-    // 任务链：交付时说 doneLine，并按 progressGain 推动项目进度(链进度=项目进度)。
+    // 任务层（交付/接取/进行中提示）→ 纯逻辑 seniorInteractAction + applySeniorAction
+    // 剧情层（ready/working/ending）仍由本场景状态机负责。
     if (this.questSystem) {
-      for (const q of this.questSystem.active()) {
-        if (q.giver === 'senior' && this.questSystem.isReady(q.id)) {
-          this.questSystem.complete(q.id);
-          // 交付：强反馈（手感 + 进度可见）
+      const action = seniorInteractAction({
+        questSystem: this.questSystem,
+        story: this._story,
+        workLoopEnabled: this.workLoopEnabled,
+        act: this.act,
+      });
+      if (action.kind === 'deliver') {
+        const applied = applySeniorAction(this.questSystem, action);
+        if (applied.ok) {
           Juice.celebrate(this, this.player.x, this.player.y - 30, 0xffd24d);
           Juice.floatText(this, this.player.x, this.player.y - 70, '✓ 交付', '#7eff7e');
           AudioSystem.questDone?.();
-          this._showLine(npc.name, q.doneLine || `「${q.title}」完成！干得漂亮。`);
-          if (q.progressGain && this.projectSystem) {
-            this.projectSystem.adjustProgress(q.progressGain);
+          this._showLine(npc.name, applied.line || action.line);
+          if (applied.progressGain && this.projectSystem) {
+            this.projectSystem.adjustProgress(applied.progressGain);
             this._updateProjectHud && this._updateProjectHud();
-            Juice.floatText(this, this.player.x + 40, this.player.y - 50, `项目 +${q.progressGain}%`, '#5fbf7f');
+            Juice.floatText(
+              this,
+              this.player.x + 40,
+              this.player.y - 50,
+              `项目 +${applied.progressGain}%`,
+              '#5fbf7f',
+            );
           }
           this._updateNpcMarks();
           this._autoSave?.();
           return;
         }
       }
-      // 任务链派活/引导：只在经营期(working)且没有待播的里程碑剧情时——
-      // 剧情节点(报到/里程碑)优先于派活，保证"先见老陈听交代，再领活干"。
-      const storyPending = isStoryPending({ ...this._story, act: this.act });
-      if (this.workLoopEnabled && !storyPending) {
-        const ctx = { act: this.act };
-        // 有可派的链任务 → 接取（acceptLine 派活 + 指路第一个目标）
-        for (const q of this.questSystem.available(ctx)) {
-          if (q.giver !== 'senior') continue;
-          this.questSystem.accept(q.id);
-          const next = this.questSystem.nextObjective(q.id);
-          const hint = next ? `\n▸ ${next.text}` : '';
+      if (action.kind === 'accept') {
+        const applied = applySeniorAction(this.questSystem, action);
+        if (applied.ok) {
           Juice.pop(this, npc.spr || this.player, 1.08);
           Juice.floatText(this, this.player.x, this.player.y - 64, '📋 新任务', '#ffd24d');
           AudioSystem.uiClick?.();
-          this._showLine(npc.name, `${q.acceptLine || `新任务：「${q.title}」`}${hint}`);
+          this._showLine(npc.name, applied.line || action.acceptLine);
           this._updateNpcMarks();
           return;
         }
-        // 链任务进行中 → 提示下一步（不重复派活）
-        for (const q of this.questSystem.active()) {
-          if (q.giver !== 'senior') continue;
-          const next = this.questSystem.nextObjective(q.id);
-          if (next) {
-            this._showLine(npc.name, `「${q.title}」还在你手上。\n▸ ${next.text}`);
-            return;
-          }
-        }
+      }
+      if (action.kind === 'hint') {
+        this._showLine(npc.name, action.line);
+        return;
       }
     }
 
@@ -2323,19 +2326,18 @@ export class WorldScene extends Phaser.Scene {
   _maybeTriggerEvent() {
     if (this.dialogueActive || this._workBoardUI || this._eventUI || this._sitting) return;
     if (!this._officeEvents || !this._officeEvents.length) return;
-    if (Phaser.Math.RND.frac() > 0.55) return;
-    // 幕次门槛 + 关系门槛 + 去重：纯逻辑 pickOfficeEvent（可单测）
-    const pool = (this._officeEvents || []).filter(
-      (e) => eventMeetsRelations(e, this.relations),
-    );
-    const r = pickOfficeEvent(
-      pool,
-      this._eventSeen,
-      this.act,
-      () => Phaser.Math.RND.frac(),
-    );
-    if (!r.event) return;
+    // 概率 + 幕次 + 关系 + 去重：整段决策在 tryPickOfficeEvent（可单测）
+    const r = tryPickOfficeEvent({
+      events: this._officeEvents,
+      seenIds: this._eventSeen,
+      act: this.act,
+      relations: this.relations,
+      fireChance: 0.55,
+      rng: () => Phaser.Math.RND.frac(),
+      relationFilter: eventMeetsRelations,
+    });
     this._eventSeen = r.seen;
+    if (!r.fired || !r.event) return;
     this._showOfficeEvent(r.event);
   }
 

@@ -142,8 +142,10 @@ ok('产品/律师办公室事件不全同', pev.slice(0, 120) !== lev.slice(0, 1
   ok('WS 一天结束 flash/float', ws.includes('一天结束'));
   // impact 必须是 intensity 签名，不能把坐标当第二参
   ok('WS impact 用 intensity', /Juice\.impact\(\s*this\s*,\s*0\.\d+/.test(ws));
-  ok('WS 用 pickOfficeEvent', ws.includes('pickOfficeEvent'));
+  ok('WS 用 tryPickOfficeEvent', ws.includes('tryPickOfficeEvent'));
   ok('WS 事件弹出 floatText', ws.includes('办公室事件'));
+  ok('WS 用 seniorInteractAction', ws.includes('seniorInteractAction'));
+  ok('WS 用 applySeniorAction', ws.includes('applySeniorAction'));
   const ps = readFileSync(join(DATA, '../../src/scenes/PauseScene.js'), 'utf8');
   ok('Pause 用 buildPauseInsight', ps.includes('buildPauseInsight'));
   const es = readFileSync(join(DATA, '../../src/scenes/EndingScene.js'), 'utf8');

@@ -261,3 +261,87 @@ export function pickOfficeEvent(events, seenIds = null, act = 1, rng = Math.rand
   if (event && event.id != null) seen.add(event.id);
   return { event, seen, resetSeen };
 }
+
+/**
+ * 办公室随机事件「一次掷骰」的完整决策（纯逻辑）。
+ * 合成：触发概率 → 幕次门槛 → 关系门槛 → 去重抽取。
+ * WorldScene 只负责「现在能不能弹窗」的场景态（对话/UI/坐下），不在此。
+ *
+ * @param {object} opts
+ * @param {object[]} opts.events
+ * @param {Set|string[]|null} [opts.seenIds]
+ * @param {number} [opts.act]
+ * @param {{ getAffinity?: Function, knows?: Function }|null} [opts.relations]
+ *   需满足 eventMeetsRelations 的接口（RelationshipSystem 实例即可）
+ * @param {number} [opts.fireChance=0.55]  掷到 ≤ 该值才触发（与历史 55% 一致）
+ * @param {() => number} [opts.rng]
+ * @param {(ev: object, rel: object|null) => boolean} [opts.relationFilter]
+ * @returns {{ fired: boolean, event: object|null, seen: Set, resetSeen: boolean, reason?: string }}
+ */
+export function tryPickOfficeEvent({
+  events = [],
+  seenIds = null,
+  act = 1,
+  relations = null,
+  fireChance = 0.55,
+  rng = Math.random,
+  relationFilter = null,
+} = {}) {
+  const roll = typeof rng === 'function' ? rng() : Math.random();
+  const seenBase = seenIds instanceof Set
+    ? new Set(seenIds)
+    : new Set(Array.isArray(seenIds) ? seenIds : []);
+
+  if (!(roll <= fireChance)) {
+    return { fired: false, event: null, seen: seenBase, resetSeen: false, reason: 'chance' };
+  }
+
+  let pool = Array.isArray(events) ? events.slice() : [];
+  // 关系门槛（可选过滤器；默认放行全部）
+  if (typeof relationFilter === 'function') {
+    pool = pool.filter((e) => relationFilter(e, relations));
+  }
+
+  const picked = pickOfficeEvent(pool, seenBase, act, rng);
+  if (!picked.event) {
+    return {
+      fired: false,
+      event: null,
+      seen: picked.seen,
+      resetSeen: picked.resetSeen,
+      reason: 'empty_pool',
+    };
+  }
+  return {
+    fired: true,
+    event: picked.event,
+    seen: picked.seen,
+    resetSeen: picked.resetSeen,
+  };
+}
+
+/**
+ * 将 seniorInteractAction 的结果应用到 QuestSystem（accept/deliver）。
+ * hint/none 不改系统状态。
+ * @returns {{ ok: boolean, kind: string, line?: string, progressGain?: number, questId?: string }}
+ */
+export function applySeniorAction(questSystem, action) {
+  if (!action || !action.kind) return { ok: false, kind: 'none' };
+  if (action.kind === 'deliver') {
+    const r = applySeniorDeliver(questSystem, action);
+    return { ...r, kind: 'deliver', line: r.line || action.line };
+  }
+  if (action.kind === 'accept') {
+    const r = applySeniorAccept(questSystem, action);
+    return { ...r, kind: 'accept' };
+  }
+  if (action.kind === 'hint') {
+    return {
+      ok: true,
+      kind: 'hint',
+      line: action.line,
+      questId: action.questId,
+    };
+  }
+  return { ok: false, kind: action.kind || 'none' };
+}

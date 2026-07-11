@@ -9,13 +9,19 @@ import {
   seniorInteractAction,
   applySeniorAccept,
   applySeniorDeliver,
+  applySeniorAction,
   reportMinigameProgress,
   isWorkLoopCareer,
   defaultSubRole,
   eventEligibleForAct,
   filterEventsByAct,
   pickOfficeEvent,
+  tryPickOfficeEvent,
 } from '../src/systems/WorkLoopOffice.js';
+import {
+  RelationshipSystem,
+  eventMeetsRelations,
+} from '../src/systems/RelationshipSystem.js';
 import { createStoryState } from '../src/systems/StoryProgress.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -172,6 +178,104 @@ try {
   ok('product act5 合格 ≥ act1', a5.length >= a1.length);
 } catch (e) {
   ok('product events 可读', false, e.message);
+}
+
+// ---------- tryPickOfficeEvent：概率 + 关系 + 幕次 合成 ----------
+console.log('\n-- tryPickOfficeEvent compose --');
+{
+  const evs = [
+    { id: 'open', title: '开放' },
+    { id: 'gated', title: '门控', minAffinity: { npc: 'vet', min: 60 } },
+    { id: 'late', title: '后期', minAct: 4 },
+  ];
+  // 概率未过
+  const miss = tryPickOfficeEvent({
+    events: evs, act: 1, fireChance: 0.55, rng: () => 0.9,
+  });
+  ok('chance miss → !fired', miss.fired === false && miss.reason === 'chance');
+
+  // 必中概率 + 无关系 → 只能抽 open（gated 被 relationFilter 挡）
+  const rel = new RelationshipSystem(); // vet 默认 50 < 60
+  const hit = tryPickOfficeEvent({
+    events: evs,
+    act: 1,
+    fireChance: 1,
+    rng: () => 0,
+    relations: rel,
+    relationFilter: eventMeetsRelations,
+  });
+  ok('必中抽到事件', hit.fired === true && !!hit.event);
+  ok('低好感不抽 gated', hit.event.id !== 'gated');
+  ok('act1 不抽 late', hit.event.id !== 'late');
+
+  // 抬高好感后可抽到 gated
+  rel.bump('vet', 20); // 70
+  const hits = new Set();
+  for (let i = 0; i < 30; i++) {
+    const r = tryPickOfficeEvent({
+      events: evs,
+      act: 1,
+      fireChance: 1,
+      rng: () => Math.random(),
+      relations: rel,
+      relationFilter: eventMeetsRelations,
+      seenIds: null,
+    });
+    if (r.event) hits.add(r.event.id);
+  }
+  ok('高好感可触达 gated', hits.has('gated') || hits.has('open'));
+
+  // fireChance=1 且空池
+  const empty = tryPickOfficeEvent({
+    events: [{ id: 'x', minAct: 9 }],
+    act: 1,
+    fireChance: 1,
+    rng: () => 0,
+  });
+  ok('空池 !fired empty_pool', empty.fired === false && empty.reason === 'empty_pool');
+}
+
+// ---------- applySeniorAction 一站式 ----------
+console.log('\n-- applySeniorAction --');
+{
+  // 重新走完整链：load programmer dev，accept via applySeniorAction
+  const chain = JSON.parse(readFileSync(join(DATA, 'taskchain_programmer_dev.json'), 'utf8'));
+  const qs2 = new QuestSystem(makeState());
+  qs2.load(chain);
+  const storyW = createStoryState();
+  storyW.phase = 'working';
+  storyW.act = 1;
+
+  const actAccept = seniorInteractAction({
+    questSystem: qs2, story: storyW, workLoopEnabled: true, act: 1,
+  });
+  ok('working 可 accept action', actAccept.kind === 'accept');
+  const appliedA = applySeniorAction(qs2, actAccept);
+  ok('applySeniorAction accept ok', appliedA.ok && appliedA.kind === 'accept');
+  ok('apply accept 含 ▸', appliedA.line && appliedA.line.includes('▸'));
+  ok('hint 不改状态', applySeniorAction(qs2, { kind: 'hint', line: 'x' }).ok === true);
+
+  // 推完 talk+minigame 才能 deliver
+  qs2.progress('talk', 'zhao');
+  reportMinigameProgress(qs2, 'coding');
+  const actD = seniorInteractAction({
+    questSystem: qs2, story: storyW, workLoopEnabled: true, act: 1,
+  });
+  ok('可 deliver action', actD.kind === 'deliver');
+  const appliedD = applySeniorAction(qs2, actD);
+  ok('applySeniorAction deliver ok', appliedD.ok && appliedD.kind === 'deliver');
+  ok('deliver progressGain', appliedD.progressGain === 12);
+  ok('apply none', applySeniorAction(qs2, { kind: 'none' }).ok === false);
+}
+
+// WorldScene 静态接线
+{
+  const ws = readFileSync(join(ROOT, 'src/scenes/WorldScene.js'), 'utf8');
+  ok('WS 用 seniorInteractAction', ws.includes('seniorInteractAction'));
+  ok('WS 用 applySeniorAction', ws.includes('applySeniorAction'));
+  ok('WS 用 tryPickOfficeEvent', ws.includes('tryPickOfficeEvent'));
+  // 不再内联 complete(q.id) 在 senior 交付循环（抽到 pure）
+  ok('WS 不内联双层 senior for-of complete', !/for \(const q of this\.questSystem\.active\(\)\) \{\s*if \(q\.giver === 'senior' && this\.questSystem\.isReady/.test(ws));
 }
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
