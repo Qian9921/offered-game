@@ -58,27 +58,24 @@ console.log('\n=== FamilyMessages 单元测试 ===\n');
   const a1b = fm.pickForAct(1);
   if (a1b) ok('pickForAct(1) 二次：不重复', a1b.index !== a1.index);
   else ok('pickForAct(1) 二次：首幕耗尽返回 null（合法）', true);
+  // 定位调整后：仅保留第一幕一条入职问候，其余幕次无消息（安全返回 null）
   const a3 = fm.pickForAct(3);
-  ok('pickForAct(3)：匹配到', !!a3);
-  ok('pickForAct(3)：context 含第三幕/996', !a3 || /第三幕|996|消耗/.test(a3.context));
+  ok('pickForAct(3)：无消息返回 null', a3 === null);
 }
 
-// pickForThreshold
+// pickForThreshold（定位调整后：无至暗情感消息，安全返回 null）
 {
   const fm = new FamilyMessages();
   await fm.load();
-  const t = fm.pickForThreshold();
-  ok('pickForThreshold：匹配到至暗消息', !!t && t.bubbles.length > 0);
-  ok('pickForThreshold：context 含至暗关键词', !t || /至暗|触底|stress高位|最低点/.test(t.context));
+  ok('pickForThreshold：无消息返回 null', fm.pickForThreshold() === null);
 }
 
-// pickForEnding
+// pickForEnding（定位调整后：无结局专属家人消息，安全返回 null）
 {
   const fm = new FamilyMessages();
   await fm.load();
-  for (const [key, label] of [['backbone','成为骨干'],['quit','裸辞出走'],['health','身体警告'],['switch','转行'],['light','找到你的光']]) {
-    const e = fm.pickForEnding(key);
-    ok(`pickForEnding(${key})：匹配"${label}"`, !!e && /结局/.test(e.context || ''), e && e.context);
+  for (const key of ['backbone', 'quit', 'health', 'switch', 'light']) {
+    ok(`pickForEnding(${key})：无消息返回 null`, fm.pickForEnding(key) === null);
   }
   ok('pickForEnding(未知key)：返回 null', fm.pickForEnding('nonexistent') === null);
 }

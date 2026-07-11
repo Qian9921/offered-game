@@ -288,43 +288,6 @@
       "bg": "office_night",
       "effects": { "san": 2, "passion": 2, "stress": -1 },
       "choices": [
-        { "text": "(继续)", "next": "a2_parents" }
-      ]
-    },
-    "a2_parents": {
-      "speaker": "妈妈",
-      "text": "手机亮了。你妈发来消息:闺女,你张阿姨可羡慕了,说你这工作旱涝保收,一辈子不愁。妈这心啊,总算落地了。",
-      "bg": "office_night",
-      "effects": {},
-      "choices": [
-        { "text": "(继续)", "next": "a2_parents_mid" }
-      ]
-    },
-    "a2_parents_mid": {
-      "speaker": "妈妈",
-      "text": "后面跟着一张照片:她把你的工作证翻拍了,发在了家族群里。配文是三个字,加一个笑脸——我闺女。",
-      "bg": "office_night",
-      "effects": {},
-      "choices": [
-        { "text": "报喜:挺好的,您放心", "next": "a2_parents_a", "note": "报喜不报忧" },
-        { "text": "试着说点真心话", "next": "a2_parents_b", "note": "说不出口的复杂" }
-      ]
-    },
-    "a2_parents_a": {
-      "speaker": "",
-      "text": "我打了行字发过去。退了三遍的材料、看到头的六年、发麻的舌头,一个字都没提。他们要的就是这句挺好,我给得起。",
-      "bg": "office_night",
-      "effects": { "san": 1, "stress": 1 },
-      "choices": [
-        { "text": "(继续)", "next": "a2_mindscape_gate" }
-      ]
-    },
-    "a2_parents_b": {
-      "speaker": "",
-      "text": "我打了句妈其实这活有点,删了;打句我不知道是不是想要这个,又删了。最后发出去的,还是那两个字:挺好。有些委屈,说出来反倒像不知足。",
-      "bg": "office_night",
-      "effects": { "san": -1, "stress": 1, "passion": 1 },
-      "choices": [
         { "text": "(继续)", "next": "a2_mindscape_gate" }
       ]
     },

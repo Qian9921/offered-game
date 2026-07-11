@@ -340,35 +340,6 @@
       "effects": { "passion": 6, "san": 3 },
       "note": "passion核心来源锚点:我定义的东西被人用了、被人谢了",
       "choices": [
-        { "label": "（继续）", "next": "a2_parents_msg" }
-      ]
-    },
-    "a2_parents_msg": {
-      "speaker": "妈妈",
-      "text": "晚上,家庭群里妈妈发来消息:「儿子最近忙不忙?你爸今天跟楼下下棋的老张头吹半天,说你在大公司做『产品经理』,管着一个大项目呢。」后面跟着一张你爸得意的表情包。",
-      "bg": "office_night",
-      "note": "爸妈报喜,父母眼里的'管大项目'与真实的夹心层反差",
-      "choices": [
-        { "label": "「不忙,挺顺的,你们别担心」", "next": "a2_parents_reply_good", "effects": { "san": 2, "passion": 2 }, "note": "报喜不报忧:温情但压下委屈" },
-        { "label": "「还行,就是夹在中间有点累」", "next": "a2_parents_reply_true", "effects": { "san": 3, "health": 1 }, "note": "难得吐半句真话,反而松一口气" }
-      ]
-    },
-    "a2_parents_reply_good": {
-      "speaker": "",
-      "text": "我打了『挺顺的』三个字,把今天被摔鼠标、被临时改需求的事,连同那点委屈,一起咽了回去。他们不懂什么叫夹心层,也不用懂。我妈要的,不过是『我儿子过得好』这七个字。我给了她。至于那些不好的,我自己收着。",
-      "bg": "office_night",
-      "note": "报喜不报忧的温情,与后续消耗期形成反差",
-      "choices": [
-        { "label": "（继续）", "next": "a2_sandwich_intro" }
-      ]
-    },
-    "a2_parents_reply_true": {
-      "speaker": "",
-      "text": "我少见地说了半句真话:「就是夹在中间有点累。」我妈秒回:「累就对了,不累哪来的钱。妈给你炖了汤,冻着呢,周末回来拿。」我看着这句糙话,忽然笑了。她不懂我累在哪,但她知道我累,还知道用一锅汤来接。够了。",
-      "bg": "office_night",
-      "effects": { "passion": 1 },
-      "note": "半句真话+母亲的笨拙温柔,不煽情",
-      "choices": [
         { "label": "（继续）", "next": "a2_sandwich_intro" }
       ]
     },

@@ -88,7 +88,7 @@
     },
     "a4_student_ask": {
       "speaker": "学生",
-      "text": "老师……我妈住院了,我想申请那个临时困难补助。可是系统里要的证明,得我们村委会盖章,来回邮寄要半个月。我这个月……我这个月真的撑不住了。",
+      "text": "老师……家里出了急事,我想申请那个临时困难补助。可是系统里要的证明,得我们村委会盖章,来回邮寄要半个月。我这个月……我这个月真的撑不住了。",
       "bg": "office_day",
       "effects": {"passion": 1},
       "choices": [
@@ -428,42 +428,6 @@
       "bg": "office_night",
       "effects": {"energy": -1, "san": -1},
       "choices": [
-        {"text": "(继续)", "next": "a4_parents_msg1"}
-      ]
-    },
-    "a4_parents_msg1": {
-      "speaker": "",
-      "text": "是妈发来的消息。'闺女,今天你王阿姨来家里,我跟她说你在大学里当老师,坐办公室,旱涝保收。她可羡慕了。你爸在旁边一句话没说,可我看他,腰杆挺得笔直。'",
-      "bg": "office_night",
-      "effects": {"passion": -1, "san": -1},
-      "choices": [
-        {"text": "(继续)", "next": "a4_parents_msg2"}
-      ]
-    },
-    "a4_parents_msg2": {
-      "speaker": "",
-      "text": "下面还有一条:'好好干,别嫌工作枯燥。稳定最重要,这是多少人求都求不来的福气。妈就盼你安安稳稳的,比什么都强。'",
-      "bg": "office_night",
-      "effects": {"passion": -2, "san": -1},
-      "choices": [
-        {"text": "(继续)", "next": "a4_parents_reply"}
-      ]
-    },
-    "a4_parents_reply": {
-      "speaker": "",
-      "text": "我盯着输入框。想打的是:'妈,我在这儿快要憋死了。我今天没能帮到一个求我的学生。我好像正在变成一个我不认识的人。'我打了一半,又一个字一个字删掉。",
-      "bg": "office_night",
-      "effects": {"passion": -2, "san": -2},
-      "choices": [
-        {"text": "(继续)", "next": "a4_parents_reply2"}
-      ]
-    },
-    "a4_parents_reply2": {
-      "speaker": "",
-      "text": "最后我发过去两个字:'知道。'再补一句:'妈你们早点睡。'我连'我不快乐'四个字都发不出去。因为我知道,那会拆掉他们挺得笔直的腰杆。我的窒息,是他们的骄傲。我们隔着这四个字,谁也够不到谁。",
-      "bg": "office_night",
-      "effects": {"passion": -2, "san": -2, "stress": 1},
-      "choices": [
         {"text": "(继续)", "next": "a4_lowest1"}
       ]
     },
@@ -505,7 +469,7 @@
     },
     "a4_final_question2": {
       "speaker": "",
-      "text": "稳定给了我一切我以为我想要的:体面、清闲、爸妈的骄傲、旱涝保收。可它也在一天天、悄无声息地,拿走那个会为一个学生难受、会熬夜写方案、会给枯草浇水的我。这笔交易,我到底还认不认?",
+      "text": "稳定给了我一切我以为我想要的:体面、清闲、旁人的羡慕、旱涝保收。可它也在一天天、悄无声息地,拿走那个会为一个学生难受、会熬夜写方案、会给枯草浇水的我。这笔交易,我到底还认不认?",
       "bg": "campus_night",
       "effects": {"passion": -1, "san": -1},
       "choices": [
