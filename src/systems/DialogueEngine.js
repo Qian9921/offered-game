@@ -188,7 +188,8 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     const boxX = (width - boxW) / 2;
     const PAD = 32;
     const bodyStyle = {
-      fontSize: '26px', color: '#ffffff', lineSpacing: 8,
+      fontSize: '26px', color: '#f4f4f8', lineSpacing: 8,
+      stroke: '#0a0a14', strokeThickness: 3,
       wordWrap: { width: boxW - PAD * 2, useAdvancedWrap: true },
     };
     const maxLines = node.speaker ? 3 : 4; // 每页行数上限，分页更均匀
@@ -212,8 +213,8 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     container.add(catcher);
 
     // 对话框：半透明深色底板 + 金色描边（高度会随页重算）
-    this._box = this.scene.add.rectangle(boxX + boxW / 2, boxY + boxH0 / 2, boxW, boxH0, 0x0a0a14, 0.88)
-      .setStrokeStyle(2, 0xd4a353, 0.6);
+    this._box = this.scene.add.rectangle(boxX + boxW / 2, boxY + boxH0 / 2, boxW, boxH0, 0x080812, 0.94)
+      .setStrokeStyle(2, 0xd4a353, 0.7);
     container.add(this._box);
 
     // 幕名：对话框右上角小字（如有）——顶部对齐，随框高重定位

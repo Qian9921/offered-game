@@ -15,8 +15,8 @@ const ORDER = GROUPS.flatMap(g => g.stats); // 迷你条顺序 = 面板顺序
 
 // —— 迷你条布局（1920 屏尺度：整体放大 ~1.9×，清晰可读）——
 const MINI_X = 14, MINI_Y = 14;
-const MINI_BAR_W = 54, MINI_BAR_H = 9, MINI_GAP = 8;
-const MINI_PAD = 14;
+const MINI_BAR_W = 30, MINI_BAR_H = 8, MINI_GAP = 6;
+const MINI_PAD = 12;
 
 // —— 展开面板布局（1920 尺度）——
 const PANEL_X = 14, PANEL_Y = 14, PANEL_W = 340, PAD = 18;
@@ -84,7 +84,8 @@ export class StatusBarUI {
       const y = MINI_Y + MINI_PAD + 18;
       // 单字标签（健/精/心/压/技/绩/金/热）
       this.mini.add(this.scene.add.text(x + MINI_BAR_W / 2, MINI_Y + MINI_PAD + 1, s.label[0], {
-        fontSize: '15px', color: s.key === 'passion' ? '#ffb080' : '#9a9ab0',
+        fontSize: '16px', color: s.key === 'passion' ? '#ffb080' : '#c0c0d0',
+        stroke: '#0a0a14', strokeThickness: 3,
       }).setOrigin(0.5, 0).setResolution(TEXT_RES));
       this.mini.add(this.scene.add.rectangle(x, y, MINI_BAR_W, MINI_BAR_H, BG_COLOR).setOrigin(0, 0));
       const fill = this.scene.add.rectangle(x, y, this._ratio(s.key) * MINI_BAR_W, MINI_BAR_H,
