@@ -5,6 +5,7 @@ import {
   bodySignalsFromStats, summarizeChoices, buildEndingReportContext,
   buildReportHistoryEntry, mergeReportHistory,
   formatTriedCareersLine, resolveInteractGoalPos, buildPauseInsight,
+  buildCareerContrast,
 } from '../src/systems/CareerFit.js';
 
 let pass = 0, fail = 0;
@@ -120,6 +121,32 @@ const highFit = buildPauseInsight({
   act: 3,
 });
 ok('高契合热情提示', highFit.body.includes('热情') || highFit.body.includes('值得') || highFit.fitScore >= 60);
+
+// 多周目对照
+const contrastEmpty = buildCareerContrast({ currentCareer: 'programmer', history: [] });
+ok('contrast 空历史有兜底', contrastEmpty.others.length === 0 && contrastEmpty.line.includes('再点'));
+const contrast = buildCareerContrast({
+  currentCareer: 'programmer',
+  history: [
+    { career: 'programmer', careerName: '程序员' },
+    { career: 'designer', careerName: '设计师' },
+    { career: 'lawyer', careerName: '律师' },
+    { career: 'designer', careerName: '设计师' }, // 去重
+  ],
+});
+ok('contrast 排除本局', !contrast.otherKeys.includes('programmer'));
+ok('contrast 含设计师律师', contrast.others.includes('设计师') && contrast.others.includes('律师'));
+ok('contrast 去重', contrast.otherKeys.filter(k => k === 'designer').length === 1);
+ok('contrast line 含本局名', contrast.line.includes('程序员'));
+
+const ctxHist = buildEndingReportContext({
+  career: 'programmer',
+  stats: { stress: 50, health: 60, passion: 55, energy: 50 },
+  profile: geek,
+  history: [{ career: 'sales', careerName: '销售', fitScore: 70 }],
+});
+ok('reportCtx 含 contrast', ctxHist.contrast && ctxHist.contrast.others.includes('销售'));
+ok('promptBlock 含多职业对照', ctxHist.promptBlock.includes('多职业对照') || ctxHist.promptBlock.includes('销售'));
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);

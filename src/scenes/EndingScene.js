@@ -42,6 +42,10 @@ export class EndingScene extends Phaser.Scene {
     let profile = null;
     try { profile = JSON.parse(localStorage.getItem('wdwtb_profile') || 'null'); } catch (e) {}
     this.profile = profile;
+    // 多周目历史：进报告对照「试过的其它职业」（不含本局，本局稍后才落档）
+    let history = [];
+    try { history = JSON.parse(localStorage.getItem(REPORT_HISTORY_KEY) || '[]'); } catch (e) {}
+    this.reportHistory = Array.isArray(history) ? history : [];
     this.reportCtx = buildEndingReportContext({
       career: this.career,
       subRole: this.subRole,
@@ -50,6 +54,7 @@ export class EndingScene extends Phaser.Scene {
       choiceLog: this.choiceLog,
       profile: this.profile,
       projectProgress: this.projectProgress,
+      history: this.reportHistory,
     });
   }
 
@@ -186,6 +191,17 @@ export class EndingScene extends Phaser.Scene {
         fontSize: '12px', color: '#c8b070', wordWrap: { width: innerW, useAdvancedWrap: true }, align: 'center',
       }).setOrigin(0.5, 0);
       g0.push(sigT); y += sigT.height + 6;
+    }
+    // 多周目对照（初衷：试过再认）
+    const contrastLine = this.reportCtx?.contrast?.others?.length
+      ? this.reportCtx.contrast.line
+      : '';
+    if (contrastLine) {
+      const ct = this.add.text(width / 2, y, contrastLine, {
+        fontSize: '12px', color: '#9aa0c0',
+        wordWrap: { width: innerW, useAdvancedWrap: true }, align: 'center',
+      }).setOrigin(0.5, 0);
+      g0.push(ct); y += ct.height + 6;
     }
     const aimark = this.add.text(width / 2, y, this.aiSource === 'ai' ? '· 由腾讯混元 hy3 为你生成 ·' : '· 基于你的旅程生成 ·', {
       fontSize: '11px', color: '#5a6a8a',

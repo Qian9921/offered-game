@@ -12,6 +12,9 @@ import {
   reportMinigameProgress,
   isWorkLoopCareer,
   defaultSubRole,
+  eventEligibleForAct,
+  filterEventsByAct,
+  pickOfficeEvent,
 } from '../src/systems/WorkLoopOffice.js';
 import { createStoryState } from '../src/systems/StoryProgress.js';
 
@@ -117,6 +120,59 @@ const delivered = applySeniorDeliver(qs, deliverAct);
 ok('deliver ok', delivered.ok === true);
 ok('dev_c1 completed', !!qs.completed.dev_c1);
 ok('dev_c2 解锁', qs.available({ act: 1 }).some(q => q.id === 'dev_c2'));
+
+// ---------- office event act filter / pick ----------
+console.log('\n-- office event pick --');
+const sampleEv = [
+  { id: 'honeymoon', title: '蜜月', text: 'a' },
+  { id: 'layoff', title: '裁员', text: 'b', minAct: 3 },
+  { id: 'late', title: '通宵', text: 'c', minAct: 2, maxAct: 4 },
+  { id: 'early_only', title: '入职', text: 'd', maxAct: 1 },
+];
+ok('act1 含 honeymoon', eventEligibleForAct(sampleEv[0], 1));
+ok('act1 不含 layoff', !eventEligibleForAct(sampleEv[1], 1));
+ok('act3 含 layoff', eventEligibleForAct(sampleEv[1], 3));
+ok('act5 不含 late(max4)', !eventEligibleForAct(sampleEv[2], 5));
+ok('null event 不合格', !eventEligibleForAct(null, 1));
+
+const f1 = filterEventsByAct(sampleEv, 1);
+ok('act1 过滤长度', f1.length === 2 && f1.every(e => e.id === 'honeymoon' || e.id === 'early_only'));
+const f3 = filterEventsByAct(sampleEv, 3);
+ok('act3 含 layoff+late+honeymoon', f3.length === 3 && f3.some(e => e.id === 'layoff'));
+
+// 优先未见过：先抽到 A，再抽应避开 A
+const r0 = pickOfficeEvent(sampleEv, new Set(), 1, () => 0);
+ok('pick act1 有事件', !!r0.event && (r0.event.id === 'honeymoon' || r0.event.id === 'early_only'));
+const r1 = pickOfficeEvent(sampleEv, r0.seen, 1, () => 0);
+ok('第二次避开已见', r1.event && r1.event.id !== r0.event.id);
+// 两轮后应 reset
+const r2 = pickOfficeEvent(sampleEv, r1.seen, 1, () => 0);
+ok('池耗尽 resetSeen', r2.resetSeen === true && !!r2.event);
+// act1 绝不抽到 minAct3
+for (let i = 0; i < 20; i++) {
+  const r = pickOfficeEvent(sampleEv, null, 1, () => Math.random());
+  if (r.event && r.event.id === 'layoff') {
+    ok('act1 误抽 layoff', false);
+    break;
+  }
+}
+ok('act1 20 次无 layoff', true);
+// 无合格事件
+const empty = pickOfficeEvent([{ id: 'x', minAct: 5 }], null, 1, () => 0);
+ok('无合格 → null event', empty.event === null);
+
+// 真实 product 事件数据：幕次门槛可滤
+try {
+  const pev = JSON.parse(readFileSync(join(DATA, 'office_events_product.json'), 'utf8'));
+  const evs = pev.events || [];
+  const a1 = filterEventsByAct(evs, 1);
+  const a5 = filterEventsByAct(evs, 5);
+  ok('product 事件非空', evs.length >= 6);
+  ok('product act1 子集 ≤ 全量', a1.length <= evs.length);
+  ok('product act5 合格 ≥ act1', a5.length >= a1.length);
+} catch (e) {
+  ok('product events 可读', false, e.message);
+}
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);

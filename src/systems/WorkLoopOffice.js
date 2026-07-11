@@ -210,3 +210,52 @@ export function applySeniorDeliver(questSystem, action) {
     line: action.line,
   };
 }
+
+/**
+ * 办公室事件是否落在当前幕（minAct/maxAct 可选门槛）。
+ * 裁员传闻不该出现在蜜月期 —— 数据侧写 minAct 即可。
+ */
+export function eventEligibleForAct(ev, act = 1) {
+  if (!ev || typeof ev !== 'object') return false;
+  const a = Number.isFinite(Number(act)) ? Math.floor(Number(act)) : 1;
+  if (ev.minAct != null && a < Number(ev.minAct)) return false;
+  if (ev.maxAct != null && a > Number(ev.maxAct)) return false;
+  return true;
+}
+
+/** @returns {object[]} */
+export function filterEventsByAct(events, act = 1) {
+  if (!Array.isArray(events)) return [];
+  return events.filter((e) => eventEligibleForAct(e, act));
+}
+
+/**
+ * 纯逻辑：按幕过滤 + 优先未见过 + 可注入 rng。
+ * @param {object[]} events
+ * @param {Set<string>|string[]|null} seenIds
+ * @param {number} act
+ * @param {() => number} [rng]  0..1
+ * @returns {{ event: object|null, seen: Set<string>, resetSeen: boolean }}
+ */
+export function pickOfficeEvent(events, seenIds = null, act = 1, rng = Math.random) {
+  const eligible = filterEventsByAct(events, act);
+  const seen = seenIds instanceof Set
+    ? new Set(seenIds)
+    : new Set(Array.isArray(seenIds) ? seenIds : []);
+  if (!eligible.length) return { event: null, seen, resetSeen: false };
+
+  let pool = eligible.filter((e) => e && (e.id == null || !seen.has(e.id)));
+  let resetSeen = false;
+  if (!pool.length) {
+    seen.clear();
+    pool = eligible.slice();
+    resetSeen = true;
+  }
+  if (!pool.length) return { event: null, seen, resetSeen };
+
+  const r = typeof rng === 'function' ? rng() : Math.random();
+  const idx = Math.abs(Math.floor(r * pool.length)) % pool.length;
+  const event = pool[idx] || null;
+  if (event && event.id != null) seen.add(event.id);
+  return { event, seen, resetSeen };
+}

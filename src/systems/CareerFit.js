@@ -204,6 +204,40 @@ export function summarizeChoices(choiceLog) {
 }
 
 /**
+ * 多周目对照：把「试过的其它职业」收成可写进报告/Hub 的一行。
+ * 服务初衷：对照体感才能分清适合与喜欢。
+ * @returns {{ line: string, others: string[], otherKeys: string[] }}
+ */
+export function buildCareerContrast({ currentCareer = null, history = [] } = {}) {
+  const hist = Array.isArray(history) ? history : [];
+  const others = [];
+  const otherKeys = [];
+  const seen = new Set();
+  for (const e of hist) {
+    if (!e || !e.career || e.career === currentCareer || seen.has(e.career)) continue;
+    seen.add(e.career);
+    otherKeys.push(e.career);
+    others.push(e.careerName || CAREER_NAMES[e.career] || e.career);
+    if (others.length >= 3) break;
+  }
+  const curName = currentCareer
+    ? (CAREER_NAMES[currentCareer] || currentCareer)
+    : '这一行';
+  if (!others.length) {
+    return {
+      line: '这是你认真过完的一条职业线。再点一条不同的，对照「适合/喜欢」会更清楚。',
+      others: [],
+      otherKeys: [],
+    };
+  }
+  return {
+    line: `你对照过：${others.join('、')}。这一局是「${curName}」——哪段日子更像你想过的生活？`,
+    others,
+    otherKeys,
+  };
+}
+
+/**
  * 组装结局报告用的用户上下文（喂 AI 或模板增强）。
  */
 export function buildEndingReportContext({
@@ -214,6 +248,7 @@ export function buildEndingReportContext({
   choiceLog = null,
   profile = null,
   projectProgress = null,
+  history = null,
 } = {}) {
   const careerName = CAREER_NAMES[career] || career;
   const body = bodySignalsFromStats(stats);
@@ -221,6 +256,7 @@ export function buildEndingReportContext({
   const fit = profile ? scoreCareer(profile, career) : null;
   const anchor = CAREER_ANCHORS[career];
   const tryAdvice = profile ? buildTryFirstAdvice(profile, 3) : null;
+  const contrast = buildCareerContrast({ currentCareer: career, history: history || [] });
 
   const lines = [
     `本局职业：${careerName}${subRole ? `（方向 ${subRole}）` : ''}`,
@@ -232,6 +268,7 @@ export function buildEndingReportContext({
     tryAdvice
       ? `若还迷茫，开局模型还曾建议对比：${tryAdvice.tryFirst.map((t) => t.name).join('、')}`
       : null,
+    contrast.others.length ? `多职业对照：${contrast.line}` : null,
   ].filter(Boolean);
 
   return {
@@ -242,6 +279,7 @@ export function buildEndingReportContext({
     fitScore: fit,
     body,
     choices,
+    contrast,
     promptBlock: lines.join('\n'),
     summaryLine: `${careerName}线 · 契合${fit != null ? fit : '—'} · ${body.signals[0]}`,
   };

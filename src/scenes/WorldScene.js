@@ -41,7 +41,7 @@ import {
   buildWorldSaveExtra,
   seniorMarkVisual,
 } from '../systems/StoryProgress.js';
-import { npcLineForAct } from '../systems/WorkLoopOffice.js';
+import { npcLineForAct, pickOfficeEvent } from '../systems/WorkLoopOffice.js';
 import { resolveInteractGoalPos } from '../systems/CareerFit.js';
 
 // WorldScene — LimeZu 现代办公室俯视角 RPG 探索 + NPC 交互 + 剧情合体
@@ -2259,17 +2259,16 @@ export class WorldScene extends Phaser.Scene {
     if (this.dialogueActive || this._workBoardUI || this._eventUI || this._sitting) return;
     if (!this._officeEvents || !this._officeEvents.length) return;
     if (Phaser.Math.RND.frac() > 0.55) return;
-    // 幕次门槛：minAct/maxAct 让事件跟着故事走(裁员传闻不该出现在蜜月期)
-    const inAct = (e) => (e.minAct == null || this.act >= e.minAct)
-      && (e.maxAct == null || this.act <= e.maxAct);
-    const eligible = this._officeEvents.filter(inAct);
-    if (!eligible.length) return;
-    // 优先没见过的,尽量不重复
-    let pool = eligible.filter(e => !this._eventSeen.has(e.id));
-    if (!pool.length) { this._eventSeen.clear(); pool = eligible; }
-    const ev = Phaser.Utils.Array.GetRandom(pool);
-    this._eventSeen.add(ev.id);
-    this._showOfficeEvent(ev);
+    // 幕次门槛 + 去重：纯逻辑 pickOfficeEvent（可单测）
+    const r = pickOfficeEvent(
+      this._officeEvents,
+      this._eventSeen,
+      this.act,
+      () => Phaser.Math.RND.frac(),
+    );
+    if (!r.event) return;
+    this._eventSeen = r.seen;
+    this._showOfficeEvent(r.event);
   }
 
   _showOfficeEvent(ev) {
@@ -2277,6 +2276,15 @@ export class WorldScene extends Phaser.Scene {
     this.dialogueActive = true;
     if (this.guideText) this.guideText.setVisible(false);
     AudioSystem.playSfx && AudioSystem.playSfx('notify');
+    // 事件弹出：轻手感，让「办公室会出事」可感知
+    Juice.flash(this, 0x2a2a4a, 100);
+    Juice.floatText(
+      this,
+      this.scale.width / 2,
+      this.scale.height / 2 - 220,
+      ev.icon ? `${ev.icon} 办公室事件` : '⚡ 办公室事件',
+      '#ffd24d',
+    );
     const { width, height } = this.scale;
     const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10001);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
