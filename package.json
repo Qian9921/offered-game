@@ -18,6 +18,8 @@
     "test:e2e:chain": "E2E_SUITE=chain node scripts/run-e2e.mjs",
     "test:e2e:full": "E2E_SUITE=full node scripts/run-e2e.mjs",
     "test:e2e:deep": "E2E_SUITE=deep node scripts/run-e2e.mjs",
+    "test:e2e:firstmin": "node scripts/firstmin.cjs",
+    "test:e2e:light": "node scripts/e2e-light-fullloop.cjs",
     "validate:chains": "node scripts/validate-taskchains.mjs"
   },
   "dependencies": {

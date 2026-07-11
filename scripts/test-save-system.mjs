@@ -132,12 +132,50 @@ ok('sleep: project 仍在', sleep.project && sleep.project.progress === 42);
 ok('sleep: quests 仍在', sleep.quests && sleep.quests.accepted && sleep.quests.accepted.dev_c1);
 ok('sleep: subRole 仍在', sleep.subRole === 'dev');
 
-// ── 4. Corrupt JSON → load() === null ──
+// ── 4. Corrupt JSON → loadSlot() === null ──
 console.log('\n-- corrupt JSON --');
-_store['wdwtb_save'] = '{not-valid-json!!!';
-ok('corrupt JSON: load() === null', SaveSystem.load() === null);
-// has() still true if key present — only load must be null
-ok('corrupt JSON: has() 仍可能为 true（键存在）', SaveSystem.has() === true);
+_store['wdwtb_save_1'] = '{not-valid-json!!!';
+ok('corrupt JSON: loadSlot(1) === null', SaveSystem.loadSlot(1) === null);
+ok('corrupt JSON: hasSlot(1) 仍为 true（键存在）', SaveSystem.hasSlot(1) === true);
+
+// ── 5. 多槽位 API ──
+console.log('\n-- 多槽位 --');
+delete _store['wdwtb_save']; delete _store['wdwtb_save_1']; delete _store['wdwtb_save_2']; delete _store['wdwtb_save_3'];
+ok('slotCount=3', SaveSystem.slotCount === 3);
+ok('空槽 saveSlot(2)', SaveSystem.saveSlot(2, { career: 'doctor', act: 2 }));
+ok('hasSlot(2) true', SaveSystem.hasSlot(2) === true);
+ok('hasSlot(1) false', SaveSystem.hasSlot(1) === false);
+ok('loadSlot(2) career', SaveSystem.loadSlot(2)?.career === 'doctor');
+ok('saveSlot 自动加 slot 字段', SaveSystem.loadSlot(2)?.slot === 2);
+const list = SaveSystem.listSlots();
+ok('listSlots 返回 3 条', list.length === 3);
+ok('listSlots[1] 有存档', list[1].exists === true && list[1].career === 'doctor');
+ok('listSlots[0] 空', list[0].exists === false);
+ok('latestSlot=2', SaveSystem.latestSlot() === 2);
+ok('firstEmptySlot=1', SaveSystem.firstEmptySlot() === 1);
+// 单独测 latestSlot：手动写入不同 updatedAt（避免毫秒精度问题）
+_store['wdwtb_save_1'] = JSON.stringify({ version: 2, slot: 1, career: 'programmer', act: 1, updatedAt: 500 });
+_store['wdwtb_save_2'] = JSON.stringify({ version: 2, slot: 2, career: 'doctor', act: 1, updatedAt: 1000 });
+_store['wdwtb_save_3'] = JSON.stringify({ version: 2, slot: 3, career: 'lawyer', act: 1, updatedAt: 2000 });
+ok('latestSlot=3（更新更晚）', SaveSystem.latestSlot() === 3);
+SaveSystem.clearSlot(2);
+ok('clearSlot(2) 后 hasSlot(2)=false', SaveSystem.hasSlot(2) === false);
+ok('clearSlot 后 firstEmptySlot=2', SaveSystem.firstEmptySlot() === 2);
+SaveSystem.saveSlot(2, { career: 'teacher', act: 3 });
+ok('满槽时 firstEmptySlot=null', SaveSystem.firstEmptySlot() === null);
+
+// ── 6. 旧档迁移 ──
+console.log('\n-- 旧档迁移 --');
+delete _store['wdwtb_save_1']; delete _store['wdwtb_save_2']; delete _store['wdwtb_save_3'];
+delete _store['wdwtb_save'];
+_store['wdwtb_save'] = JSON.stringify({ version: 2, career: 'product', act: 4, subRole: 'ux', updatedAt: 12345 });
+SaveSystem._migrateLegacy();
+ok('迁移后 wdwtb_save 删除', _store['wdwtb_save'] === undefined);
+ok('迁移到 slot1', SaveSystem.loadSlot(1)?.career === 'product');
+ok('迁移 slot 字段=1', SaveSystem.loadSlot(1)?.slot === 1);
+ok('迁移后 has()=true（兼容）', SaveSystem.has() === true);
+SaveSystem._migrateLegacy();
+ok('迁移幂等', SaveSystem.loadSlot(1)?.career === 'product');
 
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ ' + fail + ' FAILED'} (${pass} passed, ${fail} failed)\n`);
 process.exit(fail === 0 ? 0 : 1);
