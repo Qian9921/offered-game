@@ -38,7 +38,8 @@
             "san": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "senior"
     },
     {
       "id": "ev_boss",
@@ -169,7 +170,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_help",
@@ -195,7 +197,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_deploy",
@@ -247,7 +250,8 @@
             "san": 3
           }
         }
-      ]
+      ],
+      "courierNpc": "senior"
     },
     {
       "id": "ev_rubberduck",
@@ -306,7 +310,8 @@
             "san": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "senior"
     },
     {
       "id": "ev_layoff_rumor",
@@ -462,7 +467,8 @@
             "money": -100
           }
         }
-      ]
+      ],
+      "courierNpc": "zhao"
     },
     {
       "id": "ev_rel_zhou_coffee",
@@ -492,7 +498,8 @@
             "passion": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_jiang_lunch",
@@ -525,7 +532,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_silent_desk",

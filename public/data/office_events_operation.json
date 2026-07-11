@@ -64,7 +64,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "oev_channel",
@@ -169,7 +170,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_op_viral",
@@ -298,7 +300,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_op_lu_topic",
@@ -329,7 +332,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_op_quiet_corner",

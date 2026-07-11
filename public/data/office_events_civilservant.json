@@ -145,7 +145,8 @@
             "san": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "cev_tea",
@@ -170,7 +171,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_cs_grandpa",
@@ -248,7 +250,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_cs_flag",
@@ -302,7 +305,8 @@
             "skill": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_cs_min_window",
@@ -334,7 +338,8 @@
             "stress": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_cs_quiet_desk",

@@ -65,7 +65,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "dev_export_rush",
@@ -91,7 +92,8 @@
             "energy": -12
           }
         }
-      ]
+      ],
+      "courierNpc": "dev"
     },
     {
       "id": "dev_inspiration",
@@ -118,7 +120,8 @@
             "passion": -2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "dev_color_fight",
@@ -170,7 +173,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_ds_trend",
@@ -299,7 +303,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_ds_tang_walk",
@@ -330,7 +335,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_ds_silent_desk",

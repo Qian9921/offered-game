@@ -76,7 +76,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "dev"
     },
     {
       "id": "pev_data_slap",
@@ -102,7 +103,8 @@
             "performance": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "data"
     },
     {
       "id": "pev_ops_slot",
@@ -129,7 +131,8 @@
             "passion": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "ops"
     },
     {
       "id": "pev_user_complaint",
@@ -182,7 +185,8 @@
             "san": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "pev_scope_creep",
@@ -375,7 +379,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_pd_du_prototype",
@@ -408,7 +413,8 @@
             "stress": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_pd_alone_desk",

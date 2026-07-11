@@ -91,7 +91,8 @@
             "performance": -2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "sev_payment",
@@ -169,7 +170,8 @@
             "stress": -2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_sl_rain",
@@ -298,7 +300,8 @@
             "performance": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_sa_ke_script",
@@ -329,7 +332,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_sa_quiet_bay",

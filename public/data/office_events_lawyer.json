@@ -29,7 +29,8 @@
             "performance": 3
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "lev_client",
@@ -84,7 +85,8 @@
             "performance": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "lev_conflict",
@@ -111,7 +113,8 @@
             "passion": -1
           }
         }
-      ]
+      ],
+      "courierNpc": "corp"
     },
     {
       "id": "lev_allnighter",
@@ -164,7 +167,8 @@
             "passion": 1
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_lw_probono",
@@ -298,7 +302,8 @@
             "skill": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "vet"
     },
     {
       "id": "ev_rel_lw_yuan_moot",
@@ -331,7 +336,8 @@
             "stress": 2
           }
         }
-      ]
+      ],
+      "courierNpc": "peer"
     },
     {
       "id": "ev_rel_lw_quiet_floor",
