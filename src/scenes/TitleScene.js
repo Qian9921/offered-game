@@ -330,7 +330,7 @@ export class TitleScene extends Phaser.Scene {
     const { width: W, height: H } = this.scale;
     const c = this.add.container(0, 0).setDepth(20000);
     c.add(this.add.rectangle(W / 2, H / 2, W, H, 0x06060c, 0.92).setInteractive());
-    const pw = 620, ph = 600, px = W / 2, py = H / 2;
+    const pw = 760, ph = 820, px = W / 2, py = H / 2;
     c.add(this.add.rectangle(px, py, pw, ph, 0x12121e, 0.98).setStrokeStyle(2, 0xd4a353, 0.6));
     this._overlay = c;
     this.input.keyboard.once('keydown-ESC', () => this._closeOverlay());
@@ -338,12 +338,12 @@ export class TitleScene extends Phaser.Scene {
   }
   _closeOverlay() { this._overlayActive = false; if (this._overlay) { this._overlay.destroy(true); this._overlay = null; } }
   _overlayTitle(text) {
-    const px = this.scale.width / 2, py = this.scale.height / 2, ph = 600;
-    this._overlay.add(this.add.text(px, py - ph / 2 + 36, text, { fontSize: '28px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
+    const px = this.scale.width / 2, py = this.scale.height / 2, ph = 820;
+    this._overlay.add(this.add.text(px, py - ph / 2 + 36, text, { fontSize: '30px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
   }
   _overlayCloseButton() {
-    const { width: W, height: H } = this.scale; const pw = 620;
-    const btn = this.add.text(W / 2 + pw / 2 - 20, H / 2 - 600 / 2 + 18, 'x', { fontSize: '22px', color: '#8a8a9e' })
+    const { width: W, height: H } = this.scale; const pw = 760;
+    const btn = this.add.text(W / 2 + pw / 2 - 20, H / 2 - 820 / 2 + 18, 'x', { fontSize: '24px', color: '#8a8a9e' })
       .setOrigin(1, 0).setInteractive({ useHandCursor: true });
     btn.on('pointerover', () => btn.setColor('#ff9a7a'));
     btn.on('pointerout', () => btn.setColor('#8a8a9e'));
@@ -460,42 +460,37 @@ export class TitleScene extends Phaser.Scene {
     this._openOverlay(); this._overlayTitle('制作组'); this._overlayCloseButton();
     const { width: W, height: H } = this.scale;
     const lines = [
-      { t: '---- 你想成为谁 ----', c: '#ffd24d', s: '22px' },
+      { t: '你想成为谁', c: '#ffd24d', s: '24px' },
       { t: '', c: '#888' },
       { t: 'AI 开发引擎', c: '#8fd08f', s: '20px' },
       { t: 'WorkBuddy — 腾讯 AI 办公智能体', c: '#ffe08a', s: '18px' },
       { t: '从代码到内容，全程 AI 驱动开发', c: '#c8c8dc' },
       { t: '', c: '#888' },
       { t: 'AI 内容引擎', c: '#8fd08f', s: '18px' },
-      { t: '腾讯混元 hy3 — 结局画像 / NPC 个性化台词', c: '#c8c8dc' },
-      { t: '10 职业 x 5 幕叙事，AI 实时生成专属结局', c: '#9a9ab0' },
+      { t: '腾讯混元 hy3 — 结局画像 / NPC 台词', c: '#c8c8dc' },
+      { t: '10 职业 x 5 幕叙事，AI 实时生成', c: '#9a9ab0' },
       { t: '', c: '#888' },
       { t: '游戏设计', c: '#8fd08f', s: '18px' },
       { t: '职场探索叙事 RPG · 10 职业世界', c: '#c8c8dc' },
-      { t: '任务链 / 好感 / 事件 / 物品 / 五结局', c: '#9a9ab0' },
+      { t: '任务链 / 好感 / 物品 / 事件 / 五结局', c: '#9a9ab0' },
       { t: '', c: '#888' },
       { t: '像素美术', c: '#8fd08f', s: '18px' },
-      { t: 'LimeZu — Modern Office tileset', c: '#c8c8dc' },
-      { t: 'Kenney — Roguelike characters', c: '#c8c8dc' },
-      { t: 'SkyOffice — Office map (MIT)', c: '#c8c8dc' },
+      { t: 'LimeZu / Kenney / SkyOffice (MIT)', c: '#c8c8dc' },
       { t: '', c: '#888' },
       { t: '技术栈', c: '#8fd08f', s: '18px' },
-      { t: 'Phaser 3.80 · Vite 5', c: '#c8c8dc' },
-      { t: '纯 WebAudio 程序化音频', c: '#9a9ab0' },
+      { t: 'Phaser 3.80 · Vite 5 · WebAudio', c: '#c8c8dc' },
       { t: 'Fusion Pixel 12px 字体 (OFL)', c: '#9a9ab0' },
       { t: '', c: '#888' },
-      { t: '部署', c: '#8fd08f', s: '18px' },
-      { t: '腾讯云 EdgeOne Pages', c: '#c8c8dc' },
+      { t: '部署：腾讯云 EdgeOne Pages', c: '#8fd08f', s: '18px' },
       { t: '', c: '#888' },
-      { t: '致每一位毕业生', c: '#ffd24d', s: '20px' },
-      { t: '试一种人生，找到你自己。', c: '#c8b88a' },
-      { t: '', c: '#888' },
-      { t: '腾讯云黑客松 · 2026 · WorkBuddy 出品', c: '#6a6a82' },
+      { t: '试一种人生，找到你自己。', c: '#ffd24d', s: '20px' },
+      { t: '腾讯云黑客松 2026 · WorkBuddy 出品', c: '#6a6a82' },
     ];
-    const startY = H / 2 - 230;
+    const lineH = 30;
+    const startY = H / 2 - (lines.length * lineH) / 2 + 20;
     lines.forEach((line, i) => {
-      this._overlay.add(this.add.text(W / 2, startY + i * 32, line.t, {
-        fontSize: line.s || '16px', color: line.c || '#c8c8dc', fontStyle: line.s ? 'bold' : 'normal',
+      this._overlay.add(this.add.text(W / 2, startY + i * lineH, line.t, {
+        fontSize: line.s || '17px', color: line.c || '#c8c8dc', fontStyle: line.s ? 'bold' : 'normal',
       }).setOrigin(0.5));
     });
   }
