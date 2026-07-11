@@ -37,6 +37,31 @@ export class NpcAgent {
     return true;
   }
 
+  // 拜访：走到目的地后停住等待（不自动返回），由外部调 returnHome() 再回工位。
+  // 用于"NPC 跑到玩家面前送事件"——到了先说话，说完再回去。
+  goVisit(pathTo, onArrive) {
+    if (this.busy) return false;
+    const spr = this.w.spr;
+    if (!spr || !pathTo || !pathTo.length) return false;
+    this.state = 'walking';
+    this._tweenPath(pathTo, () => {
+      this.state = 'visiting';
+      spr.stop();
+      const idle = this.w.anims?.idleFrame?.(this._lastDir);
+      if (idle != null) spr.setFrame(idle);
+      if (onArrive) onArrive();
+    });
+    return true;
+  }
+
+  // 拜访结束：沿 pathBack 走回工位坐下。
+  returnHome(pathBack) {
+    if (this.state !== 'visiting') { this._sitDown(); return; }
+    if (!pathBack || !pathBack.length) { this._sitDown(); return; }
+    this.state = 'walking';
+    this._tweenPath(pathBack, () => this._sitDown());
+  }
+
   _tweenPath(waypoints, onDone) {
     const spr = this.w.spr;
     let i = 0;
