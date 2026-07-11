@@ -33,7 +33,6 @@ import {
   shouldDeferLightEnding,
   enterWorkingFromLightEnding,
   canFinishLightWorkLoop,
-  isStoryPending,
   mergeStoryState,
   createStoryState,
   chainHudStep,
