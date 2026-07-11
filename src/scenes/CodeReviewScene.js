@@ -175,12 +175,24 @@ export class CodeReviewScene extends Phaser.Scene {
     this.time.delayedCall(1500, () => t.destroy());
   }
 
+  // C8 修复（两处）：
+  // 1) 原来解释页直接在 diff 行 + "这处问题属于哪一类"分类按钮之上叠加文字，两层内容
+  //    互相压字、读不清——现补一层遮罩先盖住第一/二步的残留 UI，再画解释内容，避免叠字。
+  //    用与场景背景同色(#0d1117)的**不透明**矩形而非半透明黑：分类按钮底色偏亮、文字
+  //    对比度高，半透明遮罩仍会让残留文字透出、和新绘的"点击继续"挤在一起分不清——
+  //    不透明遮罩才能让旧内容完全隐没，不留任何可读像素。
+  // 2) icon 固定上锚点(y=200，遮罩之上全屏可用，不必再避让 diff/按钮)，ex 紧跟 icon 之下，
+  //    "点击继续"紧跟 ex 之下、clamp ≤510，任意长度解释文案都不会顶穿 540 底边。
   _explain(solved, explain) {
-    const icon = this.add.text(480, 300, solved ? '✅ 评审通过' : '📝 还需打磨', { fontSize: '18px', color: solved ? '#3fb950' : '#f0883e', fontStyle: 'bold' }).setOrigin(0.5);
+    this.ui.add(this.add.rectangle(480, 270, 960, 540, 0x0d1117, 1));
+    const iconTopY = 200;
+    const icon = this.add.text(480, iconTopY, solved ? '✅ 评审通过' : '📝 还需打磨', { fontSize: '18px', color: solved ? '#3fb950' : '#f0883e', fontStyle: 'bold' }).setOrigin(0.5, 0);
     this.ui.add(icon); Juice.pop && Juice.pop(this, icon, 1);
-    const ex = this.add.text(480, 332, explain || '', { fontSize: '13px', color: '#8b949e', wordWrap: { width: 720 }, align: 'center', lineSpacing: 3 }).setOrigin(0.5, 0);
+    const exY = iconTopY + icon.height + 14;
+    const ex = this.add.text(480, exY, explain || '', { fontSize: '13px', color: '#8b949e', wordWrap: { width: 720, useAdvancedWrap: true }, align: 'center', lineSpacing: 3 }).setOrigin(0.5, 0);
     this.ui.add(ex);
-    const cont = this.add.text(480, 470, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5);
+    const contY = Math.min(510, exY + ex.height + 30);
+    const cont = this.add.text(480, contY, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5);
     this.ui.add(cont);
     const advance = () => { this.input.off('pointerdown', advance); this.idx++; if (this.idx < this.puzzles.length) this._show(); else this._finish(); };
     this.time.delayedCall(150, () => this.input.on('pointerdown', advance));

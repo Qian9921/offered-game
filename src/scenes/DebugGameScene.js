@@ -195,17 +195,25 @@ export class DebugGameScene extends Phaser.Scene {
   }
 
   // 解释页（找对/超时后）
+  // C8 修复：原来 icon/ex/cont 全部写死 y（430/462/520），长中文解释（如超时前缀+74字 fetch 说明）
+  // 会把"点击继续"顶到 540 底边之外。现改为：icon 固定上锚点(top=418，代码区最多 7 行时
+  // 底边≈286，留足净空)，ex 紧跟 icon 之下(origin 0.5,0，用实测 icon.height 定位)，
+  // "点击继续"再紧跟 ex 之下(用实测 ex.height 定位)、并 clamp 到 ≤510，任何长度解释文案
+  // 都不会把继续按钮推出可视区。
   _showExplain(solved, explain) {
-    const icon = this.add.text(480, 430, solved ? this.chrome.solvedLabel : this.chrome.failLabel, {
+    const iconTopY = 418;
+    const icon = this.add.text(480, iconTopY, solved ? this.chrome.solvedLabel : this.chrome.failLabel, {
       fontSize: '18px', color: solved ? '#3fb950' : '#f85149', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    }).setOrigin(0.5, 0);
     this.ui.add(icon);
     Juice.pop(this, icon, 1);
-    const ex = this.add.text(480, 462, explain, {
+    const exY = iconTopY + icon.height + 12;
+    const ex = this.add.text(480, exY, explain, {
       fontSize: '13px', color: '#8b949e', wordWrap: { width: 700, useAdvancedWrap: true }, align: 'center', lineSpacing: 3,
     }).setOrigin(0.5, 0);
     this.ui.add(ex);
-    const cont = this.add.text(480, 520, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5);
+    const contY = Math.min(510, exY + ex.height + 30);
+    const cont = this.add.text(480, contY, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5);
     this.ui.add(cont);
     // 点击推进（一次性，防泄漏：advance 里先 off）
     const advance = () => {

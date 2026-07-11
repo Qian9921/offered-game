@@ -148,14 +148,25 @@ export class TestCaseScene extends Phaser.Scene {
     this.time.delayedCall(1500, () => t.destroy());
   }
 
+  // C8 修复：explain 文案在这里可能拼接"超时前缀 + pz.explain + 漏测清单"三段，最长可达
+  // 近百字、换行 3 行（实测 height≈50）。原来"点击继续"写死 y=400，本身有余量，但为防
+  // 未来题库/漏测清单变长后仍顶穿底边，统一改为：icon 固定上锚点(y=200)，ex 紧跟其下，
+  // "点击继续"紧跟 ex 之下、clamp ≤510，任意长度都安全。
+  // 附带修复：原半透明遮罩(0x000000, 0.55)不够暗，题目条数少、解释文案短时，"点击继续"
+  // 的计算位置会落在底下"提交用例"按钮原位置上——半透明底色仍让亮色按钮文字透出，与
+  // "点击继续"字迹重叠、糊成一团（实测可复现）。改用与场景背景同色(#0e1a14)的**不透明**
+  // 遮罩矩形，彻底盖住第一阶段候选清单/按钮，杜绝任何残留像素透出。
   _explain(solved, explain) {
-    // 半透明遮罩 + 结算
-    this.ui.add(this.add.rectangle(480, 270, 960, 540, 0x000000, 0.55));
-    const icon = this.add.text(480, 210, solved ? '✅ 覆盖充分' : '🔍 还有遗漏', { fontSize: '20px', color: solved ? '#4ec9b0' : '#f0883e', fontStyle: 'bold' }).setOrigin(0.5);
+    // 不透明遮罩（场景底色，彻底盖住候选清单与提交按钮）+ 结算
+    this.ui.add(this.add.rectangle(480, 270, 960, 540, 0x0e1a14, 1));
+    const iconTopY = 200;
+    const icon = this.add.text(480, iconTopY, solved ? '✅ 覆盖充分' : '🔍 还有遗漏', { fontSize: '20px', color: solved ? '#4ec9b0' : '#f0883e', fontStyle: 'bold' }).setOrigin(0.5, 0);
     this.ui.add(icon); Juice.pop && Juice.pop(this, icon, 1);
-    const ex = this.add.text(480, 248, explain || '', { fontSize: '13px', color: '#cfe8dc', wordWrap: { width: 720 }, align: 'center', lineSpacing: 4 }).setOrigin(0.5, 0);
+    const exY = iconTopY + icon.height + 14;
+    const ex = this.add.text(480, exY, explain || '', { fontSize: '13px', color: '#cfe8dc', wordWrap: { width: 720, useAdvancedWrap: true }, align: 'center', lineSpacing: 4 }).setOrigin(0.5, 0);
     this.ui.add(ex);
-    const cont = this.add.text(480, 400, '点击继续', { fontSize: '12px', color: '#7fae98' }).setOrigin(0.5);
+    const contY = Math.min(510, exY + ex.height + 30);
+    const cont = this.add.text(480, contY, '点击继续', { fontSize: '12px', color: '#7fae98' }).setOrigin(0.5);
     this.ui.add(cont);
     const advance = () => { this.input.off('pointerdown', advance); this.idx++; if (this.idx < this.puzzles.length) this._show(); else this._finish(); };
     this.time.delayedCall(150, () => this.input.on('pointerdown', advance));

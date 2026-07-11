@@ -138,15 +138,29 @@ export class OpeningScene extends Phaser.Scene {
     this.ui.add(this.add.text(480, 62, '给自己起个名字，选一个即将走进职场的你', { fontSize: '13px', color: THEME.textMuted }).setOrigin(0.5));
     this._makeNameInput();
 
-    const cx = 480, baseline = 262;
-    this.ui.add(this.add.ellipse(cx, baseline + 4, 120, 30, 0x2a2a44, 0.9));
+    // C7 修复：原 baseline=262 时，阴影外圈底部(281)与描述文字(y=288，top=280)、
+    // 以及描述文字底部(296)与下方缩略图顶部(292)均重叠/几乎贴死，导致"干练寸头 · 男"读不清。
+    // 现将立绘+阴影整体上移（baseline 262→236，头顶上方仍有充足留白，不撞标题/起名框），
+    // 描述文字改为用"阴影底部下方安全间距"与"缩略图顶部上方安全间距"之间的可用带、
+    // 结合文字实测高度居中定位，确保任意皮肤名不与阴影/缩略图重叠。
+    const cx = 480, baseline = 236;
+    const shadowOuterRy = 15;
+    this.ui.add(this.add.ellipse(cx, baseline + 4, 120, shadowOuterRy * 2, 0x2a2a44, 0.9));
     this.ui.add(this.add.ellipse(cx, baseline, 92, 22, 0x3a3a5e, 0.9));
+    const shadowBottom = baseline + 4 + shadowOuterRy; // 阴影最低点(=255)
     const first = this.charSkins[0];
     this.previewSpr = this.add.sprite(cx, baseline + 8, first.key, first.idle).setOrigin(0.5, 1);
     this._showSkinOn(this.previewSpr, first);
     this.previewSpr.setScale(first.pv);
     this.ui.add(this.previewSpr);
-    this.skinNameLabel = this.add.text(cx, baseline + 26, first.name, { fontSize: '15px', color: THEME.text, fontStyle: 'bold', letterSpacing: 1 }).setOrigin(0.5);
+
+    const thumbTop = 330 - 38; // 见下方缩略图行 y0=330 的卡片顶边(=292)
+    const labelSafeTop = shadowBottom + 12; // 阴影下方安全间距
+    const labelSafeBottom = thumbTop - 8;   // 缩略图上方安全间距
+    this.skinNameLabel = this.add.text(cx, labelSafeTop, first.name, { fontSize: '15px', color: THEME.text, fontStyle: 'bold', letterSpacing: 1 }).setOrigin(0.5, 0);
+    // 用实测文字高度在可用带内居中，任何一行皮肤名都不会撞到阴影或缩略图
+    const labelBandH = Math.max(0, labelSafeBottom - labelSafeTop);
+    this.skinNameLabel.setY(labelSafeTop + Math.max(0, (labelBandH - this.skinNameLabel.height) / 2));
     this.ui.add(this.skinNameLabel);
 
     this.thumbFrames = [];

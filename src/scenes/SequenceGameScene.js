@@ -146,18 +146,24 @@ export class SequenceGameScene extends Phaser.Scene {
     this._showExplain(false, '⏰ 时间到！\n' + pz.explain);
   }
 
+  // C8 修复：卡片列表最多 6 行(rowH=44+gap8, top=116) → 最后一行底边≈398，
+  // icon 固定上锚点 418（与列表留足净空），ex 紧跟 icon 之下，"点击继续"紧跟 ex 之下、
+  // clamp ≤510，任意长度解释文案（含"⏰ 时间到！"两行前缀）都不会顶穿 540 底边。
   _showExplain(solved, explain) {
     this._explaining = true;
-    const icon = this.add.text(480, 428, solved ? '✓ 流程正确' : '✗ 顺序乱了', {
+    const iconTopY = 418;
+    const icon = this.add.text(480, iconTopY, solved ? '✓ 流程正确' : '✗ 顺序乱了', {
       fontSize: '18px', color: solved ? '#3fb950' : '#f85149', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    }).setOrigin(0.5, 0);
     this.ui.add(icon);
     Juice.pop(this, icon, 1);
-    const ex = this.add.text(480, 458, explain, {
+    const exY = iconTopY + icon.height + 12;
+    const ex = this.add.text(480, exY, explain, {
       fontSize: '13px', color: '#8b949e', wordWrap: { width: 700, useAdvancedWrap: true }, align: 'center', lineSpacing: 3,
     }).setOrigin(0.5, 0);
     this.ui.add(ex);
-    this.ui.add(this.add.text(480, 516, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5));
+    const contY = Math.min(510, exY + ex.height + 30);
+    this.ui.add(this.add.text(480, contY, '点击继续', { fontSize: '12px', color: '#484f58' }).setOrigin(0.5));
     const advance = () => {
       this.input.off('pointerdown', advance);
       this._explaining = false;
