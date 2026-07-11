@@ -33,6 +33,7 @@ import {
   shouldDeferLightEnding,
   enterWorkingFromLightEnding,
   canFinishLightWorkLoop,
+  preferredLightEnding,
   mergeStoryState,
   createStoryState,
   chainHudStep,
@@ -1630,7 +1631,8 @@ export class WorldScene extends Phaser.Scene {
         if (this._story.phase === 'working') {
           const p = this.projectSystem ? Math.round(this.projectSystem.progress) : 0;
           if (canFinishLightWorkLoop(this._story, p)) {
-            SceneRouter.goto(this, 'EndingScene', this._endingPayload('light'));
+            const endId = preferredLightEnding(this._story, 'light');
+            SceneRouter.goto(this, 'EndingScene', this._endingPayload(endId));
             return;
           }
           this._showLine(npc.name, `稿还在推进中——现在项目 ${p}%。\n把任务链和今日工单往前推，推满 100% 再来找我收尾。`);
@@ -2167,7 +2169,9 @@ export class WorldScene extends Phaser.Scene {
   // 项目跨过里程碑 → 解锁下一幕剧情：老陈召唤(❗)，玩家走近他推进剧情。
   // 取代旧的"熬够N天"：现在是"把项目推到节点→剧情自然解锁"。
   _onProjectMilestone(pct) {
-    const r = applyProjectMilestone(this._story, pct, this.act);
+    const r = applyProjectMilestone(this._story, pct, this.act, {
+      lightCareer: LIGHT_CAREERS.includes(this.career),
+    });
     this._story = r.story;
     // impact(scene, intensity) — 仅震屏+顿帧，勿把坐标当 intensity
     Juice.impact(this, 0.014);
@@ -2827,7 +2831,8 @@ export class WorldScene extends Phaser.Scene {
           // 项目 100% 后再由导师交互进真正结局——否则迷你完整版会被剧情直接送走。
           if (shouldDeferLightEnding(self.workLoopEnabled, self.career,
               self.projectSystem ? self.projectSystem.progress : 0)) {
-            self._story = enterWorkingFromLightEnding(self._story, self.act);
+            self._story = enterWorkingFromLightEnding(
+              self._story, self.act, (node && node.ending) || 'light');
             self._persistStory();
             self._updateNpcMarks();
             self.dialogueActive = false;
@@ -2852,38 +2857,34 @@ export class WorldScene extends Phaser.Scene {
   }
 
   // ==================== 家人消息（PhoneMessage + FamilyMessages）====================
-  // 三种触发入口，共享同一个 _showPhone 渲染方法：
-  //   1. _showFamilyByAct(act)      —— 幕次推进时推一条（每幕1条，去重）
-  //   2. _onStateThreshold(info)     —— health/san/passion 触底时推一条至暗消息
-  //   3. action 'phone_message'      —— 剧情数据显式触发（上面已接线）
+  // 定位：职业探索工具，不是煽情游戏。家人消息只在入职时来一条简单的短信，
+  // 之后不再打扰——玩家的注意力应该在"体验职业、判断适不适合"上。
   _showFamilyByAct(act, keyword) {
+    // 只有第 1 幕（入职）推一条简单的家人短信；其余幕不推
+    if (act !== 1 && !keyword) return;
+    if (this._familyMsgShown) return; // 一局只推一次
+    this._familyMsgShown = true;
     this.familyMessages.load().then(() => {
       const picked = keyword
         ? this.familyMessages.pickByKeyword(keyword)
-        : this.familyMessages.pickForAct(act);
+        : this.familyMessages.pickForAct(1);
       if (picked) this._showPhone(picked.bubbles, picked.context);
     });
   }
 
-  // 状态触底回调：health/san/passion 跌破 20。
-  // 每个状态键只触发一次（用 _phoneTriggeredFor 去重），避免数值来回跳反复弹窗。
+  // 状态触底回调：不再推家人煽情消息——改为轻量的内心提示（职业健康信号）。
+  // 玩家该关注的是"这份工作对我的消耗"，而不是被亲情绑架。
   _onStateThreshold(info) {
     const key = info.key;
     if (this._phoneTriggeredFor.has(key)) return;
     this._phoneTriggeredFor.add(key);
-    // 弹窗前先确保家人在移动状态被冻结期间显示
-    this.familyMessages.load().then(() => {
-      const picked = this.familyMessages.pickForThreshold();
-      if (picked) {
-        this._showPhone(picked.bubbles, picked.context);
-      } else {
-        // 没匹配到专属消息时，用一句通用安慰兜底（不空窗）
-        this._showPhone(
-          [{ sender: '妈妈', text: '囡囡，别太拼了。身体是自己的，妈就你好好的。' }],
-          '兜底·状态触底'
-        );
-      }
-    });
+    const HINTS = {
+      health: '（身体在报警了。这是这份工作的真实成本——记下来，报告里会用到。）',
+      san: '（心态快撑不住了。问问自己：是这份工作的问题，还是节奏的问题？）',
+      passion: '（热情快烧完了。留意一下：你是不喜欢这份活，还是只是累了？）',
+    };
+    const hint = HINTS[key];
+    if (hint) this._showThoughtBubble(hint, '#e8a05a');
   }
 
   // 统一渲染：用 PhoneMessage 弹窗显示，期间冻结玩家移动

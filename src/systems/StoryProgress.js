@@ -101,12 +101,23 @@ export function enterWorkingAfterAct(story, currentAct) {
 
 /**
  * 项目里程碑：若 pct 对应幕次大于当前 act，则挂 pendingAct。
+ * 轻量职业(light_*.json 单文件)没有 act2-5 剧情——挂 pendingAct 会让 isStoryPending
+ * 挡住任务链接取 → 软锁。故 light 只 toast 不解锁。
+ * @param {{ lightCareer?: boolean }} [opts]
  * @returns {{ story, unlocked: boolean, pendingAct: number|null, toastOnly: boolean }}
  */
-export function applyProjectMilestone(story, pct, currentAct) {
+export function applyProjectMilestone(story, pct, currentAct, opts = {}) {
   const act = currentAct != null ? currentAct : (story?.act || 1);
   const actForPct = MILESTONE_ACT[pct];
   if (!actForPct || actForPct <= act) {
+    return {
+      story: { ...story },
+      unlocked: false,
+      pendingAct: story?.pendingAct ?? null,
+      toastOnly: true,
+    };
+  }
+  if (opts.lightCareer || story?.lightCareer) {
     return {
       story: { ...story },
       unlocked: false,
@@ -192,13 +203,17 @@ export function shouldDeferLightEnding(workLoopEnabled, career, projectProgress)
     && (projectProgress == null || projectProgress < 100));
 }
 
-export function enterWorkingFromLightEnding(story, currentAct) {
+export function enterWorkingFromLightEnding(story, currentAct, preferredEnding = null) {
   const act = currentAct || story?.act || 1;
+  const ending = preferredEnding || story?.preferredEnding || 'light';
   return {
     ...story,
     phase: 'working',
     act,
     checkpoint: null,
+    lightCareer: true,
+    preferredEnding: ending,
+    pendingAct: null, // 清残留，避免 isStoryPending 卡住接任务
   };
 }
 
@@ -207,6 +222,11 @@ export function enterWorkingFromLightEnding(story, currentAct) {
  */
 export function canFinishLightWorkLoop(story, projectProgress) {
   return story?.phase === 'working' && (projectProgress ?? 0) >= 100;
+}
+
+/** 迷你完整版最终结局 id：保留开场 light 剧情里玩家走到的 ending 字段 */
+export function preferredLightEnding(story, fallback = 'light') {
+  return (story && story.preferredEnding) || fallback || 'light';
 }
 
 /**
