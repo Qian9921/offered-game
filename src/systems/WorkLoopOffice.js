@@ -360,6 +360,12 @@ export function applySeniorAction(questSystem, action) {
  *   resultColor: string,
  * }}
  */
+// 状态键 → 后果小结的中文标签（只列玩家看得懂的）
+const STAT_LABEL = {
+  health: '健康', energy: '精力', san: '心态', stress: '压力',
+  skill: '技能', performance: '绩效', money: '金钱', passion: '热情',
+};
+
 export function planEventChoiceEffects(choice = {}, ev = {}) {
   const effects = {};
   if (choice && choice.effects && typeof choice.effects === 'object') {
@@ -369,10 +375,50 @@ export function planEventChoiceEffects(choice = {}, ev = {}) {
     }
   }
   const projectDelta = Number(choice?.projectDelta);
+  const pd = Number.isFinite(projectDelta) ? projectDelta : 0;
+  const addOrder = !!(choice && choice.addOrder);
+
+  // 人格轴增量：让事件也在悄悄测绘你的职业人格(喂报告)
+  const axes = {};
+  if (choice && choice.axes && typeof choice.axes === 'object') {
+    for (const [k, v] of Object.entries(choice.axes)) {
+      const n = Number(v);
+      if (Number.isFinite(n) && n !== 0) axes[k] = n;
+    }
+  }
+  // 好感涟漪：{npcId: delta}——牵动关系网。可为具体 npc,也可用 ev.courierNpc 兜底。
+  const affinity = {};
+  if (choice && choice.affinity && typeof choice.affinity === 'object') {
+    for (const [id, v] of Object.entries(choice.affinity)) {
+      const n = Number(v);
+      if (Number.isFinite(n) && n !== 0) affinity[id] = n;
+    }
+  }
+  // 记忆标签：{npcId, tag}——供后续对话/事件回调("上次那件事…")
+  const remember = (choice && choice.remember && choice.remember.tag)
+    ? { npcId: choice.remember.npcId || ev.courierNpc || null, tag: String(choice.remember.tag) }
+    : null;
+
+  // 后果小结（玩家一眼看懂"这个选择改变了什么"——根治"找完就不懂了")
+  const summary = [];
+  for (const [k, v] of Object.entries(effects)) {
+    const label = STAT_LABEL[k]; if (!label) continue;
+    summary.push({ text: `${label} ${v > 0 ? '+' : ''}${v}`, color: v >= 0 ? '#7bd88f' : '#e8a86f' });
+  }
+  if (pd !== 0) summary.push({ text: `项目进度 ${pd > 0 ? '+' : ''}${pd}%`, color: pd >= 0 ? '#7bd88f' : '#e8a86f' });
+  for (const [id, v] of Object.entries(affinity)) {
+    summary.push({ text: `与同事关系 ${v >= 0 ? '↑' : '↓'}`, color: v >= 0 ? '#7bd88f' : '#e8a86f', npc: id });
+  }
+  if (addOrder) summary.push({ text: '多了一张紧急插单', color: '#e8735a' });
+
   return {
     effects,
-    projectDelta: Number.isFinite(projectDelta) ? projectDelta : 0,
-    addOrder: !!(choice && choice.addOrder),
+    projectDelta: pd,
+    addOrder,
+    axes,
+    affinity,
+    remember,
+    summary,
     result: (choice && choice.result) ? String(choice.result) : null,
     resultColor: ev && ev.urgent ? '#ff9a7a' : '#ffd24d',
   };

@@ -19,7 +19,11 @@
             "performance": 6,
             "energy": -8
           },
-          "addOrder": true
+          "addOrder": true,
+          "axes": {
+            "risk": 2,
+            "empathy": 1
+          }
         },
         {
           "label": "先看日志定位,别慌",
@@ -28,6 +32,10 @@
             "stress": 4,
             "skill": 3,
             "performance": 3
+          },
+          "axes": {
+            "plan": 2,
+            "risk": -1
           }
         },
         {
@@ -36,6 +44,9 @@
           "effects": {
             "performance": -3,
             "san": 2
+          },
+          "axes": {
+            "collab": 2
           }
         }
       ],
@@ -53,6 +64,9 @@
           "result": "你屏住呼吸。他「嗯」了一声走了。虚惊一场。",
           "effects": {
             "stress": 3
+          },
+          "axes": {
+            "risk": -1
           }
         },
         {
@@ -61,6 +75,10 @@
           "effects": {
             "performance": 5,
             "stress": 4
+          },
+          "axes": {
+            "risk": 1,
+            "empathy": -1
           }
         }
       ]
@@ -80,7 +98,10 @@
             "passion": -4,
             "performance": 2
           },
-          "projectDelta": -6
+          "projectDelta": -6,
+          "axes": {
+            "empathy": 2
+          }
         },
         {
           "label": "「这得重新排期。」把话摊开讲",
@@ -89,6 +110,10 @@
             "stress": 3,
             "san": 3,
             "performance": -2
+          },
+          "axes": {
+            "empathy": -1,
+            "plan": 2
           }
         }
       ]
@@ -107,6 +132,9 @@
             "energy": 12,
             "san": 4,
             "stress": -3
+          },
+          "axes": {
+            "risk": -1
           }
         },
         {
@@ -115,6 +143,9 @@
           "effects": {
             "energy": 4,
             "health": -3
+          },
+          "axes": {
+            "risk": 1
           }
         }
       ]
@@ -133,6 +164,10 @@
             "stress": 6,
             "performance": 4,
             "san": -2
+          },
+          "axes": {
+            "empathy": -2,
+            "risk": 1
           }
         },
         {
@@ -142,6 +177,9 @@
             "performance": -4,
             "san": -5,
             "passion": -2
+          },
+          "axes": {
+            "empathy": 2
           }
         }
       ]
@@ -160,6 +198,12 @@
             "san": 3,
             "stress": 2,
             "performance": -1
+          },
+          "axes": {
+            "collab": 1
+          },
+          "affinity": {
+            "peer": 3
           }
         },
         {
@@ -168,6 +212,12 @@
           "effects": {
             "skill": 3,
             "performance": 2
+          },
+          "axes": {
+            "collab": -1
+          },
+          "affinity": {
+            "peer": -1
           }
         }
       ],
@@ -187,6 +237,12 @@
             "san": 4,
             "passion": 3,
             "energy": -4
+          },
+          "axes": {
+            "collab": 2
+          },
+          "affinity": {
+            "peer": 4
           }
         },
         {
@@ -195,6 +251,12 @@
           "effects": {
             "san": -2,
             "performance": 2
+          },
+          "axes": {
+            "collab": -1
+          },
+          "affinity": {
+            "peer": -2
           }
         }
       ],
