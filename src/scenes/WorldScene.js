@@ -1073,8 +1073,9 @@ export class WorldScene extends Phaser.Scene {
     [...this.npcs, ...this.workers].forEach(e => { e._mood = this._makeMoodBubble(e.spr); });
     this._refreshAllMoods();
     if (this._moodTimer) this._moodTimer.remove();
+    // 气泡更勤地变化,办公室的"活人感"更强(用户反馈活人感缺失)
     this._moodTimer = this.time.addEvent({
-      delay: 18000, loop: true, callback: () => this._shuffleSomeMoods(),
+      delay: 10000, loop: true, callback: () => this._shuffleSomeMoods(),
     });
 
     this._startNpcLife();
@@ -1204,9 +1205,9 @@ export class WorldScene extends Phaser.Scene {
     }
     if (this._npcLifeTimer) this._npcLifeTimer.remove();
     // 真实职场：大部分人一直在工位工作，偶尔有人起身（茶水/打印/伸展）。
-    // tick 间隔 15 秒（不是 4 秒），且每次只有 ~30% 概率真的有人动，同时最多 1 人在走。
+    // 办公室要有"活人感"(用户反馈):tick 间隔 8 秒,多人可同时走动,让办公室活起来。
     this._npcLifeTimer = this.time.addEvent({
-      delay: 15000, loop: true, callback: () => this._tickNpcLife(),
+      delay: 8000, loop: true, callback: () => this._tickNpcLife(),
     });
   }
 
@@ -1221,11 +1222,11 @@ export class WorldScene extends Phaser.Scene {
       ...(this.workers || []).filter(w => w.agent && w.spr?.visible),
     ];
     if (!allMovers.length) return;
-    // 同时最多 2 人在走（核心NPC加入后稍放宽：真实办公室偶尔2人同时在动）
+    // 同时最多 4 人在走（真实办公室经常好几个人同时在动——茶水间/打印/走动/开会）
     const moving = allMovers.filter(e => e.agent.busy).length;
-    if (moving >= 2) return;
-    // 每次只有 35% 概率真的有人起身（大部分时间所有人安静坐着）
-    if (Phaser.Math.RND.frac() > 0.35) return;
+    if (moving >= 4) return;
+    // 55% 概率有人起身（办公室要"活",经常有人走动,不是死坐着）
+    if (Phaser.Math.RND.frac() > 0.55) return;
     const idle = allMovers.filter(e => !e.agent.busy);
     if (!idle.length) return;
     const w = Phaser.Utils.Array.GetRandom(idle);
