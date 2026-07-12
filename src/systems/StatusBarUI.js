@@ -178,6 +178,8 @@ export class StatusBarUI {
     this.expanded = on;
     this.mini.setVisible(!on);
     this.panel.setVisible(on);
+    // 通知外部(WorldScene):展开的大面板会盖住左上任务指引,让它暂时避让(Q2重叠修复)
+    if (typeof this.onExpandChange === 'function') this.onExpandChange(on);
   }
 
   // 对话/演出时调用：整个 HUD 让路（半透明）；结束恢复

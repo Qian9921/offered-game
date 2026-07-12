@@ -408,6 +408,10 @@ export class WorldScene extends Phaser.Scene {
       this._reportShown = false;
     }
     this.statusUI = new StatusBarUI(this, this.stateSystem);
+    // Q2:Tab 展开的大状态面板会盖住左上任务指引(objectiveHud/guideText),展开时让它们避让
+    this.statusUI.onExpandChange = (expanded) => {
+      if (this.objectiveHud) this.objectiveHud.setVisible(!expanded && !this.dialogueActive && !!this.objectiveHud.text);
+    };
     this.dialogueEngine = new DialogueEngine(this, this.stateSystem);
     this._setupDialogueEvents();
     // 家人消息：数据层（异步加载）+ UI 层（仿微信弹窗）
@@ -929,18 +933,20 @@ export class WorldScene extends Phaser.Scene {
       const prof = JSON.parse(localStorage.getItem('wdwtb_profile') || '{}');
       if (prof && prof.name) pname = String(prof.name).slice(0, 8);
     } catch (e) {}
-    this.playerNameTag = this.add.text(this.player.x, this.player.y + 8, pname, {
+    // 名牌放在【头顶上方】(角色精灵 origin 居中、SCALE2 约 64px 高,头顶约 y-32,
+    // 名牌底边贴 y-40),origin(0.5,1) 让名牌底边对齐头顶上方——不再显示在脚下(那样很怪)。
+    this.playerNameTag = this.add.text(this.player.x, this.player.y - 40, pname, {
       fontSize: '13px', color: '#ffe08a', fontStyle: 'bold',
       stroke: '#0a0a14', strokeThickness: 3,
       backgroundColor: '#00000066', padding: { x: 5, y: 1 },
-    }).setOrigin(0.5, 0).setDepth(99999);
+    }).setOrigin(0.5, 1).setDepth(99999);
   }
 
-  // 每帧同步玩家名牌到脚下(在 update 里调用)
+  // 每帧同步玩家名牌到头顶上方(在 update 里调用)
   _updatePlayerNameTag() {
     if (this.playerNameTag && this.player) {
-      this.playerNameTag.setPosition(this.player.x, this.player.y + 8);
-      this.playerNameTag.setDepth(this.player.y + 1);
+      this.playerNameTag.setPosition(this.player.x, this.player.y - 40);
+      this.playerNameTag.setDepth(99999);
     }
   }
 
@@ -3003,7 +3009,7 @@ export class WorldScene extends Phaser.Scene {
         if (pathTo && pathTo.length) {
           this._eventCourier = courierNpc;
           if (courierNpc._mood) { courierNpc._mood.setText('有事找你'); this._positionMood(courierNpc); }
-          courierNpc.agent.goVisit(pathTo, () => this._showOfficeEvent(ev, courierNpc));
+          courierNpc.agent.goVisit(pathTo, () => this._courierArrive(courierNpc, ev)); // 到达后追踪玩家
           this.time.delayedCall(20000, () => {
             if (this._eventCourier === courierNpc && !this._eventUI) {
               this._releaseCourier(); this._showOfficeEvent(ev, courierNpc);
@@ -3031,13 +3037,40 @@ export class WorldScene extends Phaser.Scene {
     if (!pathTo || !pathTo.length) return false;
     this._eventCourier = w;
     if (w._mood) { w._mood.setText('有事找你'); this._positionMood(w); }
-    w.agent.goVisit(pathTo, () => this._showOfficeEvent(ev, w));
+    w.agent.goVisit(pathTo, () => this._courierArrive(w, ev)); // 到达后追踪玩家
     this.time.delayedCall(20000, () => {
       if (this._eventCourier === w && !this._eventUI) {
         this._releaseCourier(); this._showOfficeEvent(ev);
       }
     });
     return true;
+  }
+
+  /**
+   * 信使到达后的追踪:如果玩家已经走开(距离>90px),重新寻路到玩家【当前】位置再走一次,
+   * 直到真正追到玩家身边才弹事件(用户反馈:信使应一直追我,而不是跑到我的旧位置就停)。
+   * @param courier 信使 NPC / worker
+   * @param ev 事件
+   * @param hops 已追踪次数(防死循环上限)
+   */
+  _courierArrive(courier, ev, hops = 0) {
+    // 已被别的流程接管/事件已弹/信使被释放 → 不再追
+    if (this._eventCourier !== courier || this._eventUI || !this.player || !courier.spr) return;
+    const dist = Phaser.Math.Distance.Between(courier.spr.x, courier.spr.y, this.player.x, this.player.y);
+    // 追到身边(≤90px)或追太多次(6次兜底,防玩家一直跑) → 弹事件
+    if (dist <= 90 || hops >= 6) {
+      this._showOfficeEvent(ev, courier);
+      return;
+    }
+    // 玩家走开了:重新寻路到玩家【当前】位置,继续追
+    const snap = this._pathfinder
+      ? this._pathfinder.snapToWalkable(this.player.x + 40, this.player.y)
+      : { x: this.player.x + 40, y: this.player.y };
+    if (!snap) { this._showOfficeEvent(ev, courier); return; }
+    const pathTo = this._findPath(courier.spr.x, courier.spr.y, snap.x, snap.y);
+    if (!pathTo || !pathTo.length) { this._showOfficeEvent(ev, courier); return; }
+    if (courier._mood) { courier._mood.setText('等等，找你！'); this._positionMood(courier); }
+    courier.agent.goVisit(pathTo, () => this._courierArrive(courier, ev, hops + 1));
   }
 
   /** 事件送达后：courier 回工位 */
@@ -3427,13 +3460,13 @@ export class WorldScene extends Phaser.Scene {
       const [x, y] = def.pos;
       const obj = { ...def, x, y };
       this._interactables.push(obj);
-      // 常驻小名牌:让玩家一眼看到"这里能交互"(用户反馈:不显名字玩家不知道在哪用)。
-      // 低调——小字、半透明,浮在物件上方,不抢戏;走近时的 [E] 高亮提示照旧。
-      const label = (def.prompt || def.id || '').replace(/^(坐下|看看|买瓶|给|接杯|望向|看)/, '').trim() || def.prompt;
-      obj._label = this.add.text(x, y - 30, def.prompt || def.id, {
-        fontSize: '12px', color: '#cfe0ff', stroke: '#0a0a14', strokeThickness: 3,
-        backgroundColor: '#00000055', padding: { x: 4, y: 1 },
-      }).setOrigin(0.5, 1).setDepth(y - 1).setAlpha(0.75);
+      // 常驻交互提示:让玩家一眼看到"这里能按E交互"。样式【明显区别于名字】——
+      // 带 [E] 前缀 + 青绿描边胶囊感,一看就是"交互点"不是"某人的名字"
+      // (玩家名字=金色无前缀在头顶,NPC名字=白色·职位,物件=青绿[E]提示)。
+      obj._label = this.add.text(x, y - 30, `[E] ${def.prompt || def.id}`, {
+        fontSize: '11px', color: '#8affd0', fontStyle: 'bold', stroke: '#06120c', strokeThickness: 4,
+        backgroundColor: '#0c2018cc', padding: { x: 6, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(y - 1).setAlpha(0.7);
       if (this.uiCamera) this.uiCamera.ignore(obj._label);
     }
     // 选定圈：贴地金色椭圆 + 脉冲发光（跟随当前选中实体脚下，平时隐藏）
