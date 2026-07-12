@@ -49,6 +49,7 @@ export class ColorMatchScene extends Phaser.Scene {
     this._roundActive = false;
     this._timeLeft = 0;
     this._done = false;
+    this._doneFired = false; // 结算 onComplete 双发守卫,独立于 _done(游戏循环是否结束)
   }
 
   create() {
@@ -93,6 +94,9 @@ export class ColorMatchScene extends Phaser.Scene {
       if (!isNaN(n) && n >= 1 && n <= this._chips.length) this._pick(n - 1);
     };
     this.input.keyboard.on('keydown', this._onKey);
+    // ESC:以当前成绩提前结算退出
+    this._onEsc = () => this._finish();
+    this.input.keyboard.on('keydown-ESC', this._onEsc);
 
     this._updateHud();
     this._startRound();
@@ -274,7 +278,10 @@ export class ColorMatchScene extends Phaser.Scene {
 
     // 解绑选色监听,换成"继续"
     this.input.keyboard.off('keydown', this._onKey);
+    if (this._onEsc) this.input.keyboard.off('keydown-ESC', this._onEsc);
     const done = () => {
+      if (this._doneFired) return; // 防双发:同一帧 space+click 或连按导致 onComplete 重复执行
+      this._doneFired = true;
       const result = { correct: this.hit, total: this._targetTotal, ratio: Math.round(ratio * 100) / 100, maxCombo: this.maxCombo };
       if (this.onComplete) this.onComplete(result);
     };
@@ -288,6 +295,7 @@ export class ColorMatchScene extends Phaser.Scene {
 
   _cleanup() {
     if (this._onKey) this.input.keyboard.off('keydown', this._onKey);
+    if (this._onEsc) this.input.keyboard.off('keydown-ESC', this._onEsc);
     if (this._onContinueKey) this.input.keyboard.off('keydown', this._onContinueKey);
     if (this._onContinuePointer) this.input.off('pointerdown', this._onContinuePointer);
   }

@@ -35,6 +35,7 @@ export class TypingRhythmScene extends Phaser.Scene {
     this._targetTotal = { easy: 12, mid: 16, hard: 20 }[this.difficulty] || 16;
     this._spawned = 0;
     this._done = false;
+    this._doneFired = false; // 结算 onComplete 双发守卫,独立于 _done(游戏循环是否结束)
   }
 
   create() {
@@ -67,6 +68,9 @@ export class TypingRhythmScene extends Phaser.Scene {
     kb.on('keydown-ENTER', this._onBeat);
     // 也支持鼠标点(全键盘+鼠标都可)
     this.input.on('pointerdown', this._onBeat);
+    // ESC:以当前成绩提前结算退出(游戏中途放弃也要让工单/任务链正常推进)
+    this._onEsc = () => this._finish();
+    kb.on('keydown-ESC', this._onEsc);
 
     // 掉落节奏:难度越高越快、间隔越短
     const gap = { easy: 900, mid: 750, hard: 600 }[this.difficulty] || 750;
@@ -96,7 +100,7 @@ export class TypingRhythmScene extends Phaser.Scene {
 
   update(_t, dms) {
     if (this._done) return;
-    const dt = dms / 16.67; // 归一化到 ~60fps
+    const dt = Math.min(dms, 50) / 16.67; // 归一化到 ~60fps,封顶 50ms 防切标签页/卡顿导致音符瞬移跳过判定线
     for (const n of this._notes) {
       if (n.judged) continue;
       n.obj.y += n.speed * dt;
@@ -190,10 +194,14 @@ export class TypingRhythmScene extends Phaser.Scene {
     kb.off('keydown-SPACE', this._onBeat);
     kb.off('keydown-ENTER', this._onBeat);
     this.input.off('pointerdown', this._onBeat);
+    kb.off('keydown-ESC', this._onEsc);
     const done = () => {
+      if (this._doneFired) return; // 防双发:同一帧 space+click 或连按导致 onComplete 重复执行
+      this._doneFired = true;
       const result = { correct: this.hit, total: this._targetTotal, ratio: Math.round(ratio * 100) / 100, maxCombo: this.maxCombo };
       if (this.onComplete) this.onComplete(result);
     };
+    this._onDone = done;
     this.time.delayedCall(200, () => {
       kb.on('keydown-SPACE', done);
       kb.on('keydown-ENTER', done);
@@ -205,5 +213,7 @@ export class TypingRhythmScene extends Phaser.Scene {
     if (this._spawnTimer) this._spawnTimer.remove();
     const kb = this.input.keyboard;
     if (this._onBeat) { kb.off('keydown-SPACE', this._onBeat); kb.off('keydown-ENTER', this._onBeat); this.input.off('pointerdown', this._onBeat); }
+    if (this._onEsc) kb.off('keydown-ESC', this._onEsc);
+    if (this._onDone) { kb.off('keydown-SPACE', this._onDone); kb.off('keydown-ENTER', this._onDone); this.input.off('pointerdown', this._onDone); }
   }
 }

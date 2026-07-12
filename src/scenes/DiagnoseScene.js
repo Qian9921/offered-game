@@ -64,6 +64,7 @@ export class DiagnoseScene extends Phaser.Scene {
     this._timeUp = false;
     this._cur = null;
     this._card = null;
+    this._doneFired = false; // 结算 onComplete 双发守卫,独立于 _phase(游戏阶段)
 
     // 洗牌取 N 位病人
     const pool = Phaser.Utils.Array.Shuffle(PATIENTS.slice());
@@ -104,6 +105,9 @@ export class DiagnoseScene extends Phaser.Scene {
       if (idx !== undefined) this._pick(ACTIONS[idx].key);
     };
     this.input.keyboard.on('keydown', this._onKey);
+    // ESC:以当前成绩提前结算退出
+    this._onEsc = () => this._finish();
+    this.input.keyboard.on('keydown-ESC', this._onEsc);
 
     this.events.once('shutdown', () => this._cleanup());
 
@@ -234,7 +238,10 @@ export class DiagnoseScene extends Phaser.Scene {
   _endPatient(completed) {
     this._locked = true;
     const p = this._cur;
-    const success = completed && p.calm >= CALM_OK;
+    // 安心值达标就算妥善处理,不再强求走完 ideal 步骤(completed)——玩家把安心值堆满但
+    // budget 耗尽提前结束时,病人明明很安心,不该因"没走完流程"被判失败。completed 仍用于
+    // 下方文案/表情的措辞(是否"来得及走完"),但不再参与成功判定。
+    const success = p.calm >= CALM_OK;
     const fx = this._card.x, fy = 220;
 
     if (success) {
@@ -366,19 +373,25 @@ export class DiagnoseScene extends Phaser.Scene {
 
     // 换成"继续"监听
     this.input.keyboard.off('keydown', this._onKey);
+    if (this._onEsc) this.input.keyboard.off('keydown-ESC', this._onEsc);
     const done = () => {
+      if (this._doneFired) return; // 防双发:同一帧 space+click 或连按导致 onComplete 重复执行
+      this._doneFired = true;
       const result = { correct: this.correct, total, ratio: Math.round(ratio * 100) / 100, maxCombo: this.maxCombo };
       if (this.onComplete) this.onComplete(result);
     };
     this._onCont = (e) => { if (e.key === ' ' || e.key === 'Enter' || e.code === 'Space') done(); };
+    this._onContPointer = done;
     this.time.delayedCall(220, () => {
       this.input.keyboard.on('keydown', this._onCont);
-      this.input.once('pointerdown', done);
+      this.input.once('pointerdown', this._onContPointer);
     });
   }
 
   _cleanup() {
     if (this._onKey) this.input.keyboard.off('keydown', this._onKey);
+    if (this._onEsc) this.input.keyboard.off('keydown-ESC', this._onEsc);
     if (this._onCont) this.input.keyboard.off('keydown', this._onCont);
+    if (this._onContPointer) this.input.off('pointerdown', this._onContPointer);
   }
 }

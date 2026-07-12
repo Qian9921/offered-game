@@ -103,6 +103,7 @@ export class SalesTalkScene extends Phaser.Scene {
     this._hearts = [];     // 好感爱心图标
     this._locked = false;  // 结算动画期间锁输入
     this._done = false;
+    this._doneFired = false; // 结算 onComplete 双发守卫,独立于 _done(游戏循环是否结束)
     // 打乱异议顺序,一局不重复
     this._queue = Phaser.Utils.Array.Shuffle(this._pool.slice());
   }
@@ -161,6 +162,9 @@ export class SalesTalkScene extends Phaser.Scene {
     kb.on('keydown-ONE', this._onKey1);
     kb.on('keydown-TWO', this._onKey2);
     kb.on('keydown-THREE', this._onKey3);
+    // ESC:以当前成绩(未成交)提前结算退出
+    this._onEsc = () => this._finish(false);
+    kb.on('keydown-ESC', this._onEsc);
 
     this.events.once('shutdown', () => this._cleanup());
     this._nextRound();
@@ -440,7 +444,10 @@ export class SalesTalkScene extends Phaser.Scene {
     kb.off('keydown-ONE', this._onKey1);
     kb.off('keydown-TWO', this._onKey2);
     kb.off('keydown-THREE', this._onKey3);
+    if (this._onEsc) kb.off('keydown-ESC', this._onEsc);
     const done = () => {
+      if (this._doneFired) return; // 防双发:同一帧 space+click 或连按导致 onComplete 重复执行
+      this._doneFired = true;
       const result = { correct: this.correct, total, ratio: Math.round(ratio * 100) / 100, maxCombo: this.maxCombo };
       if (this.onComplete) this.onComplete(result);
     };
@@ -476,6 +483,7 @@ export class SalesTalkScene extends Phaser.Scene {
     const kb = this.input.keyboard;
     if (!kb) return;
     if (this._onKey1) { kb.off('keydown-ONE', this._onKey1); kb.off('keydown-TWO', this._onKey2); kb.off('keydown-THREE', this._onKey3); }
+    if (this._onEsc) kb.off('keydown-ESC', this._onEsc);
     if (this._doneHandler) { kb.off('keydown-SPACE', this._doneHandler); kb.off('keydown-ENTER', this._doneHandler); this.input.off('pointerdown', this._doneHandler); }
   }
 }
