@@ -2670,10 +2670,12 @@ export class WorldScene extends Phaser.Scene {
   // gameType → 小游戏场景的映射(让工单内容和玩法咬合,不再无脑轮换换皮)
   _gameSceneForType(gameType) {
     const MAP = {
-      debug: 'DebugGameScene',       // 找错误行:修bug/排查报错/定位崩溃
-      review: 'CodeReviewScene',     // 判断好坏:评审MR/重构/对齐
-      sequence: 'SequenceGameScene', // 排顺序:开发新功能/对接流程
-      testcase: 'TestCaseScene',     // 补用例:写测试
+      // 新工作玩法(可爱好玩人人能玩,不考编程知识)——替换掉硬核的"点点代码"小游戏。
+      // 程序员的写码/修bug/开发,都用「敲码节奏」(代码掉到判定线按空格,连击有爽感)。
+      debug: 'TypingRhythmScene',      // 修bug/排查/写码 → 敲码节奏
+      sequence: 'TypingRhythmScene',   // 开发新功能/对接 → 敲码节奏
+      review: 'CodeReviewScene',       // 评审(暂留,后续可换更可爱的"挑刺"节奏)
+      testcase: 'TestCaseScene',       // 补用例(暂留)
     };
     return MAP[gameType] || null;
   }
