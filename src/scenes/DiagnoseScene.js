@@ -25,16 +25,16 @@ const ACTIONS = [
 // 病人:主诉 + 肢体语言提示(暗示"当下最该做的一步",靠常识与同理心去读)+ 理想处置顺序。
 // 理想顺序体现常识:先了解、慌/怕的人先安抚、开药放最后——完全不需要医学知识。
 const PATIENTS = [
-  { face: 0.30, complaint: '我头疼三天了…',        cue: '眉头紧锁，很想被认真听听', ideal: ['问诊', '检查', '开药'] },
-  { face: 0.18, complaint: '孩子一直发烧，我好慌！', cue: '家长快哭了，先让人安下心', ideal: ['安抚', '问诊', '检查'] },
-  { face: 0.35, complaint: '体检报告我看不太懂…',   cue: '有点忐忑，需要有人解释',   ideal: ['安抚', '问诊'] },
-  { face: 0.28, complaint: '喉咙痛，说话都费劲',    cue: '想快点弄明白怎么办',       ideal: ['问诊', '检查', '开药'] },
-  { face: 0.15, complaint: '打针…会很疼吗？',       cue: '小朋友怕得发抖',           ideal: ['安抚', '问诊'] },
-  { face: 0.35, complaint: '我最近总是失眠',        cue: '想找人好好聊聊',           ideal: ['问诊', '安抚'] },
-  { face: 0.24, complaint: '不小心崴脚了，肿起来了', cue: '疼得直皱眉，想赶紧处理',   ideal: ['问诊', '检查', '开药'] },
-  { face: 0.18, complaint: '手术前…有点紧张',       cue: '手心冒汗，很需要被安心',   ideal: ['安抚', '问诊'] },
-  { face: 0.30, complaint: '咳嗽好几天没好',        cue: '想弄清楚到底咋回事',       ideal: ['问诊', '检查', '开药'] },
-  { face: 0.40, complaint: '能给我讲讲注意事项吗？', cue: '眼神里都是信任',           ideal: ['问诊', '安抚'] },
+  { name: '李先生', face: 0.30, complaint: '我头疼三天了…',        cue: '眉头紧锁，很想被认真听听', ideal: ['问诊', '检查', '开药'] },
+  { name: '年轻妈妈', face: 0.18, complaint: '孩子一直发烧，我好慌！', cue: '家长快哭了，先让人安下心', ideal: ['安抚', '问诊', '检查'] },
+  { name: '张阿姨', face: 0.35, complaint: '体检报告我看不太懂…',   cue: '有点忐忑，需要有人解释',   ideal: ['安抚', '问诊'] },
+  { name: '王同学', face: 0.28, complaint: '喉咙痛，说话都费劲',    cue: '想快点弄明白怎么办',       ideal: ['问诊', '检查', '开药'] },
+  { name: '小朋友', face: 0.15, complaint: '打针…会很疼吗？',       cue: '小朋友怕得发抖',           ideal: ['安抚', '问诊'] },
+  { name: '陈奶奶', face: 0.35, complaint: '我最近总是失眠',        cue: '想找人好好聊聊',           ideal: ['问诊', '安抚'] },
+  { name: '小伙子', face: 0.24, complaint: '不小心崴脚了，肿起来了', cue: '疼得直皱眉，想赶紧处理',   ideal: ['问诊', '检查', '开药'] },
+  { name: '刘先生', face: 0.18, complaint: '手术前…有点紧张',       cue: '手心冒汗，很需要被安心',   ideal: ['安抚', '问诊'] },
+  { name: '赵大爷', face: 0.30, complaint: '咳嗽好几天没好',        cue: '想弄清楚到底咋回事',       ideal: ['问诊', '检查', '开药'] },
+  { name: '孕妇', face: 0.40, complaint: '能给我讲讲注意事项吗？', cue: '眼神里都是信任',           ideal: ['问诊', '安抚'] },
 ];
 
 const START_CALM = 32;   // 病人来时的初始安心值
@@ -87,13 +87,15 @@ export class DiagnoseScene extends Phaser.Scene {
     this._timeText = this.add.text(936, 62, '', { fontSize: '14px', color: '#e08a6a', fontStyle: 'bold' }).setOrigin(1, 0).setDepth(31);
     this._timeBar = this.add.graphics().setDepth(31);
 
-    // 大 Combo 弹跳(底部,不挡脸)
-    this._comboPop = this.add.text(480, 476, '', { fontSize: '40px', color: '#ff9ac0', fontStyle: 'bold', stroke: '#ffffff', strokeThickness: 5 }).setOrigin(0.5).setDepth(20).setAlpha(0);
-
-    // 四个处置按钮(常驻,病人来去它们不动)
+    // 四个处置按钮(常驻,病人来去它们不动)。band = 452±37 = 415…489。
     this._buttons = [];
     const centers = [145, 375, 605, 835];
     ACTIONS.forEach((a, i) => this._buildButton(a, i + 1, centers[i], 452));
+
+    // 大 Combo 弹跳:放【按钮下方】(y=514,屏内 540 内),避开按钮 band(415…489)。
+    // 原来放 y=476 正压在常驻按钮上,combo≥2 时"N 连击 贴心！"盖住第2/3个按钮——
+    // 移到按钮下沿与屏底之间的空档,短暂淡入淡出不遮任何常驻元素。depth 20 仍在按钮之上。
+    this._comboPop = this.add.text(480, 514, '', { fontSize: '30px', color: '#ff9ac0', fontStyle: 'bold', stroke: '#ffffff', strokeThickness: 5 }).setOrigin(0.5).setDepth(20).setAlpha(0);
 
     // 输入:数字键 1-4 选处置(键盘 + 鼠标都可)
     this._onKey = (e) => {

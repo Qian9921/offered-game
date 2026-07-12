@@ -16,6 +16,12 @@ import { Juice } from '../systems/JuiceKit.js';
 export class SalesTalkScene extends Phaser.Scene {
   constructor() { super('SalesTalkScene'); }
 
+  // 气泡几何(单一数据源):矩形左缘 344,文字左缘 = 344 + 18 内边距。_drawBubble 与
+  // 文字创建都从这里派生,避免"文字放一处、气泡画另一处"再次错位。
+  static get BUBBLE_X() { return 344; }
+  static get BUBBLE_PAD() { return 18; }
+  static get BUBBLE_TEXT_X() { return SalesTalkScene.BUBBLE_X + SalesTalkScene.BUBBLE_PAD; }
+
   init(data) {
     this.difficulty = data?.difficulty || 'mid';
     this.onComplete = data?.onComplete || null;
@@ -124,8 +130,11 @@ export class SalesTalkScene extends Phaser.Scene {
     this.tweens.add({ targets: this._avatar, y: 218, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
     // 客户对话气泡
+    // ⚠️ 文字必须落在气泡矩形内部:气泡由 _drawBubble 从 x=344 起、宽度=文字宽+32 绘制,
+    // 故文字左缘 = 344 + 18(内边距) = 362(BUBBLE_TEXT_X)。之前放在 560 会整段飘到气泡右侧外。
+    // wordWrap 上限 = 屏宽960 - 左缘362 - 右留白44 ≈ 554,保证长句在屏内换行、气泡随之变宽。
     this._bubbleG = this.add.graphics().setDepth(9);
-    this._bubbleText = this.add.text(560, 190, '', {
+    this._bubbleText = this.add.text(SalesTalkScene.BUBBLE_TEXT_X, 190, '', {
       fontSize: '17px', color: '#5b3a2e', fontStyle: 'bold',
       align: 'left', wordWrap: { width: 300 },
     }).setOrigin(0, 0.5).setDepth(11);
@@ -218,10 +227,10 @@ export class SalesTalkScene extends Phaser.Scene {
     return pts;
   }
 
-  // 画对话气泡(带指向头像的小尾巴)
+  // 画对话气泡(带指向头像的小尾巴)。x 用与文字同源的 BUBBLE_X,保证文字恰好嵌在气泡内。
   _drawBubble(w, h) {
     const g = this._bubbleG; g.clear();
-    const x = 344, y = 190 - h / 2;
+    const x = SalesTalkScene.BUBBLE_X, y = 190 - h / 2;
     g.fillStyle(0xffffff, 0.96); g.lineStyle(3, 0xffd0b8, 1);
     g.fillRoundedRect(x, y, w, h, 18); g.strokeRoundedRect(x, y, w, h, 18);
     // 尾巴(指向左边头像)
@@ -239,9 +248,12 @@ export class SalesTalkScene extends Phaser.Scene {
     const responses = Phaser.Utils.Array.Shuffle(this._current.responses.slice());
     this._current = { line: this._current.line, responses };
 
-    // 气泡
+    // 气泡:宽度由文字【实际渲染宽】驱动(+2*pad),不再用固定 min(320) 上限——否则长句
+    // 换行后文字比气泡宽,右侧溢出。文字 origin(0,0.5) 从 BUBBLE_TEXT_X 展开,气泡从
+    // BUBBLE_X 展开,两者差 = BUBBLE_PAD,故气泡宽 = 文字宽 + 2*pad 恰好左右等距包住文字。
     this._bubbleText.setText(this._current.line);
-    const bw = Math.min(320, this._bubbleText.width + 32), bh = this._bubbleText.height + 26;
+    const bw = this._bubbleText.width + SalesTalkScene.BUBBLE_PAD * 2;
+    const bh = this._bubbleText.height + 26;
     this._drawBubble(bw, bh);
     this._bubbleText.setAlpha(0);
     this.tweens.add({ targets: this._bubbleText, alpha: 1, duration: 200 });

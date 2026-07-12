@@ -57,7 +57,7 @@ export class TypingRhythmScene extends Phaser.Scene {
 
     // HUD:Combo + 进度
     this._comboText = this.add.text(480, 200, '', { fontSize: '48px', color: '#ffd24d', fontStyle: 'bold', stroke: '#0a0a14', strokeThickness: 5 }).setOrigin(0.5).setAlpha(0);
-    this._progText = this.add.text(30, 18, '', { fontSize: '14px', color: '#8b949e' });
+    this._progText = this.add.text(30, 18, '', { fontSize: '14px', color: '#8b949e' }).setDepth(31);
     this._hint = this.add.text(480, this._hitY + 40, '空格 / 回车 = 敲', { fontSize: '12px', color: '#5a6a7e' }).setOrigin(0.5);
 
     // 输入:空格/回车=敲
