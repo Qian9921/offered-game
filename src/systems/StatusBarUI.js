@@ -25,10 +25,11 @@ const GROUPS = [
 ];
 const ORDER = GROUPS.flatMap(g => g.stats); // 迷你条顺序 = 面板顺序
 
-// —— 迷你条布局（1920 屏尺度：整体放大 ~1.9×，清晰可读）——
-const MINI_X = 14, MINI_Y = 14;
-const MINI_BAR_W = 30, MINI_BAR_H = 8, MINI_GAP = 6;
-const MINI_PAD = 12;
+// —— 迷你条布局（1920 屏尺度）——
+// 8 个状态挤在窄横条里会糊，故加宽色块+加大间距+下移避开顶部，单字标签有呼吸空间。
+const MINI_X = 18, MINI_Y = 20;
+const MINI_BAR_W = 42, MINI_BAR_H = 10, MINI_GAP = 12;
+const MINI_PAD = 14;
 
 // —— 展开面板布局（1920 尺度）——
 const PANEL_X = 14, PANEL_Y = 14, PANEL_W = 372, PAD = 18;
@@ -95,9 +96,9 @@ export class StatusBarUI {
     ORDER.forEach((s, i) => {
       const x = MINI_X + MINI_PAD + i * (MINI_BAR_W + MINI_GAP);
       const y = MINI_Y + MINI_PAD + 18;
-      // 单字标签（健/精/心/压/技/绩/金/热）
+      // 单字标签（健/精/心/压/技/绩/金/热）——加大字号,窄条里也看得清
       this.mini.add(this.scene.add.text(x + MINI_BAR_W / 2, MINI_Y + MINI_PAD + 1, s.label[0], {
-        fontSize: '16px', color: s.key === 'passion' ? '#ffb080' : '#c0c0d0',
+        fontSize: '18px', color: s.key === 'passion' ? '#ffb080' : '#c0c0d0',
         stroke: '#0a0a14', strokeThickness: 3,
       }).setOrigin(0.5, 0).setResolution(TEXT_RES));
       this.mini.add(this.scene.add.rectangle(x, y, MINI_BAR_W, MINI_BAR_H, BG_COLOR).setOrigin(0, 0));
