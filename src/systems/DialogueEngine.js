@@ -219,8 +219,9 @@ export class DialogueEngine extends Phaser.Events.EventEmitter {
     container.setScrollFactor(0).setDepth(10000); // 钉屏:对话UI固定在镜头上,不随世界滚动
     if (typeof this.scene.attachToUICamera === 'function') this.scene.attachToUICamera(container);
 
-    // 全屏透明输入层：命中区=整个屏幕，点任何位置都能推进（根治"点击框错位"）。
-    const catcher = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.001)
+    // 全屏输入层 + 轻度压暗：命中区=整个屏幕(点任何位置都能推进)，同时把背景办公室
+    // 压暗，剧情对话时玩家聚焦在文字上，不被满屏NPC/气泡/工位抢注意力(剧情沉浸感)。
+    const catcher = this.scene.add.rectangle(width / 2, height / 2, width, height, 0x0a0a14, 0.5)
       .setScrollFactor(0).setInteractive();
     container.add(catcher);
 
