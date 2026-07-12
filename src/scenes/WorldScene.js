@@ -1921,11 +1921,13 @@ export class WorldScene extends Phaser.Scene {
     }
     const c = this.add.container(W / 2, 180).setScrollFactor(0).setDepth(12001).setAlpha(0);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
-    c.add(this.add.rectangle(W / 2, 0, 520, 120, 0x141422, 0.96).setStrokeStyle(2, 0xffd24d, 0.7).setOrigin(0.5));
-    c.add(this.add.text(W / 2, -36, '📋 新任务接取', { fontSize: '16px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, -8, q.title || fallbackTitle || '新任务', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold', stroke: '#0a0a14', strokeThickness: 3 }).setOrigin(0.5));
-    if (q.desc) c.add(this.add.text(W / 2, 18, q.desc, { fontSize: '16px', color: '#9a9ab0', wordWrap: { width: 480, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5));
-    if (stepHint) c.add(this.add.text(W / 2, 40, stepHint, { fontSize: '15px', color: '#7eff9a', stroke: '#0a0a14', strokeThickness: 2 }).setOrigin(0.5));
+    // 子元素用【相对容器中心】的坐标(x=0)——容器已在 W/2,子元素再用 W/2 会双重偏移
+    // 到屏幕右外溢出(修复P3:任务卡片溢出屏幕的大忌)。
+    c.add(this.add.rectangle(0, 0, 520, 120, 0x141422, 0.96).setStrokeStyle(2, 0xffd24d, 0.7).setOrigin(0.5));
+    c.add(this.add.text(0, -36, '新任务接取', { fontSize: '16px', color: '#ffd24d', fontStyle: 'bold' }).setOrigin(0.5));
+    c.add(this.add.text(0, -8, q.title || fallbackTitle || '新任务', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold', stroke: '#0a0a14', strokeThickness: 3 }).setOrigin(0.5));
+    if (q.desc) c.add(this.add.text(0, 18, q.desc, { fontSize: '16px', color: '#9a9ab0', wordWrap: { width: 480, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5));
+    if (stepHint) c.add(this.add.text(0, 40, stepHint, { fontSize: '15px', color: '#7eff9a', stroke: '#0a0a14', strokeThickness: 2 }).setOrigin(0.5));
     this._questCard = c;
     this.tweens.add({
       targets: c, alpha: 1, duration: 300,
