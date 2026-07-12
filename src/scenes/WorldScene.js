@@ -3195,6 +3195,9 @@ export class WorldScene extends Phaser.Scene {
       // 项目绩效涨,结局却按停在初值50的 stateSystem.performance 打分。现按质量给绩效评分增量,
       // 让"做得好→绩效涨→结局体现"闭环。增量温和(好+3/一般+2/差+1),一局累积到合理区间。
       this.stateSystem.change('performance', quality >= 0.7 ? 3 : (quality >= 0.4 ? 2 : 1));
+      // 工单也长一点技能:让"成长"回到职场主循环(此前技能全靠夜晚 study 独占,白天工单不加
+      // skill→干活不变强)。温和 +2/+1,别让夜晚 study(+6) 失去意义。
+      this.stateSystem.change('skill', quality >= 0.7 ? 2 : 1);
       if (quality >= 0.99) this.stateSystem.change('passion', 3);       // 做得漂亮,有成就感
       else if (quality <= 0.34) this.stateSystem.change('stress', 3);   // 搞砸了,额外焦虑
       this._updateProjectHud();
