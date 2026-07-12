@@ -41,7 +41,7 @@ function startGame() {
   if (game.isBooted) hide(); else game.events.once('ready', hide);
 }
 try {
-  const wait = document.fonts.load('12px "Fusion Pixel"', '你想成为谁');
+  const wait = document.fonts.load('12px "Fusion Pixel"', '录用通知入职');
   Promise.race([wait, new Promise(r => setTimeout(r, 3000))]).then(startGame, startGame);
 } catch (e) { startGame(); }
 

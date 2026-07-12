@@ -140,7 +140,7 @@ export class HubScene extends Phaser.Scene {
       : '⭐ 当前主打「程序员」深度体验，测评结果会在更多职业开放后派上用场';
 
     // 标题
-    const title = this.add.text(480, 62, '你想成为谁？', {
+    const title = this.add.text(480, 62, '入职哪一行？', {
       fontSize: '34px', color: '#ffffff', fontStyle: 'bold', letterSpacing: 4,
     }).setOrigin(0.5);
     title.setShadow(0, 2, '#d4a35366', 10, false, true);
