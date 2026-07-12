@@ -86,6 +86,7 @@ export class EndingScene extends Phaser.Scene {
     const tagCounts = {};
     for (const e of entries0) { if (e && e.tag) tagCounts[e.tag] = (tagCounts[e.tag] || 0) + 1; }
     this._insights = unlockedInsights(tagCounts).map(getInsight).filter(Boolean);
+    this._keyHandlers = []; // 键盘 handler 记录，每次重渲染前解绑防泄漏
   }
 
   // 无 WorkValues 时的占位折算（P6 接线后由真实累积替代）
@@ -118,6 +119,7 @@ export class EndingScene extends Phaser.Scene {
       this._renderLoading();
       this._generateWithAI();
     }
+    this.events.once('shutdown', () => this._unbindKeys()); // 场景切换时解绑键盘，防泄漏
   }
 
   // 把本局结果并入跨职业档案（人格轴累加、职业/子职业/契合度记录）
@@ -226,6 +228,7 @@ export class EndingScene extends Phaser.Scene {
   // 全程「先量文字实际高度、再定位」——根治遮字。卡片高度由内容反推，不写死。
   _render(p) {
     const { width, height } = this.scale;
+    this._unbindKeys(); // 上一视图（结局报告/其它）的键盘绑定先清，防重复触发
     if (this.uiContainer) this.uiContainer.destroy(true);
     const ui = this.add.container(0, 0);
     this.uiContainer = ui;
@@ -304,10 +307,19 @@ export class EndingScene extends Phaser.Scene {
     // 按钮区
     const btnY = y + 30;
     const btnGroup = addGroup();
-    const b1 = this._button(ui, width / 2 - 220, btnY, 190, 36, '再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
-    const b2 = this._button(ui, width / 2, btnY, 190, 36, '保存画像 📷', 0x3a3a2a, () => this._sharePortrait());
-    const b3 = this._button(ui, width / 2 + 220, btnY, 190, 36, '返回标题', 0x33283a, () => this.scene.start('TitleScene'));
+    const b1 = this._button(ui, width / 2 - 220, btnY, 190, 36, '1. 再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
+    const b2 = this._button(ui, width / 2, btnY, 190, 36, '2. 保存画像 📷', 0x3a3a2a, () => this._sharePortrait());
+    const b3 = this._button(ui, width / 2 + 220, btnY, 190, 36, '3. 返回标题 · ESC', 0x33283a, () => this.scene.start('TitleScene'));
     btnGroup.push(b1.bg, b1.txt, b2.bg, b2.txt, b3.bg, b3.txt);
+
+    // 键盘：左右方向键/Tab 切页签，数字键1-3对应按钮，ESC=返回标题
+    this._bindKey('LEFT', () => this._toggleView());
+    this._bindKey('RIGHT', () => this._toggleView());
+    this._bindKey('TAB', (e) => { if (e) e.preventDefault(); this._toggleView(); }); // Tab 默认会切浏览器焦点，禁掉
+    this._bindKey('ONE', () => this.scene.start('HubScene'));
+    this._bindKey('TWO', () => this._sharePortrait());
+    this._bindKey('THREE', () => this.scene.start('TitleScene'));
+    this._bindKey('ESC', () => this.scene.start('TitleScene'));
 
     // 卡片底板：由内容最终高度反推（不写死 500），画完后沉到最底作"舞台"
     const contentBottom = btnY + 40;
@@ -372,6 +384,18 @@ export class EndingScene extends Phaser.Scene {
       targets: t, alpha: 1, duration: 250, yoyo: true, hold: 1800,
       onComplete: () => t.destroy(),
     });
+  }
+
+  // ===== 键盘 handler 记录/解绑（每次重渲染 _render/_renderReport 前调用，防跨渲染泄漏）=====
+  _unbindKeys() {
+    const kb = this.input.keyboard;
+    for (const { key, handler } of this._keyHandlers) kb.off(`keydown-${key}`, handler);
+    this._keyHandlers = [];
+  }
+
+  _bindKey(key, handler) {
+    this.input.keyboard.on(`keydown-${key}`, handler);
+    this._keyHandlers.push({ key, handler });
   }
 
   _divider(parent, cx, y, w) {
@@ -464,9 +488,15 @@ export class EndingScene extends Phaser.Scene {
     else this._render(this._portrait || DEFAULT_PORTRAIT);
   }
 
+  // 左右方向键/Tab：在两个页签间来回切换（不管当前在哪个视图）
+  _toggleView() {
+    this._switchView(this._view === 'report' ? 'portrait' : 'report');
+  }
+
   // ===== 职业人格报告视图（雷达 + 4轴 + 胜任力 + 证据强项 + 3方向 + 置信度）=====
   _renderReport() {
     const { width, height } = this.scale;
+    this._unbindKeys(); // 上一视图的键盘绑定先清，防重复触发
     if (this.uiContainer) this.uiContainer.destroy(true);
     const ui = this.add.container(0, 0);
     this.uiContainer = ui;
@@ -564,9 +594,18 @@ export class EndingScene extends Phaser.Scene {
 
     // 按钮
     const btnY = y + 24;
-    this._button(ui, width / 2 - 220, btnY, 190, 36, '再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
-    this._button(ui, width / 2, btnY, 190, 36, '保存报告 📷', 0x3a3a2a, () => this._sharePortrait());
-    this._button(ui, width / 2 + 220, btnY, 190, 36, '返回标题', 0x33283a, () => this.scene.start('TitleScene'));
+    this._button(ui, width / 2 - 220, btnY, 190, 36, '1. 再玩一次', 0x2a2a4a, () => this.scene.start('HubScene'));
+    this._button(ui, width / 2, btnY, 190, 36, '2. 保存报告 📷', 0x3a3a2a, () => this._sharePortrait());
+    this._button(ui, width / 2 + 220, btnY, 190, 36, '3. 返回标题 · ESC', 0x33283a, () => this.scene.start('TitleScene'));
+
+    // 键盘：左右方向键/Tab 切页签，数字键1-3对应按钮，ESC=返回标题
+    this._bindKey('LEFT', () => this._toggleView());
+    this._bindKey('RIGHT', () => this._toggleView());
+    this._bindKey('TAB', (e) => { if (e) e.preventDefault(); this._toggleView(); }); // Tab 默认会切浏览器焦点，禁掉
+    this._bindKey('ONE', () => this.scene.start('HubScene'));
+    this._bindKey('TWO', () => this._sharePortrait());
+    this._bindKey('THREE', () => this.scene.start('TitleScene'));
+    this._bindKey('ESC', () => this.scene.start('TitleScene'));
 
     // 卡片底板（自适应高度 + 垂直居中，防溢出）
     const contentBottom = btnY + 40;

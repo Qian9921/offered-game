@@ -21,6 +21,7 @@ export class HomeScene extends Phaser.Scene {
     this.stats = data?.stats || {
       health: 80, energy: 100, san: 80, stress: 20, skill: 10, performance: 50, money: 0, passion: 70,
     };
+    this._keyHandlers = []; // 本场景绑定的键盘 handler，shutdown 时精确解绑防泄漏
   }
 
   create() {
@@ -47,6 +48,13 @@ export class HomeScene extends Phaser.Scene {
     this.familyMessages.load();
 
     this._showSelfImprove();
+    this.events.once('shutdown', () => this._unbindKeys()); // 场景切换时解绑键盘，防泄漏
+  }
+
+  _unbindKeys() {
+    const kb = this.input.keyboard;
+    for (const { key, handler } of this._keyHandlers) kb.off(`keydown-${key}`, handler);
+    this._keyHandlers = [];
   }
 
   // 自我提升选项：花精力/钱换成长
@@ -66,13 +74,14 @@ export class HomeScene extends Phaser.Scene {
       { label: '😴 早点睡（精力+15，健康+5）', effect: { energy: 15, health: 5 } },
     ];
     let by = 290;
-    options.forEach(opt => {
+    options.forEach((opt, i) => {
       const btn = this.add.rectangle(W / 2, by, 640, 60, 0x2a2a4a).setStrokeStyle(2, 0x4a4a66)
         .setInteractive({ useHandCursor: true });
-      const txt = this.add.text(W / 2, by, opt.label, { fontSize: '22px', color: '#e6e6e6' }).setOrigin(0.5);
+      const txt = this.add.text(W / 2, by, `${i + 1}. ${opt.label}`, { fontSize: '22px', color: '#e6e6e6' }).setOrigin(0.5);
       btn.on('pointerover', () => btn.setFillStyle(0x3a3a5a));
       btn.on('pointerout', () => btn.setFillStyle(0x2a2a4a));
-      btn.on('pointerdown', () => { AudioSystem.uiClick(); this._doImprove(opt); });
+      const activate = () => { AudioSystem.uiClick(); this._doImprove(opt); };
+      btn.on('pointerdown', activate);
       this.ui.add(btn); this.ui.add(txt);
       by += 76;
     });
@@ -80,9 +89,24 @@ export class HomeScene extends Phaser.Scene {
     // 睡觉按钮（进下一天）
     const sleepBtn = this.add.rectangle(W / 2, by + 20, 400, 56, 0x3a2a4a).setStrokeStyle(2, 0xd4a353)
       .setInteractive({ useHandCursor: true });
-    const sleepTxt = this.add.text(W / 2, by + 20, '🌙 睡觉，迎接新的一天', { fontSize: '22px', color: '#ffd68a' }).setOrigin(0.5);
+    const sleepTxt = this.add.text(W / 2, by + 20, '🌙 睡觉，迎接新的一天 · 空格/回车', { fontSize: '22px', color: '#ffd68a' }).setOrigin(0.5);
     sleepBtn.on('pointerdown', () => { AudioSystem.uiClick(); this._sleep(); });
     this.ui.add(sleepBtn); this.ui.add(sleepTxt);
+
+    // 键盘：数字键1-4选自我提升选项，空格/回车=睡觉。
+    // 家人消息弹窗打开时（phoneMessage.isShowing）先不处理，防止穿透触发。
+    const kb = this.input.keyboard;
+    const NUMS = ['ONE', 'TWO', 'THREE', 'FOUR'];
+    options.forEach((opt, i) => {
+      const handler = () => { if (!this.phoneMessage.isShowing()) { AudioSystem.uiClick(); this._doImprove(opt); } };
+      kb.on(`keydown-${NUMS[i]}`, handler);
+      this._keyHandlers.push({ key: NUMS[i], handler });
+    });
+    const sleepHandler = () => { if (!this.phoneMessage.isShowing()) { AudioSystem.uiClick(); this._sleep(); } };
+    kb.on('keydown-SPACE', sleepHandler);
+    kb.on('keydown-ENTER', sleepHandler);
+    this._keyHandlers.push({ key: 'SPACE', handler: sleepHandler });
+    this._keyHandlers.push({ key: 'ENTER', handler: sleepHandler });
   }
 
   _doImprove(opt) {

@@ -14,6 +14,7 @@ export class OpeningScene extends Phaser.Scene {
   init(data) {
     this._newGameSlot = (data && data.newGameSlot) || null;
     this._nameValue = '';
+    this._keyHandlers = []; // 本阶段键盘 handler，_clearUI 时精确解绑，防止跨阶段泄漏
   }
 
   preload() {
@@ -45,8 +46,8 @@ export class OpeningScene extends Phaser.Scene {
     this.riasec = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
     this.big5 = { O: 0, C: 0, E: 0, A: 0, N: 0 };
     this.ui = null;
-    this.events.once('shutdown', () => this._removeNameInput());
-    this.events.once('destroy', () => this._removeNameInput());
+    this.events.once('shutdown', () => { this._removeNameInput(); this._unbindKeys(); });
+    this.events.once('destroy', () => { this._removeNameInput(); this._unbindKeys(); });
     this._buildCustomize();
   }
 
@@ -64,7 +65,21 @@ export class OpeningScene extends Phaser.Scene {
     }
   }
 
-  _clearUI() { if (this.ui) { this.ui.destroy(true); this.ui = null; } }
+  _clearUI() {
+    this._unbindKeys(); // 每个阶段切换前解绑上一阶段的键盘 handler，防泄漏
+    if (this.ui) { this.ui.destroy(true); this.ui = null; }
+  }
+
+  _unbindKeys() {
+    const kb = this.input.keyboard;
+    for (const { key, handler } of this._keyHandlers) kb.off(`keydown-${key}`, handler);
+    this._keyHandlers = [];
+  }
+
+  _bindKey(key, handler) {
+    this.input.keyboard.on(`keydown-${key}`, handler);
+    this._keyHandlers.push({ key, handler });
+  }
 
   // 可爱圆角按钮（本场景通用）
   _button(x, y, w, h, label, cb, color = THEME.panelSoft, fontSize = '15px') {
@@ -191,8 +206,8 @@ export class OpeningScene extends Phaser.Scene {
       this.tintDots.push(dot);
     });
 
-    this._button(480, 512, 210, 40, '下一步 →', () => {
-      // 名字必填:空名不能继续(用户要求)。给个温和提示,聚焦输入框。
+    // 下一步:名字必填校验(空名不能继续)+ 支持回车键。鼠标点按钮或按回车都走同一校验。
+    const goNext = () => {
       const nm = (this._nameValue || '').trim();
       if (!nm) {
         if (this._nameHint) this._nameHint.destroy();
@@ -205,7 +220,9 @@ export class OpeningScene extends Phaser.Scene {
         return;
       }
       this.qIdx = 0; this._showQuestion();
-    }, 0x2a4a3e);
+    };
+    this._button(480, 512, 210, 40, '下一步 → · 回车', goNext, 0x2a4a3e);
+    this._bindKey('ENTER', goNext); // 回车也推进(同样走必填校验)
   }
 
   _ensureWalkAnim(s) {
@@ -261,20 +278,23 @@ export class OpeningScene extends Phaser.Scene {
     this.ui.add(this.add.text(480, 128, q.text, { fontSize: '17px', color: THEME.text, wordWrap: { width: 720, useAdvancedWrap: true }, align: 'center' }).setOrigin(0.5));
     this.ui.add(this.add.text(480, 162, '没有标准答案 · 凭直觉选 · 只影响推荐方向', { fontSize: '12px', color: THEME.textDim }).setOrigin(0.5));
 
+    const NUMS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
     q.options.forEach((op, i) => {
       const cardH = 52;
       const cy = 208 + i * (cardH + 10);
+      const pick = () => {
+        for (const [k, v] of Object.entries(op.riasec || {})) this.riasec[k] += v;
+        for (const [k, v] of Object.entries(op.big5 || {})) this.big5[k] += v;
+        this.answers.push({ q: q.id, pick: i, label: op.label });
+        this.qIdx++;
+        this._showQuestion();
+      };
+      if (i < NUMS.length) this._bindKey(NUMS[i], () => { AudioSystem.uiClick && AudioSystem.uiClick(); pick(); });
       const choice = makeCuteChoice(this, {
         x: 480, y: cy, w: 660, h: cardH, label: op.label, index: i, scrollFactor: 1,
         tone: TONES[i % TONES.length], fontSize: 15, popDelay: i * 60,
         sound: () => AudioSystem.uiClick && AudioSystem.uiClick(),
-        onClick: () => {
-          for (const [k, v] of Object.entries(op.riasec || {})) this.riasec[k] += v;
-          for (const [k, v] of Object.entries(op.big5 || {})) this.big5[k] += v;
-          this.answers.push({ q: q.id, pick: i, label: op.label });
-          this.qIdx++;
-          this._showQuestion();
-        },
+        onClick: pick,
       });
       this.ui.add(choice);
     });
@@ -360,9 +380,9 @@ export class OpeningScene extends Phaser.Scene {
 
     this.ui.add(this.add.text(480, dy, source === 'ai' ? '· 由腾讯混元为你撰写 · 灵感：MBTI / 霍兰德 / 大五 ·' : '· 来自你的选择 · 灵感：MBTI / 霍兰德 / 大五 ·', { fontSize: '10px', color: THEME.textDim }).setOrigin(0.5, 0));
 
-    this._button(480, 494, 300, 44, `带着画像去试职业 →`, () => {
-      this.scene.start('HubScene', { newGameSlot: this._newGameSlot });
-    }, 0x2a4a3e, '16px');
+    const goHub = () => { this.scene.start('HubScene', { newGameSlot: this._newGameSlot }); };
+    this._button(480, 494, 300, 44, `带着画像去试职业 → · 回车`, goHub, 0x2a4a3e, '16px');
+    this._bindKey('ENTER', goHub);
   }
 
   // 一条 MBTI 维度滑条：左标 — 轨道(中点+彩点) — 右标
