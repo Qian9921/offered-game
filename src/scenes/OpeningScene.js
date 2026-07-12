@@ -191,7 +191,21 @@ export class OpeningScene extends Phaser.Scene {
       this.tintDots.push(dot);
     });
 
-    this._button(480, 512, 210, 40, '下一步 →', () => { this.qIdx = 0; this._showQuestion(); }, 0x2a4a3e);
+    this._button(480, 512, 210, 40, '下一步 →', () => {
+      // 名字必填:空名不能继续(用户要求)。给个温和提示,聚焦输入框。
+      const nm = (this._nameValue || '').trim();
+      if (!nm) {
+        if (this._nameHint) this._nameHint.destroy();
+        this._nameHint = this.add.text(480, 90, '先给自己起个名字吧', {
+          fontSize: '13px', color: '#ff9a6a', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(60);
+        this.ui.add(this._nameHint);
+        if (this._nameInput) { this._nameInput.style.borderColor = '#ff6b3d'; this._nameInput.focus(); }
+        this.tweens.add({ targets: this._nameHint, alpha: { from: 1, to: 0.3 }, duration: 500, yoyo: true, repeat: 2 });
+        return;
+      }
+      this.qIdx = 0; this._showQuestion();
+    }, 0x2a4a3e);
   }
 
   _ensureWalkAnim(s) {

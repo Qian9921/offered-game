@@ -922,6 +922,26 @@ export class WorldScene extends Phaser.Scene {
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT); // 按住冲刺
     this.facing = 'down';
+
+    // 玩家名牌(头顶显示捏人时起的名字)——金色区分于 NPC 的白名牌,跟随玩家移动。
+    let pname = '我';
+    try {
+      const prof = JSON.parse(localStorage.getItem('wdwtb_profile') || '{}');
+      if (prof && prof.name) pname = String(prof.name).slice(0, 8);
+    } catch (e) {}
+    this.playerNameTag = this.add.text(this.player.x, this.player.y + 8, pname, {
+      fontSize: '13px', color: '#ffe08a', fontStyle: 'bold',
+      stroke: '#0a0a14', strokeThickness: 3,
+      backgroundColor: '#00000066', padding: { x: 5, y: 1 },
+    }).setOrigin(0.5, 0).setDepth(99999);
+  }
+
+  // 每帧同步玩家名牌到脚下(在 update 里调用)
+  _updatePlayerNameTag() {
+    if (this.playerNameTag && this.player) {
+      this.playerNameTag.setPosition(this.player.x, this.player.y + 8);
+      this.playerNameTag.setDepth(this.player.y + 1);
+    }
   }
 
   // ==================== NPC ====================
@@ -1360,6 +1380,7 @@ export class WorldScene extends Phaser.Scene {
     if (vx !== 0 && vy !== 0) { vx *= 0.7071; vy *= 0.7071; }
     this.player.setVelocity(vx, vy);
     this.player.setDepth(this.player.y);
+    this._updatePlayerNameTag(); // 玩家名牌跟随脚下
 
     if (vx === 0 && vy === 0) {
       // 停步：停动画并回到该朝向的 idle 帧（不再定格在走路中间帧）
