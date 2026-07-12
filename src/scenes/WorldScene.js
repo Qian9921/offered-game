@@ -2661,10 +2661,26 @@ export class WorldScene extends Phaser.Scene {
     return ['DebugGameScene', 'SequenceGameScene'];
   }
 
-  _launchCoding(onComplete, difficulty = null) {
-    const rot = this._workGameRotation();
-    this._workGameIdx = ((this._workGameIdx == null ? -1 : this._workGameIdx) + 1) % rot.length;
-    const gameKey = rot[this._workGameIdx];
+  // gameType → 小游戏场景的映射(让工单内容和玩法咬合,不再无脑轮换换皮)
+  _gameSceneForType(gameType) {
+    const MAP = {
+      debug: 'DebugGameScene',       // 找错误行:修bug/排查报错/定位崩溃
+      review: 'CodeReviewScene',     // 判断好坏:评审MR/重构/对齐
+      sequence: 'SequenceGameScene', // 排顺序:开发新功能/对接流程
+      testcase: 'TestCaseScene',     // 补用例:写测试
+    };
+    return MAP[gameType] || null;
+  }
+
+  _launchCoding(onComplete, difficulty = null, gameType = null) {
+    // 优先按工单类型选对应小游戏(名实相符:修bug→找茬、评审→审查、开发→序列、测试→用例);
+    // 无 gameType(如任务链默认工作)才回退到轮换。
+    let gameKey = gameType ? this._gameSceneForType(gameType) : null;
+    if (!gameKey) {
+      const rot = this._workGameRotation();
+      this._workGameIdx = ((this._workGameIdx == null ? -1 : this._workGameIdx) + 1) % rot.length;
+      gameKey = rot[this._workGameIdx];
+    }
     this.scene.pause();
     this.scene.launch(gameKey, {
       act: this.act, difficulty, fromScene: null,
@@ -2925,7 +2941,7 @@ export class WorldScene extends Phaser.Scene {
         this._exhaustedPrompted = true;
         this._showThoughtBubble('（精力见底了……今天到极限了，该下班了。）', '#f0c060');
       }
-    }, order.difficulty); // 按工单难度抽对应难度的关卡
+    }, order.difficulty, order.gameType); // 按工单难度抽关卡 + 按 gameType 选对应小游戏(名实相符)
   }
 
   // ==================== 随机办公室事件 ====================
