@@ -1674,12 +1674,20 @@ export class WorldScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10002);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
+    const kb = this.input.keyboard;
+    const buyKeyHandlers = []; // {name, handler} —— 数字键选购，随面板生命周期绑定/解绑
     const close = () => {
+      kb.off('keydown-ESC', onEsc);
+      buyKeyHandlers.forEach(({ name, handler }) => kb.off(`keydown-${name}`, handler));
       c.destroy(true);
       this.dialogueActive = false;
+      // ESC 关闭本面板的这一帧，update() 里的 JustDown(escKey) 仍可能读到 true，
+      // 顺带弹出暂停菜单（同款 B1 修复，见 _openNpcMenu/_showLine）。
+      this._suppressInteractUntil = this.time.now + 250;
       if (this.guideText) this.guideText.setVisible(true);
       this._afterInteract(obj);
     };
+    const onEsc = () => close();
     const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
       .setScrollFactor(0).setInteractive();
     c.add(mask);
@@ -1694,6 +1702,7 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(1, 0.5);
     c.add(moneyLabel);
 
+    const DIGIT_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
     goods.forEach((g, i) => {
       const gy = py - ph / 2 + 100 + i * 84;
       c.add(this.add.rectangle(px, gy, pw - 56, 72, 0x232338, 0.96).setStrokeStyle(1, 0x4a4a6a));
@@ -1710,7 +1719,7 @@ export class WorldScene extends Phaser.Scene {
         .setStrokeStyle(2, 0x5fbf7f).setInteractive({ useHandCursor: true });
       buyBtn.on('pointerover', () => buyBtn.setFillStyle(0x35604e));
       buyBtn.on('pointerout', () => buyBtn.setFillStyle(0x2a4a3e));
-      buyBtn.on('pointerdown', () => {
+      const doBuy = () => {
         const money = this.stateSystem.get('money');
         if (money < g.price) {
           this._showThoughtBubble('（钱不太够……下次吧。）', '#e8735a');
@@ -1726,9 +1735,22 @@ export class WorldScene extends Phaser.Scene {
         AudioSystem.uiClick();
         Juice.floatText(this, this.scale.width / 2, this.scale.height / 2 - 160,
           `${g.icon} ${g.name} 已放进背包`, '#7eff9a');
-      });
+      };
+      buyBtn.on('pointerdown', doBuy);
       c.add(buyBtn);
       c.add(this.add.text(px + pw / 2 - 84, gy, '购买', { fontSize: '17px', fill: '#eafff0', fontStyle: 'bold' }).setOrigin(0.5));
+      // 数字键 1/2/3...选购——键盘玩家不用鼠标也能买
+      const keyName = DIGIT_NAMES[i];
+      if (keyName) {
+        c.add(this.add.text(px - pw / 2 + 20, gy, `${i + 1}`, {
+          fontSize: '16px', fill: '#6fb2e8', fontStyle: 'bold',
+        }).setOrigin(0.5));
+        buyKeyHandlers.push({ name: keyName, handler: doBuy });
+      }
+    });
+    this.time.delayedCall(120, () => {
+      kb.on('keydown-ESC', onEsc);
+      buyKeyHandlers.forEach(({ name, handler }) => kb.on(`keydown-${name}`, handler));
     });
 
     const closeBtn = this.add.text(px + pw / 2 - 16, py - ph / 2 + 12, '✕', { fontSize: '24px', fill: '#8a8a9e' })
@@ -1888,15 +1910,24 @@ export class WorldScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10002);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
+    const kb = this.input.keyboard;
+    const giftKeyHandlers = []; // {name, handler} —— 数字键选礼物，随面板生命周期绑定/解绑
     const closePanel = (keepFrozen = false) => {
+      kb.off('keydown-ESC', onEsc);
+      giftKeyHandlers.forEach(({ name, handler }) => kb.off(`keydown-${name}`, handler));
       c.destroy(true);
       if (!keepFrozen) {
         this.dialogueActive = false;
+        // ESC 关闭本面板的这一帧，update() 里的 JustDown(escKey) 仍可能读到 true，
+        // 顺带弹出暂停菜单（同款 B1 修复，见 _openNpcMenu/_showLine）。
+        this._suppressInteractUntil = this.time.now + 250;
         if (this.guideText) this.guideText.setVisible(true);
         // 送礼取消/失败:让被暂停的走动 NPC 继续(送礼成功走 keepFrozen=true 转交 _showLine)。
         this._resumePausedNpc();
       }
     };
+    // ESC 走和 ✕/遮罩相同的 closePanel(false) 路径，别绕过——里面已经补了 _resumePausedNpc。
+    const onEsc = () => closePanel(false);
     const mask = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
       .setScrollFactor(0).setInteractive();
     c.add(mask);
@@ -1906,13 +1937,14 @@ export class WorldScene extends Phaser.Scene {
       fontSize: '24px', fill: '#ffb0d8', fontStyle: 'bold',
     }).setOrigin(0.5));
 
+    const GIFT_DIGIT_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
     giftable.forEach((it, i) => {
       const gy = py - ph / 2 + 90 + i * 68;
       const row = this.add.rectangle(px, gy, pw - 48, 58, 0x232338, 0.96)
         .setStrokeStyle(1, 0x4a4a6a).setInteractive({ useHandCursor: true });
       row.on('pointerover', () => row.setFillStyle(0x33334e));
       row.on('pointerout', () => row.setFillStyle(0x232338));
-      row.on('pointerdown', () => {
+      const doGift = () => {
         const plan = planGift({ items: this.items, npc, itemId: it.id });
         if (!plan.ok) { closePanel(false); return; }
         this.items.removeOne(it.id);
@@ -1927,7 +1959,8 @@ export class WorldScene extends Phaser.Scene {
           ? `「${it.name}！你怎么知道我就好这口？谢了！」`
           : '「哟，谢啦。改天请你喝东西。」';
         this._showLine(npc.name, thanks);
-      });
+      };
+      row.on('pointerdown', doGift);
       c.add(row);
       c.add(this.add.text(px - pw / 2 + 46, gy, `${it.icon} ${it.name} ×${it.count}`, {
         fontSize: '18px', fill: '#ffffff',
@@ -1935,6 +1968,18 @@ export class WorldScene extends Phaser.Scene {
       c.add(this.add.text(px + pw / 2 - 46, gy, `好感+${it.giftAffinity}`, {
         fontSize: '14px', fill: '#ffb0d8',
       }).setOrigin(1, 0.5));
+      // 数字键 1/2/3...选礼物——键盘玩家不用鼠标也能送
+      const keyName = GIFT_DIGIT_NAMES[i];
+      if (keyName) {
+        c.add(this.add.text(px - pw / 2 + 20, gy, `${i + 1}`, {
+          fontSize: '15px', fill: '#6fb2e8', fontStyle: 'bold',
+        }).setOrigin(0.5));
+        giftKeyHandlers.push({ name: keyName, handler: doGift });
+      }
+    });
+    this.time.delayedCall(120, () => {
+      kb.on('keydown-ESC', onEsc);
+      giftKeyHandlers.forEach(({ name, handler }) => kb.on(`keydown-${name}`, handler));
     });
 
     const closeBtn = this.add.text(px + pw / 2 - 16, py - ph / 2 + 12, '✕', { fontSize: '24px', fill: '#8a8a9e' })
@@ -2804,6 +2849,8 @@ export class WorldScene extends Phaser.Scene {
     if (!this.projectSystem) return;
     this.dialogueActive = true; // 冻结移动（玩家此时已坐在工位上）
     if (this.guideText) this.guideText.setVisible(false);
+    const kb = this.input.keyboard;
+    this._workBoardKeyHandlers = []; // {name, handler}——ESC + 数字键 + 回车，随面板关闭统一解绑
     const { width, height } = this.scale;
     const c = this.add.container(0, 0).setScrollFactor(0).setDepth(10000);
     if (typeof this.attachToUICamera === 'function') this.attachToUICamera(c);
@@ -2870,13 +2917,17 @@ export class WorldScene extends Phaser.Scene {
         }).setOrigin(0.5);
       c.add(btn); c.add(btnTxt);
       if (enabled) {
+        const doMainWork = () => {
+          this._closeWorkBoard(c);
+          this._doQuestWork(activeQuest);
+        };
         btn.setInteractive({ useHandCursor: true })
           .on('pointerover', () => btn.setFillStyle(0x3a5a4e))
           .on('pointerout', () => btn.setFillStyle(0x2a4a3e))
-          .on('pointerdown', () => {
-            this._closeWorkBoard(c);
-            this._doQuestWork(activeQuest);
-          });
+          .on('pointerdown', doMainWork);
+        // 回车/E 确认主任务工作——键盘玩家不用鼠标也能开工
+        this._workBoardKeyHandlers.push({ name: 'ENTER', handler: doMainWork });
+        this._workBoardKeyHandlers.push({ name: 'E', handler: doMainWork });
       }
     }
 
@@ -2899,6 +2950,7 @@ export class WorldScene extends Phaser.Scene {
 
     const orders = this.projectSystem.getOrders();
     const DIFF = { easy: { t: '简单', c: '#6fcf7f' }, mid: { t: '中等', c: '#f0c060' }, hard: { t: '困难', c: '#e8735a' } };
+    const ORDER_DIGIT_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
     orders.forEach((o, i) => {
       const oy = secY + 54 + i * 70;
       const done = o.done;
@@ -2906,10 +2958,14 @@ export class WorldScene extends Phaser.Scene {
       const card = this.add.rectangle(px, oy, pw - 80, 60, done ? 0x182618 : (disabled ? 0x1a1a24 : 0x232338), 0.96)
         .setStrokeStyle(2, done ? 0x3a5a3a : (disabled ? 0x2a2a34 : 0x4a4a6a));
       if (!done && !disabled) {
+        const doOrder = () => { this._closeWorkBoard(c); this._doWorkOrder(o); };
         card.setInteractive({ useHandCursor: true })
           .on('pointerover', () => card.setFillStyle(0x33334e))
           .on('pointerout', () => card.setFillStyle(0x232338))
-          .on('pointerdown', () => { this._closeWorkBoard(c); this._doWorkOrder(o); });
+          .on('pointerdown', doOrder);
+        // 数字键选工单——键盘玩家不用鼠标也能开工
+        const keyName = ORDER_DIGIT_NAMES[i];
+        if (keyName) this._workBoardKeyHandlers.push({ name: keyName, handler: doOrder });
       }
       c.add(card);
       const d = DIFF[o.difficulty] || DIFF.mid;
@@ -2919,7 +2975,7 @@ export class WorldScene extends Phaser.Scene {
       c.add(this.add.text(px - pw / 2 + 60, oy + 14, `${d.t} · +${o.progress}% · 绩效+${o.performance}`, {
         fontSize: '15px', fill: '#7a7a8e',
       }).setOrigin(0, 0.5));
-      c.add(this.add.text(px + pw / 2 - 56, oy, done ? '已完成' : (disabled ? '🔒' : '▶ 开工'), {
+      c.add(this.add.text(px + pw / 2 - 56, oy, done ? '已完成' : (disabled ? '🔒' : `▶ ${i + 1} 开工`), {
         fontSize: '16px', fill: done ? '#6a8a6a' : (disabled ? '#4a4a5e' : d.c), fontStyle: 'bold',
       }).setOrigin(1, 0.5));
     });
@@ -2931,14 +2987,29 @@ export class WorldScene extends Phaser.Scene {
     c.add(closeBtn);
     mask.on('pointerdown', () => this._closeWorkBoard(c)); // 点空白关闭
     this._workBoardUI = c;
+    // ESC 关闭面板——延迟绑定，避免开面板同一帧 ESC 被读到导致"刚开就关"
+    const onEsc = () => this._closeWorkBoard(c);
+    this._workBoardKeyHandlers.push({ name: 'ESC', handler: onEsc });
+    this.time.delayedCall(120, () => {
+      this._workBoardKeyHandlers.forEach(({ name, handler }) => kb.on(`keydown-${name}`, handler));
+    });
   }
 
   _closeWorkBoard(c) {
     if (c) c.destroy(true);
     this._workBoardUI = null;
     this.dialogueActive = false;
+    // ESC 关闭本面板的这一帧，update() 里的 JustDown(escKey) 仍可能读到 true，
+    // 顺带弹出暂停菜单（同款 B1 修复，见 _openNpcMenu/_showLine）。
+    this._suppressInteractUntil = this.time.now + 250;
     this._standUp(); // 收工起身
     if (this.guideText) this.guideText.setVisible(true);
+    // 解绑本面板加的全部键盘监听（ESC + 数字键 + 回车/E），防止泄漏重复触发
+    if (this._workBoardKeyHandlers) {
+      const kb = this.input.keyboard;
+      this._workBoardKeyHandlers.forEach(({ name, handler }) => kb.off(`keydown-${name}`, handler));
+      this._workBoardKeyHandlers = null;
+    }
   }
 
   // 开工做某工单 → 小游戏 → 成绩 quality 决定推进/绩效,并按工单消耗身心。
@@ -2955,6 +3026,18 @@ export class WorldScene extends Phaser.Scene {
       else if (quality >= 0.5) { this.stateSystem.change('skill', 2); }
       else { this.stateSystem.change('stress', 3); this.stateSystem.change('skill', 1); }
       this.stateSystem.change('energy', -8); // 干活耗精力
+      // ⚠️ 任务链工作也是"工作成果"→ 计入绩效 + 项目进度(修 bug:此前只加 skill/passion,
+      // 导致玩家做了活但绩效/项目进度纹丝不动)。口径与工单一致:压力过高产出打折 ×0.8。
+      let qwork = null;
+      if (this.projectSystem) {
+        const stressMul = stressOutputMultiplier(this.stateSystem.get('stress'));
+        const effQuality = quality * stressMul.multiplier;
+        if (stressMul.stressed) {
+          Juice.floatText(this, this.player.x, this.player.y - 60, '压力过大，产出打折 ×0.8', '#e8a05a');
+        }
+        qwork = this.projectSystem.creditWork(effQuality);
+        this._updateProjectHud();
+      }
       // 推进任务链目标
       this.questSystem.progress('minigame', 'coding');
       this.questSystem.progress('minigame', 'work');
@@ -2964,10 +3047,11 @@ export class WorldScene extends Phaser.Scene {
       Juice.celebrate(this, this.player.x, this.player.y - 30, 0x5fbf7f);
       const q = quest ? this.questSystem.defs[quest.id] : null;
       const ready = quest && this.questSystem.isReady(quest.id);
+      const perfSuffix = qwork ? ` · 项目 +${qwork.progressGain}% · 绩效 +${qwork.perfGain}` : '';
       this._showThoughtBubble(
         ready
-          ? `✅ 任务工作完成！去找导师交付「${(q && q.title) || '任务'}」（头顶 ❓）`
-          : '✅ 干完一轮。看看左上角还差什么。',
+          ? `✅ 任务工作完成！去找导师交付「${(q && q.title) || '任务'}」（头顶 ❓）${perfSuffix}`
+          : `✅ 干完一轮。看看左上角还差什么。${perfSuffix}`,
         '#5fbf7f',
       );
       if (energyGate(this.stateSystem.get('energy')).forceOff && !this._exhaustedPrompted) {
