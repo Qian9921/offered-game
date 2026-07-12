@@ -2890,15 +2890,15 @@ export class WorldScene extends Phaser.Scene {
     return ['TypingRhythmScene'];
   }
 
-  // gameType → 小游戏场景的映射(让工单内容和玩法咬合,不再无脑轮换换皮)
+  // gameType → 小游戏场景的映射。⚠️ 让【工单内容和玩法真正咬合、且多样不单调】——
+  // 用户反馈"一直敲空格太单调,要做真正适合当前任务的小游戏"。此前 debug/sequence 全被
+  // 塞进敲码节奏(TypingRhythm),12个工单里8个都是敲空格。现让每种任务用名副其实的玩法:
   _gameSceneForType(gameType) {
     const MAP = {
-      // 新工作玩法(可爱好玩人人能玩,不考编程知识)——替换掉硬核的"点点代码"小游戏。
-      // 程序员的写码/修bug/开发,都用「敲码节奏」(代码掉到判定线按空格,连击有爽感)。
-      debug: 'TypingRhythmScene',      // 修bug/排查/写码 → 敲码节奏
-      sequence: 'TypingRhythmScene',   // 开发新功能/对接 → 敲码节奏
-      review: 'CodeReviewScene',       // 评审(暂留,后续可换更可爱的"挑刺"节奏)
-      testcase: 'TestCaseScene',       // 补用例(暂留)
+      debug: 'DebugGameScene',        // 修bug/排查 → 「Debug找茬」点出bug所在的行(像真的定位问题)
+      sequence: 'SequenceGameScene',  // 开发/联调 → 「顺序重组」按正确执行顺序排步骤卡(考流程感)
+      review: 'CodeReviewScene',      // 评审 → 代码评审挑刺
+      testcase: 'TestCaseScene',      // 补用例 → 写测试用例
     };
     return MAP[gameType] || null;
   }
