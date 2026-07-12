@@ -3409,7 +3409,16 @@ export class WorldScene extends Phaser.Scene {
     // 走近时用一个柔和高亮圈 + [E] 提示指示"这里能交互",更真实。
     for (const def of defs) {
       const [x, y] = def.pos;
-      this._interactables.push({ ...def, x, y });
+      const obj = { ...def, x, y };
+      this._interactables.push(obj);
+      // 常驻小名牌:让玩家一眼看到"这里能交互"(用户反馈:不显名字玩家不知道在哪用)。
+      // 低调——小字、半透明,浮在物件上方,不抢戏;走近时的 [E] 高亮提示照旧。
+      const label = (def.prompt || def.id || '').replace(/^(坐下|看看|买瓶|给|接杯|望向|看)/, '').trim() || def.prompt;
+      obj._label = this.add.text(x, y - 30, def.prompt || def.id, {
+        fontSize: '12px', color: '#cfe0ff', stroke: '#0a0a14', strokeThickness: 3,
+        backgroundColor: '#00000055', padding: { x: 4, y: 1 },
+      }).setOrigin(0.5, 1).setDepth(y - 1).setAlpha(0.75);
+      if (this.uiCamera) this.uiCamera.ignore(obj._label);
     }
     // 选定圈：贴地金色椭圆 + 脉冲发光（跟随当前选中实体脚下，平时隐藏）
     this._selRing = this.add.ellipse(0, 0, 52, 24, 0xffe08a, 0.12)
