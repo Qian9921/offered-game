@@ -22,6 +22,13 @@ export class CommuteScene extends Phaser.Scene {
     this.stats = data?.stats || null; // 上一场景传来的状态快照
     this.subRole = data?.subRole || null;
     this.slot = data?.slot || 1;
+    // ⚠️ 瞬时态复位(根因:Phaser 复用同一 CommuteScene 实例,scene.start 重跑 init 但
+    // 不重置这些字段)。_chosen/_going 若残留上一天的 true,第2+次通勤 _choose/_goWork
+    // 开头的 if(this._chosen)return 会直接返回 → "第三天通勤点什么都没用"卡死。每次进场清零。
+    this._chosen = false;
+    this._going = false;
+    this._currentEvent = null;
+    this._optKeyHandlers = [];
     // 从存档读种子队列(昨晚埋的 + followup 连锁)和最近看过的事件
     this._seeds = [];
     this._recent = [];
